@@ -83,9 +83,24 @@ int CNexDome::Sync_Dome(double dAz)
 {
     int err = 0;
     int dir;
+    char buf[SERIAL_BUFFER_SIZE];
+    char resp[SERIAL_BUFFER_SIZE];
+    unsigned long  nBytesWrite;
+    int nBytesToRead;
+    unsigned long nBytesRead;
 
     mCurrentAzPosition = dAz;
+    snprintf(buf, 20, "s %3.2f\n", dAz);
+    err = pSerx->writeFile(buf, 20, nBytesWrite);
+
     AzToTicks(dAz, dir, (int &)mCurrentAzPositionInTicks);
+
+    // read response
+    nBytesToRead = (int)strlen(buf);
+    err = pSerx->readFile(resp, nBytesToRead, nBytesRead, MAX_TIMEOUT);
+    if (nBytesRead != nBytesToRead) // timeout
+        err = CANT_CONNECT;
+
     return err;
 }
 

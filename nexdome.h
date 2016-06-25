@@ -11,6 +11,13 @@
 #include "../../licensedinterfaces/sberrorx.h"
 #include "../../licensedinterfaces/serxinterface.h"
 
+#define SERIAL_BUFFER_SIZE 20
+#define MAX_TIMEOUT 500
+
+// error codes
+// Error code
+enum NExDomeErrors {OK=0, CANT_CONNECT, BAD_CMD_RESPONSE};
+
 class CNexDome
 {
 public:
