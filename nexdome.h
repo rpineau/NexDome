@@ -16,7 +16,7 @@
 
 // error codes
 // Error code
-enum NExDomeErrors {OK=0, CANT_CONNECT, BAD_CMD_RESPONSE};
+enum NExDomeErrors {ND_OK=0, ND_CANT_CONNECT, ND_BAD_CMD_RESPONSE};
 
 class CNexDome
 {
@@ -34,7 +34,8 @@ public:
     int Sync_Dome(double dAz);
     int Park(void);
     int Unpark(void);
-
+    int Goto_Azimuth(double newAz);
+    
     // convertion functions
     void AzToTicks(double pdAz, int &dir, int &ticks);
     void TicksToAz(int ticks, double &pdAz);
@@ -65,6 +66,10 @@ public:
 
 protected:
 
+    int             ReadResponse(char *respBuffer, int bufferLen);
+    int             getDomeAz(double &domeAz);
+    int             getDomeEl(double &domeEl);
+    
     bool            bIsConnected;
 
     bool            mHomed;

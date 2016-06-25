@@ -22,10 +22,8 @@ CNexDome::CNexDome()
     mNbTicksPerRev = 0;
 
     mCurrentAzPosition = 0;
-    mCurrentAzPositionInTicks = 0;
 
     mHomeAz = 0;
-    mHomeAzInTicks = 0;
 
     mCloseShutterBeforePark = true;
     mShutterOpened = false;
@@ -78,36 +76,97 @@ void CNexDome::Disconnect(void)
     bIsConnected = false;
 }
 
+int CNexDome::ReadResponse(char *respBuffer, int bufferLen)
+{
+    int err = ND_OK;
+    unsigned long nBytesRead = 0;
+    memset(respBuffer, 0, (size_t) bufferLen);
+    // Look for a CR  character, until time out occurs or MAX_BUFFER characters was read
+    while (*respBuffer != '\n' && nBytesRead < bufferLen )
+    {
+        err = pSerx->readFile(respBuffer, 1, nBytesRead, MAX_TIMEOUT);
+        if (nBytesRead !=1) // timeout
+            err = ND_BAD_CMD_RESPONSE;
+    }
+
+    return err;
+}
+
+int CNexDome::getDomeAz(double &domeAz)
+{
+    int err = 0;
+    char buf[SERIAL_BUFFER_SIZE];
+    char resp[SERIAL_BUFFER_SIZE];
+    unsigned long  nBytesWrite;
+    
+    snprintf(buf, 20, "q\n");
+    err = pSerx->writeFile(buf, 20, nBytesWrite);
+    
+    // read response
+    err = ReadResponse(resp, SERIAL_BUFFER_SIZE);
+    if(resp[0] != 'Q')
+        err = ND_BAD_CMD_RESPONSE;
+    
+    if(err)
+        return err;
+    
+    // convert Az string to float
+    domeAz = atof(&resp[1]);
+    return err;
+}
+
+int CNexDome::getDomeEl(double &domeEl)
+{
+    int err = 0;
+    char buf[SERIAL_BUFFER_SIZE];
+    char resp[SERIAL_BUFFER_SIZE];
+    unsigned long  nBytesWrite;
+    
+    snprintf(buf, 20, "b\n");
+    err = pSerx->writeFile(buf, 20, nBytesWrite);
+    
+    // read response
+    err = ReadResponse(resp, SERIAL_BUFFER_SIZE);
+    if(resp[0] != 'B')
+        err = ND_BAD_CMD_RESPONSE;
+    
+    if(err)
+        return err;
+    
+    // convert El string to float
+    domeEl = atof(&resp[1]);
+    return err;
+}
+
 
 int CNexDome::Sync_Dome(double dAz)
 {
     int err = 0;
-    int dir;
     char buf[SERIAL_BUFFER_SIZE];
     char resp[SERIAL_BUFFER_SIZE];
     unsigned long  nBytesWrite;
-    int nBytesToRead;
-    unsigned long nBytesRead;
 
     mCurrentAzPosition = dAz;
     snprintf(buf, 20, "s %3.2f\n", dAz);
     err = pSerx->writeFile(buf, 20, nBytesWrite);
 
-    AzToTicks(dAz, dir, (int &)mCurrentAzPositionInTicks);
-
     // read response
-    nBytesToRead = (int)strlen(buf);
-    err = pSerx->readFile(resp, nBytesToRead, nBytesRead, MAX_TIMEOUT);
-    if (nBytesRead != nBytesToRead) // timeout
-        err = CANT_CONNECT;
-
+    err = ReadResponse(resp, SERIAL_BUFFER_SIZE);
+    if(resp[0] != 'S')
+        err = ND_BAD_CMD_RESPONSE;
     return err;
 }
 
 int CNexDome::Park(void)
 {
-    mParked = true;
-    return 0;
+    int err;
+    err = Goto_Azimuth(mParkAz);
+    if(!err)
+        mParked = true;
+    else
+        mParked = false;
+    
+    return err;
 
 }
 
@@ -116,6 +175,25 @@ int CNexDome::Unpark(void)
     mParked = false;
     return 0;
 }
+
+int CNexDome::Goto_Azimuth(double newAz)
+{
+    int err = 0;
+    char buf[SERIAL_BUFFER_SIZE];
+    char resp[SERIAL_BUFFER_SIZE];
+    unsigned long  nBytesWrite;
+
+    snprintf(buf, 20, "g %3.2f\n", newAz);
+    err = pSerx->writeFile(buf, 20, nBytesWrite);
+    
+    // read response
+    err = ReadResponse(resp, SERIAL_BUFFER_SIZE);
+    if(resp[0] != 'G')
+        err = ND_BAD_CMD_RESPONSE;
+
+    return err;
+}
+
 /*
 	Convert pdAz to number of ticks from home and direction.
 
