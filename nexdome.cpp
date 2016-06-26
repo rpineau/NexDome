@@ -40,9 +40,7 @@ CNexDome::~CNexDome()
 bool CNexDome::Connect(const char *szPort)
 {
     int err;
-    unsigned tmpAz;
-    unsigned tmpHomePosition;
-
+    
     // 19200 8N1
     if(pSerx->open(szPort,9600) == 0)
         bIsConnected = true;
@@ -53,7 +51,7 @@ bool CNexDome::Connect(const char *szPort)
     if(!bIsConnected)
         return false;
 
-    // bIsConnected = GetFirmware(szFirmware);
+    bIsConnected = GetFirmwareVersion(firmwareVersion, SERIAL_BUFFER_SIZE);
     pSerx->purgeTxRx();
 
 
@@ -192,6 +190,30 @@ int CNexDome::Goto_Azimuth(double newAz)
         err = ND_BAD_CMD_RESPONSE;
 
     return err;
+}
+
+
+int CNexDome::GetFirmwareVersion(char *version, int strMaxLen)
+{
+    int err = 0;
+    char buf[SERIAL_BUFFER_SIZE];
+    char resp[SERIAL_BUFFER_SIZE];
+    unsigned long  nBytesWrite;
+    
+    snprintf(buf, 20, "v\n");
+    err = pSerx->writeFile(buf, 20, nBytesWrite);
+    
+    // read response
+    err = ReadResponse(resp, SERIAL_BUFFER_SIZE);
+    if(resp[0] != 'V')
+        err = ND_BAD_CMD_RESPONSE;
+    
+    if(err)
+        return err;
+    
+    strncpy(version, &resp[1], strMaxLen);
+    return err;
+
 }
 
 /*
@@ -359,3 +381,9 @@ void CNexDome::setCurrentAz(double dAz)
 {
     mCurrentAzPosition = dAz;
 }
+
+char * CNexDome::getVersion()
+{
+    return firmwareVersion;
+}
+

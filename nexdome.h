@@ -35,6 +35,7 @@ public:
     int Park(void);
     int Unpark(void);
     int Goto_Azimuth(double newAz);
+    int GetFirmwareVersion(char *version, int strMaxLen);
     
     // convertion functions
     void AzToTicks(double pdAz, int &dir, int &ticks);
@@ -64,6 +65,8 @@ public:
     double getCurrentAz();
     void setCurrentAz(double dAz);
 
+    char* getVersion();
+    
 protected:
 
     int             ReadResponse(char *respBuffer, int bufferLen);
@@ -90,6 +93,9 @@ protected:
 
     unsigned        mGotoTicks;
     SerXInterface   *pSerx;
+    
+    char            firmwareVersion[SERIAL_BUFFER_SIZE];
+    
 };
 
 #endif

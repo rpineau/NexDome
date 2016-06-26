@@ -39,12 +39,12 @@ X2Dome::X2Dome(const char* pszSelection,
 
     if (m_pIniUtil)
     {   
-        nexDome.setNbTicksPerRev( m_pIniUtil->readInt(PARENT_KEY, CHILD_KEY_TICKS_PER_REV, nexDome.getNbTicksPerRev()) );
-        nexDome.setHomeAz( m_pIniUtil->readDouble(PARENT_KEY, CHILD_KEY_HOME_AZ, nexDome.getHomeAz()) );
-        nexDome.setParkAz( m_pIniUtil->readDouble(PARENT_KEY, CHILD_KEY_PARK_AZ, nexDome.getParkAz()) );
+        nexDome.setNbTicksPerRev( m_pIniUtil->readInt(PARENT_KEY, CHILD_KEY_TICKS_PER_REV, 0) );
+        nexDome.setHomeAz( m_pIniUtil->readDouble(PARENT_KEY, CHILD_KEY_HOME_AZ, 180) );
+        nexDome.setParkAz( m_pIniUtil->readDouble(PARENT_KEY, CHILD_KEY_PARK_AZ, 180) );
         mHasShutterControl = m_pIniUtil->readInt(PARENT_KEY, CHILD_KEY_SHUTTER_CONTROL, true);
         mOpenUpperShutterOnly = m_pIniUtil->readInt(PARENT_KEY, CHILD_KEY_SHUTTER_OPEN_UPPER_ONLY, false);
-        mIsRollOffRoof = m_pIniUtil->readInt(PARENT_KEY, CHILD_KEY_ROOL_OFF_ROOF, mIsRollOffRoof);
+        mIsRollOffRoof = m_pIniUtil->readInt(PARENT_KEY, CHILD_KEY_ROOL_OFF_ROOF, false);
         nexDome.setCloseShutterBeforePark( ! m_pIniUtil->readInt(PARENT_KEY, CHILD_KEY_SHUTTER_OPER_ANY_Az, false)); // if we can operate at any Az then CloseShutterBeforePark is false
     }
 }
@@ -270,8 +270,9 @@ void X2Dome::deviceInfoDetailedDescription(BasicStringInterface& str) const
 }
  void X2Dome::deviceInfoFirmwareVersion(BasicStringInterface& str)					
 {
-    str = "Not available.";
+    str = nexDome.getVersion();
 }
+
 void X2Dome::deviceInfoModel(BasicStringInterface& str)
 {
     str = "NexDome";
