@@ -8,6 +8,7 @@
 #include "nexdome.h"
 #include <stdlib.h>
 #include <stdio.h>
+#include <ctype.h>
 #include <memory.h>
 // #ifdef SB_MAC_BUILD
 #include <unistd.h>
@@ -92,49 +93,55 @@ int CNexDome::readResponse(char *respBuffer, int bufferLen)
     return err;
 }
 
-int CNexDome::getDomeAz(double &domeAz)
+int CNexDome::domeCommand(const char *cmd, char *result, char respCmdCode, int resultMaxLen)
 {
     int err = 0;
     char buf[SERIAL_BUFFER_SIZE];
     char resp[SERIAL_BUFFER_SIZE];
     unsigned long  nBytesWrite;
-    
-    snprintf(buf, 20, "q\n");
+
+    memset(buf,0,SERIAL_BUFFER_SIZE);
+    strncpy(buf,cmd,SERIAL_BUFFER_SIZE);
     err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
-    
+
     // read response
     err = readResponse(resp, SERIAL_BUFFER_SIZE);
-    if(resp[0] != 'Q')
+
+    if(resp[0] != respCmdCode)
         err = ND_BAD_CMD_RESPONSE;
-    
+
+    if(result)
+        strncpy(result, &resp[1], resultMaxLen);
+
+    return err;
+
+}
+
+int CNexDome::getDomeAz(double &domeAz)
+{
+    int err = 0;
+    char resp[SERIAL_BUFFER_SIZE];
+
+    err = domeCommand("q\n", resp, 'Q', SERIAL_BUFFER_SIZE);
     if(err)
         return err;
     
     // convert Az string to float
-    domeAz = atof(&resp[1]);
+    domeAz = atof(resp);
     return err;
 }
 
 int CNexDome::getDomeEl(double &domeEl)
 {
     int err = 0;
-    char buf[SERIAL_BUFFER_SIZE];
     char resp[SERIAL_BUFFER_SIZE];
-    unsigned long  nBytesWrite;
-    
-    snprintf(buf, 20, "b\n");
-    err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
-    
-    // read response
-    err = readResponse(resp, SERIAL_BUFFER_SIZE);
-    if(resp[0] != 'B')
-        err = ND_BAD_CMD_RESPONSE;
-    
+
+    err = domeCommand("b\n", resp, 'B', SERIAL_BUFFER_SIZE);
     if(err)
         return err;
     
     // convert El string to float
-    domeEl = atof(&resp[1]);
+    domeEl = atof(resp);
     return err;
 }
 
@@ -142,23 +149,14 @@ int CNexDome::getDomeEl(double &domeEl)
 int CNexDome::getDomeHomeAz(double &Az)
 {
     int err = 0;
-    char buf[SERIAL_BUFFER_SIZE];
     char resp[SERIAL_BUFFER_SIZE];
-    unsigned long  nBytesWrite;
 
-    snprintf(buf, 20, "z\n");
-    err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
-
-    // read response
-    err = readResponse(resp, SERIAL_BUFFER_SIZE);
-    if(resp[0] != 'Z')
-        err = ND_BAD_CMD_RESPONSE;
-
+    err = domeCommand("z\n", resp, 'Z', SERIAL_BUFFER_SIZE);
     if(err)
         return err;
 
     // convert Az string to float
-    Az = atof(&resp[1]);
+    Az = atof(resp);
     return err;
 }
 
@@ -166,21 +164,13 @@ int CNexDome::getDomeHomeAz(double &Az)
 int CNexDome::getShutterState(int &state)
 {
     int err = 0;
-    char buf[SERIAL_BUFFER_SIZE];
     char resp[SERIAL_BUFFER_SIZE];
-    unsigned long  nBytesWrite;
 
-    snprintf(buf, 20, "u\n");
-    err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
-
-    // read response
-    err = readResponse(resp, SERIAL_BUFFER_SIZE);
-    if(resp[0] != 'U')
-        err = ND_BAD_CMD_RESPONSE;
+    err = domeCommand("u\n", resp, 'U', SERIAL_BUFFER_SIZE);
     if(err)
         return err;
 
-    state = atoi(&resp[1]);
+    state = atoi(resp);
 
     return err;
 }
@@ -190,22 +180,14 @@ bool CNexDome::isDomeMoving()
     bool isMoving;
     int tmp;
     int err = 0;
-    char buf[SERIAL_BUFFER_SIZE];
     char resp[SERIAL_BUFFER_SIZE];
-    unsigned long  nBytesWrite;
 
-    snprintf(buf, 20, "m\n");
-    err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
-
-    // read response
-    err = readResponse(resp, SERIAL_BUFFER_SIZE);
-    if(resp[0] != 'M')
-        err = ND_BAD_CMD_RESPONSE;
+    err = domeCommand("m\n", resp, 'M', SERIAL_BUFFER_SIZE);
     if(err)
         return false;   // Not really correct but will do for now.
 
     isMoving = false;
-    tmp = atoi(&resp[1]);
+    tmp = atoi(resp);
     if(tmp)
         isMoving = true;
 
@@ -216,17 +198,10 @@ int CNexDome::syncDome(double dAz)
 {
     int err = 0;
     char buf[SERIAL_BUFFER_SIZE];
-    char resp[SERIAL_BUFFER_SIZE];
-    unsigned long  nBytesWrite;
 
     mCurrentAzPosition = dAz;
-    snprintf(buf, 20, "s %3.2f\n", dAz);
-    err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
-
-    // read response
-    err = readResponse(resp, SERIAL_BUFFER_SIZE);
-    if(resp[0] != 'S')
-        err = ND_BAD_CMD_RESPONSE;
+    snprintf(buf, SERIAL_BUFFER_SIZE, "s %3.2f\n", dAz);
+    err = domeCommand(buf, NULL, 'S', SERIAL_BUFFER_SIZE);
     return err;
 }
 
@@ -248,16 +223,12 @@ int CNexDome::gotoAzimuth(double newAz)
 {
     int err = 0;
     char buf[SERIAL_BUFFER_SIZE];
-    char resp[SERIAL_BUFFER_SIZE];
-    unsigned long  nBytesWrite;
 
-    snprintf(buf, 20, "g %3.2f\n", newAz);
-    err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
-    
-    // read response
-    err = readResponse(resp, SERIAL_BUFFER_SIZE);
-    if(resp[0] != 'G')
-        err = ND_BAD_CMD_RESPONSE;
+    snprintf(buf, SERIAL_BUFFER_SIZE, "g %3.2f\n", newAz);
+    err = domeCommand(buf, NULL, 'G', SERIAL_BUFFER_SIZE);
+    if(err)
+        return err;
+
     mGotoAz = newAz;
 
     return err;
@@ -265,79 +236,31 @@ int CNexDome::gotoAzimuth(double newAz)
 
 int CNexDome::openShutter()
 {
-    int err = 0;
-    char buf[SERIAL_BUFFER_SIZE];
-    char resp[SERIAL_BUFFER_SIZE];
-    unsigned long  nBytesWrite;
-
-    snprintf(buf, 20, "d\n");
-    err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
-
-    // read response
-    err = readResponse(resp, SERIAL_BUFFER_SIZE);
-    if(resp[0] != 'D')
-        err = ND_BAD_CMD_RESPONSE;
-
-    return err;
+    return (domeCommand("d\n", NULL, 'D', SERIAL_BUFFER_SIZE));
 }
 
 int CNexDome::closeShutter()
 {
-    int err = 0;
-    char buf[SERIAL_BUFFER_SIZE];
-    char resp[SERIAL_BUFFER_SIZE];
-    unsigned long  nBytesWrite;
-
-    snprintf(buf, 20, "e\n");
-    err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
-
-    // read response
-    err = readResponse(resp, SERIAL_BUFFER_SIZE);
-    if(resp[0] != 'D')
-        err = ND_BAD_CMD_RESPONSE;
-
-    return err;
+    return (domeCommand("e\n", NULL, 'D', SERIAL_BUFFER_SIZE));
 }
 
 
 int CNexDome::getFirmwareVersion(char *version, int strMaxLen)
 {
     int err = 0;
-    char buf[SERIAL_BUFFER_SIZE];
     char resp[SERIAL_BUFFER_SIZE];
-    unsigned long  nBytesWrite;
-    
-    snprintf(buf, 20, "v\n");
-    err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
-    
-    // read response
-    err = readResponse(resp, SERIAL_BUFFER_SIZE);
-    if(resp[0] != 'V')
-        err = ND_BAD_CMD_RESPONSE;
-    
+
+    err = domeCommand("v\n", resp, 'V', SERIAL_BUFFER_SIZE);
     if(err)
         return err;
     
-    strncpy(version, &resp[1], strMaxLen);
+    strncpy(version, resp, strMaxLen);
     return err;
 }
 
 int CNexDome::goHome()
 {
-    int err = 0;
-    char buf[SERIAL_BUFFER_SIZE];
-    char resp[SERIAL_BUFFER_SIZE];
-    unsigned long  nBytesWrite;
-
-    snprintf(buf, 20, "h\n");
-    err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
-
-    // read response
-    err = readResponse(resp, SERIAL_BUFFER_SIZE);
-    if(resp[0] != 'H')
-        err = ND_BAD_CMD_RESPONSE;
-
-    return err;
+    return (domeCommand("h\n", NULL, 'H', SERIAL_BUFFER_SIZE));
 }
 
 int CNexDome::isGoToComplete(bool &complete)
@@ -480,24 +403,7 @@ bool CNexDome::isCalibrating()
 
 int CNexDome::abortCurrentCommand()
 {
-    int err = 0;
-    char buf[SERIAL_BUFFER_SIZE];
-    char resp[SERIAL_BUFFER_SIZE];
-    unsigned long  nBytesWrite;
-
-    snprintf(buf, 20, "a\n");
-    err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
-
-    // read response
-    err = readResponse(resp, SERIAL_BUFFER_SIZE);
-    if(resp[0] != 'A')
-        err = ND_BAD_CMD_RESPONSE;
-
-    if(err)
-        return err;
-
-    return err;
-
+    return (domeCommand("a\n", NULL, 'A', SERIAL_BUFFER_SIZE));
 }
 
 #pragma mark - Getter / Setter
@@ -523,15 +429,12 @@ int CNexDome::setHomeAz(double dAz)
     int err = 0;
     char buf[SERIAL_BUFFER_SIZE];
     char resp[SERIAL_BUFFER_SIZE];
-    unsigned long  nBytesWrite;
 
     snprintf(buf, 20, "j %3.2f\n", dAz);
-    err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
+    err = domeCommand(buf, resp, 'J', SERIAL_BUFFER_SIZE);
+    if(err)
+        return err;
 
-    // read response
-    err = readResponse(resp, SERIAL_BUFFER_SIZE);
-    if(resp[0] != 'J')
-        err = ND_BAD_CMD_RESPONSE;
     mHomeAz = dAz;
 
     return err;
@@ -549,15 +452,12 @@ int CNexDome::setParkAz(double dAz)
     int err = 0;
     char buf[SERIAL_BUFFER_SIZE];
     char resp[SERIAL_BUFFER_SIZE];
-    unsigned long  nBytesWrite;
 
     snprintf(buf, 20, "l %3.2f\n", dAz);
-    err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
+    err = domeCommand(buf, resp, 'L', SERIAL_BUFFER_SIZE);
+    if(err)
+        return err;
 
-    // read response
-    err = readResponse(resp, SERIAL_BUFFER_SIZE);
-    if(resp[0] != 'L')
-        err = ND_BAD_CMD_RESPONSE;
     mParkAz = dAz;
 
     return err;

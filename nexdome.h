@@ -73,17 +73,16 @@ public:
     void setShutterOnly(bool bMode);
 
 protected:
-
+    
     int             readResponse(char *respBuffer, int bufferLen);
     int             getDomeAz(double &domeAz);
     int             getDomeEl(double &domeEl);
     int             getDomeHomeAz(double &Az);
     int             getShutterState(int &state);
-
     bool            isDomeMoving();
+    int             domeCommand(const char *cmd, char *result, char respCmdCode, int resultMaxLen);
 
     bool            bIsConnected;
-
     bool            mHomed;
     bool            mParked;
     bool            mCloseShutterBeforePark;
