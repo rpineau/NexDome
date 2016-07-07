@@ -40,7 +40,7 @@ X2Dome::X2Dome(const char* pszSelection,
     if (m_pIniUtil)
     {   
         nexDome.setNbTicksPerRev( m_pIniUtil->readInt(PARENT_KEY, CHILD_KEY_TICKS_PER_REV, 0) );
-        nexDome.setHomeAz( m_pIniUtil->readDouble(PARENT_KEY, CHILD_KEY_HOME_AZ, 180) );
+        nexDome.setHomeAz( m_pIniUtil->readDouble(PARENT_KEY, CHILD_KEY_HOME_AZ, 0) );
         nexDome.setParkAz( m_pIniUtil->readDouble(PARENT_KEY, CHILD_KEY_PARK_AZ, 180) );
         mHasShutterControl = m_pIniUtil->readInt(PARENT_KEY, CHILD_KEY_SHUTTER_CONTROL, true);
         mOpenUpperShutterOnly = m_pIniUtil->readInt(PARENT_KEY, CHILD_KEY_SHUTTER_OPEN_UPPER_ONLY, false);
@@ -83,6 +83,9 @@ int X2Dome::establishLink(void)
         return ERR_COMMNOLINK;
 
     m_bLinked = true;
+    if(mIsRollOffRoof)
+        nexDome.setShutterOnly(true);
+
 	return SB_OK;
 }
 
@@ -211,8 +214,7 @@ int X2Dome::execModalSettingsDialog()
         if(m_bLinked)
         {
             nexDome.setHomeAz(dHomeAz);
-            nexDome.setParkAz(dHomeAz);
-            // nexDome.SetPark_MaxDomeII(!operateAnyAz, dParkAz);
+            nexDome.setParkAz(dParkAz);
             nexDome.setNbTicksPerRev(nTicksPerRev);
         }
 
@@ -271,7 +273,9 @@ void X2Dome::deviceInfoDetailedDescription(BasicStringInterface& str) const
 }
  void X2Dome::deviceInfoFirmwareVersion(BasicStringInterface& str)					
 {
-    str = nexDome.getVersion();
+    char cFirmware[SERIAL_BUFFER_SIZE];
+    nexDome.getFirmwareVersion(cFirmware, SERIAL_BUFFER_SIZE);
+    str = cFirmware;
 }
 
 void X2Dome::deviceInfoModel(BasicStringInterface& str)
@@ -286,7 +290,7 @@ void X2Dome::deviceInfoModel(BasicStringInterface& str)
 
  void	X2Dome::driverInfoDetailedInfo(BasicStringInterface& str) const	
 {
-    str = "NexDome plugin v1.0 beta";
+    str = "NexDome X2 plugin v1.0 beta";
 }
 
 double	X2Dome::driverInfoVersion(void) const
@@ -306,13 +310,7 @@ int X2Dome::dapiGetAzEl(double* pdAz, double* pdEl)
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    if(mIsRollOffRoof)
-    {
-        *pdAz = nexDome.getCurrentAz();
-        *pdEl = nexDome.getCurrentEl();
-        return SB_OK;
-    }
-
+    *pdAz = nexDome.getCurrentAz();
     *pdEl = nexDome.getCurrentEl();
     return SB_OK;
 }
@@ -326,13 +324,7 @@ int X2Dome::dapiGotoAzEl(double dAz, double dEl)
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    if(mIsRollOffRoof)
-    {
-        nexDome.setCurrentAz(dAz);
-        return SB_OK;
-    }
-
-    err = nexDome.Goto_Azimuth(dAz);
+    err = nexDome.gotoAzimuth(dAz);
 
     if(err)
         return ERR_CMDFAILED;
@@ -348,21 +340,7 @@ int X2Dome::dapiAbort(void)
 
     if(!m_bLinked)
         return ERR_NOLINK;
-
-
-    switch(mlastCommand)
-    {
-        case AzGoto:
-            if(mIsRollOffRoof)
-                break;
-            // nexDome.Abort_Azimuth_MaxDomeII();
-            break;
-        
-        case ShutterOpen:
-        case ShutterClose:
-            // nexDome.Abort_Shutter_MaxDomeII();
-            break;
-    }
+    nexDome.abortCurrentCommand();
 	return SB_OK;
 }
 
@@ -376,14 +354,11 @@ int X2Dome::dapiOpen(void)
 
     if(!mHasShutterControl)
         return SB_OK;
-    /*
-    if(mOpenUpperShutterOnly)
-        err = nexDome.Open_Upper_Shutter_Only_MaxDomeII();
-    else
-        err = nexDome.Open_Shutter_MaxDomeII();
+
+    err = nexDome.openShutter();
     if(err)
         return ERR_CMDFAILED;
-     */
+
     mlastCommand = ShutterOpen;
 	return SB_OK;
 }
@@ -399,7 +374,7 @@ int X2Dome::dapiClose(void)
     if(!mHasShutterControl)
         return SB_OK;
 
-    // err = nexDome.Close_Shutter_MaxDomeII();
+    err = nexDome.closeShutter();
     if(err)
         return ERR_CMDFAILED;
 
@@ -417,14 +392,14 @@ int X2Dome::dapiPark(void)
 
     if(mIsRollOffRoof)
     {
-        // err = nexDome.Close_Shutter_MaxDomeII();
+        err = nexDome.closeShutter();
         if(err)
             return ERR_CMDFAILED;
 
         return SB_OK;
     }
 
-    err = nexDome.Park();
+    err = nexDome.parkDome();
     if(err)
         return ERR_CMDFAILED;
 
@@ -439,7 +414,7 @@ int X2Dome::dapiUnpark(void)
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    err = nexDome.Unpark();
+    err = nexDome.unparkDome();
     if(err)
         return ERR_CMDFAILED;
 
@@ -457,7 +432,7 @@ int X2Dome::dapiFindHome(void)
     if(mIsRollOffRoof)
         return SB_OK;
 
-    // err = nexDome.Home_Azimuth();
+    err = nexDome.goHome();
     if(err)
         return ERR_CMDFAILED;
 
@@ -479,7 +454,7 @@ int X2Dome::dapiIsGotoComplete(bool* pbComplete)
 
     }
 
-    err = nexDome.IsGoToComplete(*pbComplete);
+    err = nexDome.isGoToComplete(*pbComplete);
     if(err)
         return ERR_CMDFAILED;
     return SB_OK;
@@ -499,7 +474,7 @@ int X2Dome::dapiIsOpenComplete(bool* pbComplete)
         return SB_OK;
     }
 
-    err = nexDome.IsOpenComplete(*pbComplete);
+    err = nexDome.isOpenComplete(*pbComplete);
     if(err)
         return ERR_CMDFAILED;
 
@@ -520,7 +495,7 @@ int	X2Dome::dapiIsCloseComplete(bool* pbComplete)
         return SB_OK;
     }
 
-    err = nexDome.IsCloseComplete(*pbComplete);
+    err = nexDome.isCloseComplete(*pbComplete);
     if(err)
         return ERR_CMDFAILED;
 
@@ -541,7 +516,7 @@ int X2Dome::dapiIsParkComplete(bool* pbComplete)
         return SB_OK;
     }
 
-    err = nexDome.IsParkComplete(*pbComplete);
+    err = nexDome.isParkComplete(*pbComplete);
     if(err)
         return ERR_CMDFAILED;
 
@@ -562,7 +537,7 @@ int X2Dome::dapiIsUnparkComplete(bool* pbComplete)
         return SB_OK;
     }
 
-    err = nexDome.IsUnparkComplete(*pbComplete);
+    err = nexDome.isUnparkComplete(*pbComplete);
     if(err)
         return ERR_CMDFAILED;
 
@@ -583,7 +558,7 @@ int X2Dome::dapiIsFindHomeComplete(bool* pbComplete)
         return SB_OK;
     }
 
-    err = nexDome.IsFindHomeComplete(*pbComplete);
+    err = nexDome.isFindHomeComplete(*pbComplete);
     if(err)
         return ERR_CMDFAILED;
 
@@ -602,7 +577,7 @@ int X2Dome::dapiSync(double dAz, double dEl)
     if(mIsRollOffRoof)
         return SB_OK;
 
-    err = nexDome.Sync_Dome(dAz);
+    err = nexDome.syncDome(dAz);
     if (err)
         return ERR_CMDFAILED;
 	return SB_OK;

@@ -21,8 +21,8 @@ CNexDome::CNexDome()
 
     mNbTicksPerRev = 0;
 
-    mCurrentAzPosition = 0;
-    mCurrentElPosition = 0;
+    mCurrentAzPosition = 0.0;
+    mCurrentElPosition = 0.0;
 
     mHomeAz = 0;
 
@@ -31,6 +31,8 @@ CNexDome::CNexDome()
     
     mParked = true;
     mHomed = false;
+
+    mCalibrating  = false;
 }
 
 CNexDome::~CNexDome()
@@ -54,7 +56,7 @@ bool CNexDome::Connect(const char *szPort)
 
     pSerx->purgeTxRx();
 
-    err = GetFirmwareVersion(firmwareVersion, SERIAL_BUFFER_SIZE);
+    err = getFirmwareVersion(firmwareVersion, SERIAL_BUFFER_SIZE);
     if(err)
     {
         bIsConnected = false; // if this fails we're not properly connectiong.
@@ -74,7 +76,7 @@ void CNexDome::Disconnect(void)
     bIsConnected = false;
 }
 
-int CNexDome::ReadResponse(char *respBuffer, int bufferLen)
+int CNexDome::readResponse(char *respBuffer, int bufferLen)
 {
     int err = ND_OK;
     unsigned long nBytesRead = 0;
@@ -101,7 +103,7 @@ int CNexDome::getDomeAz(double &domeAz)
     err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
     
     // read response
-    err = ReadResponse(resp, SERIAL_BUFFER_SIZE);
+    err = readResponse(resp, SERIAL_BUFFER_SIZE);
     if(resp[0] != 'Q')
         err = ND_BAD_CMD_RESPONSE;
     
@@ -124,7 +126,7 @@ int CNexDome::getDomeEl(double &domeEl)
     err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
     
     // read response
-    err = ReadResponse(resp, SERIAL_BUFFER_SIZE);
+    err = readResponse(resp, SERIAL_BUFFER_SIZE);
     if(resp[0] != 'B')
         err = ND_BAD_CMD_RESPONSE;
     
@@ -148,7 +150,7 @@ int CNexDome::getDomeHomeAz(double &Az)
     err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
 
     // read response
-    err = ReadResponse(resp, SERIAL_BUFFER_SIZE);
+    err = readResponse(resp, SERIAL_BUFFER_SIZE);
     if(resp[0] != 'Z')
         err = ND_BAD_CMD_RESPONSE;
 
@@ -172,7 +174,7 @@ int CNexDome::getShutterState(int &state)
     err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
 
     // read response
-    err = ReadResponse(resp, SERIAL_BUFFER_SIZE);
+    err = readResponse(resp, SERIAL_BUFFER_SIZE);
     if(resp[0] != 'U')
         err = ND_BAD_CMD_RESPONSE;
     if(err)
@@ -196,7 +198,7 @@ bool CNexDome::isDomeMoving()
     err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
 
     // read response
-    err = ReadResponse(resp, SERIAL_BUFFER_SIZE);
+    err = readResponse(resp, SERIAL_BUFFER_SIZE);
     if(resp[0] != 'M')
         err = ND_BAD_CMD_RESPONSE;
     if(err)
@@ -210,7 +212,7 @@ bool CNexDome::isDomeMoving()
     return isMoving;
 }
 
-int CNexDome::Sync_Dome(double dAz)
+int CNexDome::syncDome(double dAz)
 {
     int err = 0;
     char buf[SERIAL_BUFFER_SIZE];
@@ -222,27 +224,27 @@ int CNexDome::Sync_Dome(double dAz)
     err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
 
     // read response
-    err = ReadResponse(resp, SERIAL_BUFFER_SIZE);
+    err = readResponse(resp, SERIAL_BUFFER_SIZE);
     if(resp[0] != 'S')
         err = ND_BAD_CMD_RESPONSE;
     return err;
 }
 
-int CNexDome::Park(void)
+int CNexDome::parkDome(void)
 {
     int err;
-    err = Goto_Azimuth(mParkAz);
+    err = gotoAzimuth(mParkAz);
     return err;
 
 }
 
-int CNexDome::Unpark(void)
+int CNexDome::unparkDome(void)
 {
     mParked = false;
     return 0;
 }
 
-int CNexDome::Goto_Azimuth(double newAz)
+int CNexDome::gotoAzimuth(double newAz)
 {
     int err = 0;
     char buf[SERIAL_BUFFER_SIZE];
@@ -253,7 +255,7 @@ int CNexDome::Goto_Azimuth(double newAz)
     err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
     
     // read response
-    err = ReadResponse(resp, SERIAL_BUFFER_SIZE);
+    err = readResponse(resp, SERIAL_BUFFER_SIZE);
     if(resp[0] != 'G')
         err = ND_BAD_CMD_RESPONSE;
     mGotoAz = newAz;
@@ -261,8 +263,44 @@ int CNexDome::Goto_Azimuth(double newAz)
     return err;
 }
 
+int CNexDome::openShutter()
+{
+    int err = 0;
+    char buf[SERIAL_BUFFER_SIZE];
+    char resp[SERIAL_BUFFER_SIZE];
+    unsigned long  nBytesWrite;
 
-int CNexDome::GetFirmwareVersion(char *version, int strMaxLen)
+    snprintf(buf, 20, "d\n");
+    err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
+
+    // read response
+    err = readResponse(resp, SERIAL_BUFFER_SIZE);
+    if(resp[0] != 'D')
+        err = ND_BAD_CMD_RESPONSE;
+
+    return err;
+}
+
+int CNexDome::closeShutter()
+{
+    int err = 0;
+    char buf[SERIAL_BUFFER_SIZE];
+    char resp[SERIAL_BUFFER_SIZE];
+    unsigned long  nBytesWrite;
+
+    snprintf(buf, 20, "e\n");
+    err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
+
+    // read response
+    err = readResponse(resp, SERIAL_BUFFER_SIZE);
+    if(resp[0] != 'D')
+        err = ND_BAD_CMD_RESPONSE;
+
+    return err;
+}
+
+
+int CNexDome::getFirmwareVersion(char *version, int strMaxLen)
 {
     int err = 0;
     char buf[SERIAL_BUFFER_SIZE];
@@ -273,7 +311,7 @@ int CNexDome::GetFirmwareVersion(char *version, int strMaxLen)
     err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
     
     // read response
-    err = ReadResponse(resp, SERIAL_BUFFER_SIZE);
+    err = readResponse(resp, SERIAL_BUFFER_SIZE);
     if(resp[0] != 'V')
         err = ND_BAD_CMD_RESPONSE;
     
@@ -282,11 +320,27 @@ int CNexDome::GetFirmwareVersion(char *version, int strMaxLen)
     
     strncpy(version, &resp[1], strMaxLen);
     return err;
-
 }
 
+int CNexDome::goHome()
+{
+    int err = 0;
+    char buf[SERIAL_BUFFER_SIZE];
+    char resp[SERIAL_BUFFER_SIZE];
+    unsigned long  nBytesWrite;
 
-int CNexDome::IsGoToComplete(bool &complete)
+    snprintf(buf, 20, "h\n");
+    err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
+
+    // read response
+    err = readResponse(resp, SERIAL_BUFFER_SIZE);
+    if(resp[0] != 'H')
+        err = ND_BAD_CMD_RESPONSE;
+
+    return err;
+}
+
+int CNexDome::isGoToComplete(bool &complete)
 {
     int err = 0;
     double domeAz;
@@ -309,7 +363,7 @@ int CNexDome::IsGoToComplete(bool &complete)
     return err;
 }
 
-int CNexDome::IsOpenComplete(bool &complete)
+int CNexDome::isOpenComplete(bool &complete)
 {
     int err=0;
     int state;
@@ -331,7 +385,7 @@ int CNexDome::IsOpenComplete(bool &complete)
     return err;
 }
 
-int CNexDome::IsCloseComplete(bool &complete)
+int CNexDome::isCloseComplete(bool &complete)
 {
     int err=0;
     int state;
@@ -354,7 +408,7 @@ int CNexDome::IsCloseComplete(bool &complete)
 }
 
 
-int CNexDome::IsParkComplete(bool &complete)
+int CNexDome::isParkComplete(bool &complete)
 {
     int err = 0;
     double domeAz;
@@ -381,7 +435,7 @@ int CNexDome::IsParkComplete(bool &complete)
     return err;
 }
 
-int CNexDome::IsUnparkComplete(bool &complete)
+int CNexDome::isUnparkComplete(bool &complete)
 {
     int err=0;
 
@@ -391,15 +445,59 @@ int CNexDome::IsUnparkComplete(bool &complete)
     return err;
 }
 
-int CNexDome::IsFindHomeComplete(bool &complete)
+int CNexDome::isFindHomeComplete(bool &complete)
 {
-    int err=0;
-    unsigned tmpAz;
-    unsigned tmpHomePosition;
+    int err = 0;
+    double domeAz;
 
-    complete = true;
+    if(isDomeMoving()) {
+        mHomed = false;
+        complete = false;
+        return err;
+    }
+
+    getDomeAz(domeAz);
+
+    if (mHomeAz == domeAz)
+    {
+        mHomed = true;
+        complete = true;
+    }
+    else {
+        // we're not moving and we're not at the final destination !!!
+        mHomed = false;
+        err = ERR_CMDFAILED;
+        mParked = false;
+    }
 
     return err;
+}
+
+bool CNexDome::isCalibrating()
+{
+    return mCalibrating;
+}
+
+int CNexDome::abortCurrentCommand()
+{
+    int err = 0;
+    char buf[SERIAL_BUFFER_SIZE];
+    char resp[SERIAL_BUFFER_SIZE];
+    unsigned long  nBytesWrite;
+
+    snprintf(buf, 20, "a\n");
+    err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
+
+    // read response
+    err = readResponse(resp, SERIAL_BUFFER_SIZE);
+    if(resp[0] != 'A')
+        err = ND_BAD_CMD_RESPONSE;
+
+    if(err)
+        return err;
+
+    return err;
+
 }
 
 #pragma mark - Getter / Setter
@@ -420,10 +518,23 @@ double CNexDome::getHomeAz()
     return mHomeAz;
 }
 
-void CNexDome::setHomeAz(double dAz)
+int CNexDome::setHomeAz(double dAz)
 {
+    int err = 0;
+    char buf[SERIAL_BUFFER_SIZE];
+    char resp[SERIAL_BUFFER_SIZE];
+    unsigned long  nBytesWrite;
+
+    snprintf(buf, 20, "j %3.2f\n", dAz);
+    err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
+
+    // read response
+    err = readResponse(resp, SERIAL_BUFFER_SIZE);
+    if(resp[0] != 'J')
+        err = ND_BAD_CMD_RESPONSE;
     mHomeAz = dAz;
 
+    return err;
 }
 
 
@@ -433,12 +544,23 @@ double CNexDome::getParkAz()
 
 }
 
-void CNexDome::setParkAz(double dAz)
+int CNexDome::setParkAz(double dAz)
 {
-    int dir;
+    int err = 0;
+    char buf[SERIAL_BUFFER_SIZE];
+    char resp[SERIAL_BUFFER_SIZE];
+    unsigned long  nBytesWrite;
+
+    snprintf(buf, 20, "l %3.2f\n", dAz);
+    err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
+
+    // read response
+    err = readResponse(resp, SERIAL_BUFFER_SIZE);
+    if(resp[0] != 'L')
+        err = ND_BAD_CMD_RESPONSE;
     mParkAz = dAz;
 
-
+    return err;
 }
 
 bool CNexDome::getCloseShutterBeforePark()
@@ -458,7 +580,7 @@ double CNexDome::getCurrentAz()
 
 double CNexDome::getCurrentEl()
 {
-    return mCurrentAzPosition;
+    return mCurrentElPosition;
 }
 
 void CNexDome::setCurrentAz(double dAz)
@@ -471,3 +593,7 @@ char * CNexDome::getVersion()
     return firmwareVersion;
 }
 
+void CNexDome::setShutterOnly(bool bMode)
+{
+    mShutterOnly = bMode;
+}

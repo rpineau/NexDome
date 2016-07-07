@@ -32,29 +32,34 @@ public:
     void        SetSerxPointer(SerXInterface *p) { pSerx = p; }
 
     // Dome commands
-    int Sync_Dome(double dAz);
-    int Park(void);
-    int Unpark(void);
-    int Goto_Azimuth(double newAz);
-    int GetFirmwareVersion(char *version, int strMaxLen);
+    int syncDome(double dAz);
+    int parkDome(void);
+    int unparkDome(void);
+    int gotoAzimuth(double newAz);
+    int openShutter();
+    int closeShutter();
+    int getFirmwareVersion(char *version, int strMaxLen);
+    int goHome();
     
     // command complete functions
-    int IsGoToComplete(bool &complete);
-    int IsOpenComplete(bool &complete);
-    int IsCloseComplete(bool &complete);
-    int IsParkComplete(bool &complete);
-    int IsUnparkComplete(bool &complete);
-    int IsFindHomeComplete(bool &complete);
-    
+    int isGoToComplete(bool &complete);
+    int isOpenComplete(bool &complete);
+    int isCloseComplete(bool &complete);
+    int isParkComplete(bool &complete);
+    int isUnparkComplete(bool &complete);
+    int isFindHomeComplete(bool &complete);
+    bool isCalibrating();
+    int abortCurrentCommand();
+
     // getter/setter
     int getNbTicksPerRev();
     void setNbTicksPerRev(int nbTicksPerRev);
 
     double getHomeAz();
-    void setHomeAz(double dAz);
+    int setHomeAz(double dAz);
 
     double getParkAz();
-    void setParkAz(double dAz);
+    int setParkAz(double dAz);
 
     bool getCloseShutterBeforePark();
     void setCloseShutterBeforePark(bool close);
@@ -65,10 +70,11 @@ public:
     void setCurrentAz(double dAz);
 
     char* getVersion();
-    
+    void setShutterOnly(bool bMode);
+
 protected:
 
-    int             ReadResponse(char *respBuffer, int bufferLen);
+    int             readResponse(char *respBuffer, int bufferLen);
     int             getDomeAz(double &domeAz);
     int             getDomeEl(double &domeEl);
     int             getDomeHomeAz(double &Az);
@@ -97,7 +103,9 @@ protected:
     SerXInterface   *pSerx;
     
     char            firmwareVersion[SERIAL_BUFFER_SIZE];
-    
+    bool            mCalibrating;
+    bool            mShutterOnly; // roll off roof so the arduino is running the shutter firmware only.
+
 };
 
 #endif
