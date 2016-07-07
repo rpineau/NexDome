@@ -22,6 +22,7 @@ CNexDome::CNexDome()
     mNbTicksPerRev = 0;
 
     mCurrentAzPosition = 0;
+    mCurrentElPosition = 0;
 
     mHomeAz = 0;
 
@@ -51,16 +52,14 @@ bool CNexDome::Connect(const char *szPort)
     if(!bIsConnected)
         return false;
 
-    bIsConnected = GetFirmwareVersion(firmwareVersion, SERIAL_BUFFER_SIZE);
     pSerx->purgeTxRx();
 
-
-        if(err)
-        {
-            bIsConnected = false; // if this fails we're not properly connectiong.
-            pSerx->close();
-        }
-
+    err = GetFirmwareVersion(firmwareVersion, SERIAL_BUFFER_SIZE);
+    if(err)
+    {
+        bIsConnected = false; // if this fails we're not properly connectiong.
+        pSerx->close();
+    }
     return bIsConnected;
 }
 
@@ -69,6 +68,7 @@ void CNexDome::Disconnect(void)
 {
     if(bIsConnected)
     {
+        pSerx->purgeTxRx();
         pSerx->close();
     }
     bIsConnected = false;
@@ -80,7 +80,7 @@ int CNexDome::ReadResponse(char *respBuffer, int bufferLen)
     unsigned long nBytesRead = 0;
     memset(respBuffer, 0, (size_t) bufferLen);
     // Look for a CR  character, until time out occurs or MAX_BUFFER characters was read
-    while (*respBuffer != '\n' && nBytesRead < bufferLen )
+    while (*respBuffer != '\n' || nBytesRead < bufferLen )
     {
         err = pSerx->readFile(respBuffer, 1, nBytesRead, MAX_TIMEOUT);
         if (nBytesRead !=1) // timeout
@@ -98,7 +98,7 @@ int CNexDome::getDomeAz(double &domeAz)
     unsigned long  nBytesWrite;
     
     snprintf(buf, 20, "q\n");
-    err = pSerx->writeFile(buf, 20, nBytesWrite);
+    err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
     
     // read response
     err = ReadResponse(resp, SERIAL_BUFFER_SIZE);
@@ -121,7 +121,7 @@ int CNexDome::getDomeEl(double &domeEl)
     unsigned long  nBytesWrite;
     
     snprintf(buf, 20, "b\n");
-    err = pSerx->writeFile(buf, 20, nBytesWrite);
+    err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
     
     // read response
     err = ReadResponse(resp, SERIAL_BUFFER_SIZE);
@@ -137,6 +137,79 @@ int CNexDome::getDomeEl(double &domeEl)
 }
 
 
+int CNexDome::getDomeHomeAz(double &Az)
+{
+    int err = 0;
+    char buf[SERIAL_BUFFER_SIZE];
+    char resp[SERIAL_BUFFER_SIZE];
+    unsigned long  nBytesWrite;
+
+    snprintf(buf, 20, "z\n");
+    err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
+
+    // read response
+    err = ReadResponse(resp, SERIAL_BUFFER_SIZE);
+    if(resp[0] != 'Z')
+        err = ND_BAD_CMD_RESPONSE;
+
+    if(err)
+        return err;
+
+    // convert Az string to float
+    Az = atof(&resp[1]);
+    return err;
+}
+
+
+int CNexDome::getShutterState(int &state)
+{
+    int err = 0;
+    char buf[SERIAL_BUFFER_SIZE];
+    char resp[SERIAL_BUFFER_SIZE];
+    unsigned long  nBytesWrite;
+
+    snprintf(buf, 20, "u\n");
+    err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
+
+    // read response
+    err = ReadResponse(resp, SERIAL_BUFFER_SIZE);
+    if(resp[0] != 'U')
+        err = ND_BAD_CMD_RESPONSE;
+    if(err)
+        return err;
+
+    state = atoi(&resp[1]);
+
+    return err;
+}
+
+bool CNexDome::isDomeMoving()
+{
+    bool isMoving;
+    int tmp;
+    int err = 0;
+    char buf[SERIAL_BUFFER_SIZE];
+    char resp[SERIAL_BUFFER_SIZE];
+    unsigned long  nBytesWrite;
+
+    snprintf(buf, 20, "m\n");
+    err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
+
+    // read response
+    err = ReadResponse(resp, SERIAL_BUFFER_SIZE);
+    if(resp[0] != 'M')
+        err = ND_BAD_CMD_RESPONSE;
+    if(err)
+        return false;   // Not really correct but will do for now.
+
+    isMoving = false;
+    tmp = atoi(&resp[1]);
+    if(tmp)
+        isMoving = true;
+
+    return isMoving;
+}
+
 int CNexDome::Sync_Dome(double dAz)
 {
     int err = 0;
@@ -146,7 +219,7 @@ int CNexDome::Sync_Dome(double dAz)
 
     mCurrentAzPosition = dAz;
     snprintf(buf, 20, "s %3.2f\n", dAz);
-    err = pSerx->writeFile(buf, 20, nBytesWrite);
+    err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
 
     // read response
     err = ReadResponse(resp, SERIAL_BUFFER_SIZE);
@@ -159,11 +232,6 @@ int CNexDome::Park(void)
 {
     int err;
     err = Goto_Azimuth(mParkAz);
-    if(!err)
-        mParked = true;
-    else
-        mParked = false;
-    
     return err;
 
 }
@@ -182,12 +250,13 @@ int CNexDome::Goto_Azimuth(double newAz)
     unsigned long  nBytesWrite;
 
     snprintf(buf, 20, "g %3.2f\n", newAz);
-    err = pSerx->writeFile(buf, 20, nBytesWrite);
+    err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
     
     // read response
     err = ReadResponse(resp, SERIAL_BUFFER_SIZE);
     if(resp[0] != 'G')
         err = ND_BAD_CMD_RESPONSE;
+    mGotoAz = newAz;
 
     return err;
 }
@@ -201,7 +270,7 @@ int CNexDome::GetFirmwareVersion(char *version, int strMaxLen)
     unsigned long  nBytesWrite;
     
     snprintf(buf, 20, "v\n");
-    err = pSerx->writeFile(buf, 20, nBytesWrite);
+    err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
     
     // read response
     err = ReadResponse(resp, SERIAL_BUFFER_SIZE);
@@ -216,52 +285,26 @@ int CNexDome::GetFirmwareVersion(char *version, int strMaxLen)
 
 }
 
-/*
-	Convert pdAz to number of ticks from home and direction.
-
- */
-void CNexDome::AzToTicks(double pdAz, int &dir, int &ticks)
-{
-    dir = 0;
-
-    ticks = floor(0.5 + (pdAz - mHomeAz) * mNbTicksPerRev / 360.0);
-    while (ticks > mNbTicksPerRev) ticks -= mNbTicksPerRev;
-    while (ticks < 0) ticks += mNbTicksPerRev;
-
-    // find the dirrection with the shortest path
-    if( (mCurrentAzPosition < pdAz) && (mCurrentAzPosition <(pdAz -180)))
-    {
-        dir = 1;
-    }
-    else if (mCurrentAzPosition > pdAz)
-    {
-        dir = 1;
-    }
-
-}
-
-
-/*
-	Convert ticks from home to Az
- 
-*/
-
-void CNexDome::TicksToAz(int ticks, double &pdAz)
-{
-    
-    pdAz = mHomeAzInTicks + ticks * 360.0 / mNbTicksPerRev;
-    while (pdAz < 0) pdAz += 360;
-    while (pdAz >= 360) pdAz -= 360;
-}
-
 
 int CNexDome::IsGoToComplete(bool &complete)
 {
     int err = 0;
-    unsigned tmpAz;
-    unsigned tmpHomePosition;
+    double domeAz;
 
-    complete = true;
+    if(isDomeMoving()) {
+        complete = false;
+        return err;
+    }
+
+    getDomeAz(domeAz);
+
+    if (mGotoAz == domeAz)
+        complete = true;
+    else {
+        // we're not moving and we're not at the final destination !!!
+        complete = false;
+        err = ERR_CMDFAILED;
+    }
 
     return err;
 }
@@ -269,10 +312,21 @@ int CNexDome::IsGoToComplete(bool &complete)
 int CNexDome::IsOpenComplete(bool &complete)
 {
     int err=0;
-    unsigned tmpAz;
-    unsigned tmpHomePosition;
+    int state;
 
-    complete = true;
+    err = getShutterState(state);
+    if(err)
+        return ERR_CMDFAILED;
+    if(state == OPEN){
+        mShutterOpened = true;
+        complete = true;
+        mCurrentElPosition = 90.0;
+    }
+    else {
+        mShutterOpened = false;
+        complete = false;
+        mCurrentElPosition = 0.0;
+    }
 
     return err;
 }
@@ -280,10 +334,21 @@ int CNexDome::IsOpenComplete(bool &complete)
 int CNexDome::IsCloseComplete(bool &complete)
 {
     int err=0;
-    unsigned tmpAz;
-    unsigned tmpHomePosition;
+    int state;
 
-    complete = true;
+    err = getShutterState(state);
+    if(err)
+        return ERR_CMDFAILED;
+    if(state == CLOSED){
+        mShutterOpened = false;
+        complete = true;
+        mCurrentElPosition = 0.0;
+    }
+    else {
+        mShutterOpened = true;
+        complete = false;
+        mCurrentElPosition = 90.0;
+    }
 
     return err;
 }
@@ -291,11 +356,27 @@ int CNexDome::IsCloseComplete(bool &complete)
 
 int CNexDome::IsParkComplete(bool &complete)
 {
-    int err=0;
-    unsigned tmpAz;
-    unsigned tmpHomePosition;
+    int err = 0;
+    double domeAz;
 
-    complete = true;
+    if(isDomeMoving()) {
+        complete = false;
+        return err;
+    }
+
+    getDomeAz(domeAz);
+
+    if (mParkAz == domeAz)
+    {
+        mParked = true;
+        complete = true;
+    }
+    else {
+        // we're not moving and we're not at the final destination !!!
+        complete = false;
+        err = ERR_CMDFAILED;
+        mParked = false;
+    }
 
     return err;
 }
@@ -303,9 +384,8 @@ int CNexDome::IsParkComplete(bool &complete)
 int CNexDome::IsUnparkComplete(bool &complete)
 {
     int err=0;
-    unsigned tmpAz;
-    unsigned tmpHomePosition;
 
+    mParked = false;
     complete = true;
 
     return err;
@@ -357,7 +437,6 @@ void CNexDome::setParkAz(double dAz)
 {
     int dir;
     mParkAz = dAz;
-    AzToTicks(dAz, dir, (int &)mParkAzInTicks);
 
 
 }
@@ -373,6 +452,11 @@ void CNexDome::setCloseShutterBeforePark(bool close)
 }
 
 double CNexDome::getCurrentAz()
+{
+    return mCurrentAzPosition;
+}
+
+double CNexDome::getCurrentEl()
 {
     return mCurrentAzPosition;
 }

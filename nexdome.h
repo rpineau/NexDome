@@ -16,7 +16,8 @@
 
 // error codes
 // Error code
-enum NExDomeErrors {ND_OK=0, ND_CANT_CONNECT, ND_BAD_CMD_RESPONSE};
+enum NexDomeErrors {ND_OK=0, ND_CANT_CONNECT, ND_BAD_CMD_RESPONSE, COMMAND_FAILED};
+enum NexDomeShutterState {OPEN=1, OPENING, CLOSED, CLOSING, SHUTTER_ERROR};
 
 class CNexDome
 {
@@ -37,10 +38,6 @@ public:
     int Goto_Azimuth(double newAz);
     int GetFirmwareVersion(char *version, int strMaxLen);
     
-    // convertion functions
-    void AzToTicks(double pdAz, int &dir, int &ticks);
-    void TicksToAz(int ticks, double &pdAz);
-
     // command complete functions
     int IsGoToComplete(bool &complete);
     int IsOpenComplete(bool &complete);
@@ -63,6 +60,8 @@ public:
     void setCloseShutterBeforePark(bool close);
 
     double getCurrentAz();
+    double getCurrentEl();
+
     void setCurrentAz(double dAz);
 
     char* getVersion();
@@ -72,7 +71,11 @@ protected:
     int             ReadResponse(char *respBuffer, int bufferLen);
     int             getDomeAz(double &domeAz);
     int             getDomeEl(double &domeEl);
-    
+    int             getDomeHomeAz(double &Az);
+    int             getShutterState(int &state);
+
+    bool            isDomeMoving();
+
     bool            bIsConnected;
 
     bool            mHomed;
@@ -82,16 +85,15 @@ protected:
     
     unsigned        mNbTicksPerRev;
 
-    unsigned        mHomeAzInTicks;
     double          mHomeAz;
     
-    unsigned        mParkAzInTicks;
     double          mParkAz;
 
-    unsigned        mCurrentAzPositionInTicks;
     double          mCurrentAzPosition;
+    double          mCurrentElPosition;
 
-    unsigned        mGotoTicks;
+    double          mGotoAz;
+    
     SerXInterface   *pSerx;
     
     char            firmwareVersion[SERIAL_BUFFER_SIZE];

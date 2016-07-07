@@ -89,6 +89,7 @@ int X2Dome::establishLink(void)
 int X2Dome::terminateLink(void)					
 {
     X2MutexLocker ml(GetMutex());
+    nexDome.Disconnect();
 	m_bLinked = false;
 	return SB_OK;
 }
@@ -300,12 +301,6 @@ double	X2Dome::driverInfoVersion(void) const
 
 int X2Dome::dapiGetAzEl(double* pdAz, double* pdEl)
 {
-    int err;
-
-    unsigned tmpAzInTicks;
-    double tmpAz;
-    unsigned tmpHomePosition;
-
     X2MutexLocker ml(GetMutex());
 
     if(!m_bLinked)
@@ -314,18 +309,11 @@ int X2Dome::dapiGetAzEl(double* pdAz, double* pdEl)
     if(mIsRollOffRoof)
     {
         *pdAz = nexDome.getCurrentAz();
-        *pdEl = 0.0f;
+        *pdEl = nexDome.getCurrentEl();
         return SB_OK;
     }
 
-    *pdEl=0.0f;
-    // returns number of ticks from home position for tmpAzInTicks
-    // err = maxDome.Status_MaxDomeII(tmpShutterStatus, tmpAzimuthStatus, tmpAzInTicks, tmpHomePosition);
-    if(err)
-        return ERR_CMDFAILED;
-    
-    nexDome.TicksToAz(tmpAzInTicks, tmpAz);
-    *pdAz = tmpAz;
+    *pdEl = nexDome.getCurrentEl();
     return SB_OK;
 }
 
@@ -344,7 +332,7 @@ int X2Dome::dapiGotoAzEl(double dAz, double dEl)
         return SB_OK;
     }
 
-    // err = nexDome.Goto_Azimuth_MaxDomeII(dAz);
+    err = nexDome.Goto_Azimuth(dAz);
 
     if(err)
         return ERR_CMDFAILED;
