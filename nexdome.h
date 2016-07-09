@@ -78,6 +78,7 @@ protected:
     int             getDomeAz(double &domeAz);
     int             getDomeEl(double &domeEl);
     int             getDomeHomeAz(double &Az);
+    int             getDomeParkAz(double &Az);
     int             getShutterState(int &state);
     bool            isDomeMoving();
     int             domeCommand(const char *cmd, char *result, char respCmdCode, int resultMaxLen);

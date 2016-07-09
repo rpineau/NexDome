@@ -26,6 +26,7 @@ CNexDome::CNexDome()
     mCurrentElPosition = 0.0;
 
     mHomeAz = 0;
+    mParkAz = 0;
 
     mCloseShutterBeforePark = true;
     mShutterOpened = false;
@@ -126,7 +127,7 @@ int CNexDome::getDomeAz(double &domeAz)
     if(err)
         return err;
     
-    // convert Az string to float
+    // convert Az string to double
     domeAz = atof(resp);
     return err;
 }
@@ -140,7 +141,7 @@ int CNexDome::getDomeEl(double &domeEl)
     if(err)
         return err;
     
-    // convert El string to float
+    // convert El string to double
     domeEl = atof(resp);
     return err;
 }
@@ -155,7 +156,21 @@ int CNexDome::getDomeHomeAz(double &Az)
     if(err)
         return err;
 
-    // convert Az string to float
+    // convert Az string to double
+    Az = atof(resp);
+    return err;
+}
+
+int CNexDome::getDomeParkAz(double &Az)
+{
+    int err = 0;
+    char resp[SERIAL_BUFFER_SIZE];
+
+    err = domeCommand("n\n", resp, 'N', SERIAL_BUFFER_SIZE);
+    if(err)
+        return err;
+
+    // convert Az string to double
     Az = atof(resp);
     return err;
 }
@@ -351,8 +366,9 @@ int CNexDome::isParkComplete(bool &complete)
     else {
         // we're not moving and we're not at the final destination !!!
         complete = false;
-        err = ERR_CMDFAILED;
+        mHomed = false;
         mParked = false;
+        err = ERR_CMDFAILED;
     }
 
     return err;
@@ -388,9 +404,10 @@ int CNexDome::isFindHomeComplete(bool &complete)
     }
     else {
         // we're not moving and we're not at the final destination !!!
+        complete = false;
         mHomed = false;
-        err = ERR_CMDFAILED;
         mParked = false;
+        err = ERR_CMDFAILED;
     }
 
     return err;
@@ -428,10 +445,9 @@ int CNexDome::setHomeAz(double dAz)
 {
     int err = 0;
     char buf[SERIAL_BUFFER_SIZE];
-    char resp[SERIAL_BUFFER_SIZE];
 
-    snprintf(buf, 20, "j %3.2f\n", dAz);
-    err = domeCommand(buf, resp, 'J', SERIAL_BUFFER_SIZE);
+    snprintf(buf, SERIAL_BUFFER_SIZE, "j %3.2f\n", dAz);
+    err = domeCommand(buf, NULL, 'J', SERIAL_BUFFER_SIZE);
     if(err)
         return err;
 
@@ -451,10 +467,9 @@ int CNexDome::setParkAz(double dAz)
 {
     int err = 0;
     char buf[SERIAL_BUFFER_SIZE];
-    char resp[SERIAL_BUFFER_SIZE];
 
-    snprintf(buf, 20, "l %3.2f\n", dAz);
-    err = domeCommand(buf, resp, 'L', SERIAL_BUFFER_SIZE);
+    snprintf(buf, SERIAL_BUFFER_SIZE, "l %3.2f\n", dAz);
+    err = domeCommand(buf, NULL, 'L', SERIAL_BUFFER_SIZE);
     if(err)
         return err;
 
