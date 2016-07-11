@@ -28,7 +28,6 @@ CNexDome::CNexDome()
     mHomeAz = 0;
     mParkAz = 0;
 
-    mCloseShutterBeforePark = true;
     mShutterOpened = false;
     
     mParked = true;
@@ -209,7 +208,7 @@ bool CNexDome::isDomeMoving()
     return isMoving;
 }
 
-int CNexDome::syncDome(double dAz)
+int CNexDome::syncDome(double dAz, double El)
 {
     int err = 0;
     char buf[SERIAL_BUFFER_SIZE];
@@ -217,6 +216,7 @@ int CNexDome::syncDome(double dAz)
     mCurrentAzPosition = dAz;
     snprintf(buf, SERIAL_BUFFER_SIZE, "s %3.2f\n", dAz);
     err = domeCommand(buf, NULL, 'S', SERIAL_BUFFER_SIZE);
+    // TODO : Also set Elevation when supported by the firware.
     return err;
 }
 
@@ -478,15 +478,6 @@ int CNexDome::setParkAz(double dAz)
     return err;
 }
 
-bool CNexDome::getCloseShutterBeforePark()
-{
-    return mCloseShutterBeforePark;
-}
-
-void CNexDome::setCloseShutterBeforePark(bool close)
-{
-    mCloseShutterBeforePark = close;
-}
 
 double CNexDome::getCurrentAz()
 {

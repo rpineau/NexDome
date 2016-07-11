@@ -43,9 +43,6 @@ X2Dome::X2Dome(const char* pszSelection,
         nexDome.setHomeAz( m_pIniUtil->readDouble(PARENT_KEY, CHILD_KEY_HOME_AZ, 0) );
         nexDome.setParkAz( m_pIniUtil->readDouble(PARENT_KEY, CHILD_KEY_PARK_AZ, 180) );
         mHasShutterControl = m_pIniUtil->readInt(PARENT_KEY, CHILD_KEY_SHUTTER_CONTROL, true);
-        mOpenUpperShutterOnly = m_pIniUtil->readInt(PARENT_KEY, CHILD_KEY_SHUTTER_OPEN_UPPER_ONLY, false);
-        mIsRollOffRoof = m_pIniUtil->readInt(PARENT_KEY, CHILD_KEY_ROOL_OFF_ROOF, false);
-        nexDome.setCloseShutterBeforePark( ! m_pIniUtil->readInt(PARENT_KEY, CHILD_KEY_SHUTTER_OPER_ANY_Az, false)); // if we can operate at any Az then CloseShutterBeforePark is false
     }
 }
 
@@ -83,8 +80,8 @@ int X2Dome::establishLink(void)
         return ERR_COMMNOLINK;
 
     m_bLinked = true;
-    if(mIsRollOffRoof)
-        nexDome.setShutterOnly(true);
+    // if(mIsRollOffRoof)
+    //    nexDome.setShutterOnly(true);
 
 	return SB_OK;
 }
@@ -147,38 +144,11 @@ int X2Dome::execModalSettingsDialog()
     if(mHasShutterControl)
     {
         dx->setChecked("hasShutterCtrl",true);
-        dx->setEnabled("radioButtonShutterAnyAz", true);
-        dx->setEnabled("isRoolOffRoof", true);
-        dx->setEnabled("radioButtonShutterAnyAz", true);
-        dx->setEnabled("groupBoxShutter", true);
 
-        if(mOpenUpperShutterOnly)
-            dx->setChecked("openUpperShutterOnly", true);
-        else
-            dx->setChecked("openUpperShutterOnly", false);
-
-        if(nexDome.getCloseShutterBeforePark())
-            dx->setChecked("radioButtonShutterPark", true);
-        else
-            dx->setChecked("radioButtonShutterAnyAz", true);
-
-        if (mIsRollOffRoof)
-            dx->setChecked("isRoolOffRoof",true);
-        else
-            dx->setChecked("isRoolOffRoof",false);
     }
     else
     {
         dx->setChecked("hasShutterCtrl",false);
-        dx->setChecked("radioButtonShutterAnyAz",false);
-        dx->setChecked("openUpperShutterOnly",false);
-        dx->setChecked("isRoolOffRoof",false);
-
-        dx->setEnabled("openUpperShutterOnly", false);
-        dx->setEnabled("isRoolOffRoof", false);
-        dx->setEnabled("groupBoxShutter", false);
-        dx->setEnabled("radioButtonShutterAnyAz", false);
-        
     }
     
     // disable Auto Calibrate for now
@@ -200,16 +170,6 @@ int X2Dome::execModalSettingsDialog()
         operateAnyAz = dx->isChecked("radioButtonShutterAnyAz");
         dx->propertyInt("ticksPerRev", "value", nTicksPerRev);
         mHasShutterControl = dx->isChecked("hasShutterCtrl");
-        if(mHasShutterControl)
-        {
-            mOpenUpperShutterOnly = dx->isChecked("openUpperShutterOnly");
-            mIsRollOffRoof = dx->isChecked("isRoolOffRoof");
-        }
-        else
-        {
-            mOpenUpperShutterOnly = false;
-            mIsRollOffRoof = false;
-        }
 
         if(m_bLinked)
         {
@@ -223,10 +183,6 @@ int X2Dome::execModalSettingsDialog()
         nErr |= m_pIniUtil->writeDouble(PARENT_KEY, CHILD_KEY_HOME_AZ, dHomeAz);
         nErr |= m_pIniUtil->writeDouble(PARENT_KEY, CHILD_KEY_PARK_AZ, dParkAz);
         nErr |= m_pIniUtil->writeInt(PARENT_KEY, CHILD_KEY_SHUTTER_CONTROL, mHasShutterControl);
-        nErr |= m_pIniUtil->writeInt(PARENT_KEY, CHILD_KEY_SHUTTER_OPEN_UPPER_ONLY, mOpenUpperShutterOnly);
-        nErr |= m_pIniUtil->writeInt(PARENT_KEY, CHILD_KEY_ROOL_OFF_ROOF, mIsRollOffRoof);
-        nErr |= m_pIniUtil->writeInt(PARENT_KEY, CHILD_KEY_SHUTTER_OPER_ANY_Az, operateAnyAz);
-        
     }
     return nErr;
 
@@ -328,11 +284,9 @@ int X2Dome::dapiGotoAzEl(double dAz, double dEl)
 
     if(err)
         return ERR_CMDFAILED;
+
     else
-    {
-        mlastCommand = AzGoto;
         return SB_OK;
-    }
 }
 
 int X2Dome::dapiAbort(void)
@@ -359,7 +313,6 @@ int X2Dome::dapiOpen(void)
     if(err)
         return ERR_CMDFAILED;
 
-    mlastCommand = ShutterOpen;
 	return SB_OK;
 }
 
@@ -378,7 +331,6 @@ int X2Dome::dapiClose(void)
     if(err)
         return ERR_CMDFAILED;
 
-    mlastCommand = ShutterClose;
 	return SB_OK;
 }
 
@@ -390,13 +342,11 @@ int X2Dome::dapiPark(void)
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    if(mIsRollOffRoof)
+    if(mHasShutterControl)
     {
         err = nexDome.closeShutter();
         if(err)
             return ERR_CMDFAILED;
-
-        return SB_OK;
     }
 
     err = nexDome.parkDome();
@@ -429,9 +379,6 @@ int X2Dome::dapiFindHome(void)
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    if(mIsRollOffRoof)
-        return SB_OK;
-
     err = nexDome.goHome();
     if(err)
         return ERR_CMDFAILED;
@@ -446,13 +393,6 @@ int X2Dome::dapiIsGotoComplete(bool* pbComplete)
 
     if(!m_bLinked)
         return ERR_NOLINK;
-
-    if(mIsRollOffRoof)
-    {
-        *pbComplete = true;
-        return SB_OK;
-
-    }
 
     err = nexDome.isGoToComplete(*pbComplete);
     if(err)
@@ -510,12 +450,6 @@ int X2Dome::dapiIsParkComplete(bool* pbComplete)
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    if(mIsRollOffRoof)
-    {
-        *pbComplete = true;
-        return SB_OK;
-    }
-
     err = nexDome.isParkComplete(*pbComplete);
     if(err)
         return ERR_CMDFAILED;
@@ -531,12 +465,6 @@ int X2Dome::dapiIsUnparkComplete(bool* pbComplete)
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    if(mIsRollOffRoof)
-    {
-        *pbComplete = true;
-        return SB_OK;
-    }
-
     err = nexDome.isUnparkComplete(*pbComplete);
     if(err)
         return ERR_CMDFAILED;
@@ -551,12 +479,6 @@ int X2Dome::dapiIsFindHomeComplete(bool* pbComplete)
 
     if(!m_bLinked)
         return ERR_NOLINK;
-
-    if(mIsRollOffRoof)
-    {
-        *pbComplete = true;
-        return SB_OK;
-    }
 
     err = nexDome.isFindHomeComplete(*pbComplete);
     if(err)
@@ -574,10 +496,7 @@ int X2Dome::dapiSync(double dAz, double dEl)
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    if(mIsRollOffRoof)
-        return SB_OK;
-
-    err = nexDome.syncDome(dAz);
+    err = nexDome.syncDome(dAz, dEl);
     if (err)
         return ERR_CMDFAILED;
 	return SB_OK;

@@ -32,7 +32,7 @@ public:
     void        SetSerxPointer(SerXInterface *p) { pSerx = p; }
 
     // Dome commands
-    int syncDome(double dAz);
+    int syncDome(double dAz, double El);
     int parkDome(void);
     int unparkDome(void);
     int gotoAzimuth(double newAz);
@@ -61,9 +61,6 @@ public:
     double getParkAz();
     int setParkAz(double dAz);
 
-    bool getCloseShutterBeforePark();
-    void setCloseShutterBeforePark(bool close);
-
     double getCurrentAz();
     double getCurrentEl();
 
@@ -86,7 +83,6 @@ protected:
     bool            bIsConnected;
     bool            mHomed;
     bool            mParked;
-    bool            mCloseShutterBeforePark;
     bool            mShutterOpened;
     
     unsigned        mNbTicksPerRev;

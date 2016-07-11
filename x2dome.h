@@ -150,8 +150,7 @@ private:
 	int         m_nPrivateISIndex;
 	int         m_bLinked;
     CNexDome    nexDome;
-    int         mlastCommand;
     bool        mHasShutterControl;
     bool        mOpenUpperShutterOnly;
-    bool        mIsRollOffRoof;
+    // bool        mIsRollOffRoof;
 };
