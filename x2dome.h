@@ -62,7 +62,7 @@ public:
 	/*!\name DriverRootInterface Implementation
 	See DriverRootInterface.*/
 	//@{ 
-	virtual DeviceType							deviceType(void)							  {return DriverRootInterface::DT_DOME;}
+	virtual DeviceType							deviceType(void) {return DriverRootInterface::DT_DOME;}
 	virtual int									queryAbstraction(const char* pszName, void** ppVal);
 	//@} 
 

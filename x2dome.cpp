@@ -42,7 +42,7 @@ X2Dome::X2Dome(const char* pszSelection,
         nexDome.setNbTicksPerRev( m_pIniUtil->readInt(PARENT_KEY, CHILD_KEY_TICKS_PER_REV, 0) );
         nexDome.setHomeAz( m_pIniUtil->readDouble(PARENT_KEY, CHILD_KEY_HOME_AZ, 0) );
         nexDome.setParkAz( m_pIniUtil->readDouble(PARENT_KEY, CHILD_KEY_PARK_AZ, 180) );
-        mHasShutterControl = m_pIniUtil->readInt(PARENT_KEY, CHILD_KEY_SHUTTER_CONTROL, true);
+        mHasShutterControl = m_pIniUtil->readInt(PARENT_KEY, CHILD_KEY_SHUTTER_CONTROL, false);
     }
 }
 
@@ -217,25 +217,36 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
 
 void X2Dome::deviceInfoNameShort(BasicStringInterface& str) const					
 {
+    printf("deviceInfoNameShort\n");
 	str = "NexDome";
 }
 void X2Dome::deviceInfoNameLong(BasicStringInterface& str) const					
 {
+    printf("deviceInfoNameLong\n");
     str = "NexDome Dome Control System";
 }
 void X2Dome::deviceInfoDetailedDescription(BasicStringInterface& str) const		
 {
+    printf("deviceInfoDetailedDescription\n");
     str = "NexDome Dome Control System by Rodolphe Pineau";
 }
  void X2Dome::deviceInfoFirmwareVersion(BasicStringInterface& str)					
 {
-    char cFirmware[SERIAL_BUFFER_SIZE];
-    nexDome.getFirmwareVersion(cFirmware, SERIAL_BUFFER_SIZE);
-    str = cFirmware;
+    printf("deviceInfoFirmwareVersion\n");
+    if(m_bLinked) {
+        char cFirmware[SERIAL_BUFFER_SIZE];
+        nexDome.getFirmwareVersion(cFirmware, SERIAL_BUFFER_SIZE);
+        str = cFirmware;
+
+    }
+    else
+        str = "N/A";
 }
 
 void X2Dome::deviceInfoModel(BasicStringInterface& str)
 {
+    printf("deviceInfoModel\n");
+
     str = "NexDome";
 }
 

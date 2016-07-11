@@ -16,7 +16,7 @@
 
 // error codes
 // Error code
-enum NexDomeErrors {ND_OK=0, ND_CANT_CONNECT, ND_BAD_CMD_RESPONSE, COMMAND_FAILED};
+enum NexDomeErrors {ND_OK=0, NOT_CONNECTED, ND_CANT_CONNECT, ND_BAD_CMD_RESPONSE, COMMAND_FAILED};
 enum NexDomeShutterState {OPEN=1, OPENING, CLOSED, CLOSING, SHUTTER_ERROR};
 
 class CNexDome

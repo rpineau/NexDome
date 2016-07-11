@@ -122,6 +122,9 @@ int CNexDome::getDomeAz(double &domeAz)
     int err = 0;
     char resp[SERIAL_BUFFER_SIZE];
 
+    if(!bIsConnected)
+        return NOT_CONNECTED;
+
     err = domeCommand("q\n", resp, 'Q', SERIAL_BUFFER_SIZE);
     if(err)
         return err;
@@ -135,6 +138,9 @@ int CNexDome::getDomeEl(double &domeEl)
 {
     int err = 0;
     char resp[SERIAL_BUFFER_SIZE];
+
+    if(!bIsConnected)
+        return NOT_CONNECTED;
 
     err = domeCommand("b\n", resp, 'B', SERIAL_BUFFER_SIZE);
     if(err)
@@ -151,6 +157,9 @@ int CNexDome::getDomeHomeAz(double &Az)
     int err = 0;
     char resp[SERIAL_BUFFER_SIZE];
 
+    if(!bIsConnected)
+        return NOT_CONNECTED;
+
     err = domeCommand("z\n", resp, 'Z', SERIAL_BUFFER_SIZE);
     if(err)
         return err;
@@ -164,6 +173,9 @@ int CNexDome::getDomeParkAz(double &Az)
 {
     int err = 0;
     char resp[SERIAL_BUFFER_SIZE];
+
+    if(!bIsConnected)
+        return NOT_CONNECTED;
 
     err = domeCommand("n\n", resp, 'N', SERIAL_BUFFER_SIZE);
     if(err)
@@ -180,6 +192,9 @@ int CNexDome::getShutterState(int &state)
     int err = 0;
     char resp[SERIAL_BUFFER_SIZE];
 
+    if(!bIsConnected)
+        return NOT_CONNECTED;
+
     err = domeCommand("u\n", resp, 'U', SERIAL_BUFFER_SIZE);
     if(err)
         return err;
@@ -195,6 +210,9 @@ bool CNexDome::isDomeMoving()
     int tmp;
     int err = 0;
     char resp[SERIAL_BUFFER_SIZE];
+
+    if(!bIsConnected)
+        return NOT_CONNECTED;
 
     err = domeCommand("m\n", resp, 'M', SERIAL_BUFFER_SIZE);
     if(err)
@@ -213,6 +231,9 @@ int CNexDome::syncDome(double dAz, double El)
     int err = 0;
     char buf[SERIAL_BUFFER_SIZE];
 
+    if(!bIsConnected)
+        return NOT_CONNECTED;
+
     mCurrentAzPosition = dAz;
     snprintf(buf, SERIAL_BUFFER_SIZE, "s %3.2f\n", dAz);
     err = domeCommand(buf, NULL, 'S', SERIAL_BUFFER_SIZE);
@@ -223,6 +244,10 @@ int CNexDome::syncDome(double dAz, double El)
 int CNexDome::parkDome(void)
 {
     int err;
+
+    if(!bIsConnected)
+        return NOT_CONNECTED;
+
     err = gotoAzimuth(mParkAz);
     return err;
 
@@ -239,6 +264,9 @@ int CNexDome::gotoAzimuth(double newAz)
     int err = 0;
     char buf[SERIAL_BUFFER_SIZE];
 
+    if(!bIsConnected)
+        return NOT_CONNECTED;
+
     snprintf(buf, SERIAL_BUFFER_SIZE, "g %3.2f\n", newAz);
     err = domeCommand(buf, NULL, 'G', SERIAL_BUFFER_SIZE);
     if(err)
@@ -251,11 +279,17 @@ int CNexDome::gotoAzimuth(double newAz)
 
 int CNexDome::openShutter()
 {
+    if(!bIsConnected)
+        return NOT_CONNECTED;
+
     return (domeCommand("d\n", NULL, 'D', SERIAL_BUFFER_SIZE));
 }
 
 int CNexDome::closeShutter()
 {
+    if(!bIsConnected)
+        return NOT_CONNECTED;
+
     return (domeCommand("e\n", NULL, 'D', SERIAL_BUFFER_SIZE));
 }
 
@@ -264,6 +298,9 @@ int CNexDome::getFirmwareVersion(char *version, int strMaxLen)
 {
     int err = 0;
     char resp[SERIAL_BUFFER_SIZE];
+
+    if(!bIsConnected)
+        return NOT_CONNECTED;
 
     err = domeCommand("v\n", resp, 'V', SERIAL_BUFFER_SIZE);
     if(err)
@@ -275,6 +312,9 @@ int CNexDome::getFirmwareVersion(char *version, int strMaxLen)
 
 int CNexDome::goHome()
 {
+    if(!bIsConnected)
+        return NOT_CONNECTED;
+
     return (domeCommand("h\n", NULL, 'H', SERIAL_BUFFER_SIZE));
 }
 
@@ -282,6 +322,9 @@ int CNexDome::isGoToComplete(bool &complete)
 {
     int err = 0;
     double domeAz;
+
+    if(!bIsConnected)
+        return NOT_CONNECTED;
 
     if(isDomeMoving()) {
         complete = false;
@@ -306,6 +349,9 @@ int CNexDome::isOpenComplete(bool &complete)
     int err=0;
     int state;
 
+    if(!bIsConnected)
+        return NOT_CONNECTED;
+
     err = getShutterState(state);
     if(err)
         return ERR_CMDFAILED;
@@ -327,6 +373,9 @@ int CNexDome::isCloseComplete(bool &complete)
 {
     int err=0;
     int state;
+
+    if(!bIsConnected)
+        return NOT_CONNECTED;
 
     err = getShutterState(state);
     if(err)
@@ -350,6 +399,9 @@ int CNexDome::isParkComplete(bool &complete)
 {
     int err = 0;
     double domeAz;
+
+    if(!bIsConnected)
+        return NOT_CONNECTED;
 
     if(isDomeMoving()) {
         complete = false;
@@ -378,6 +430,9 @@ int CNexDome::isUnparkComplete(bool &complete)
 {
     int err=0;
 
+    if(!bIsConnected)
+        return NOT_CONNECTED;
+
     mParked = false;
     complete = true;
 
@@ -388,6 +443,9 @@ int CNexDome::isFindHomeComplete(bool &complete)
 {
     int err = 0;
     double domeAz;
+
+    if(!bIsConnected)
+        return NOT_CONNECTED;
 
     if(isDomeMoving()) {
         mHomed = false;
@@ -420,6 +478,8 @@ bool CNexDome::isCalibrating()
 
 int CNexDome::abortCurrentCommand()
 {
+    if(!bIsConnected)
+        return NOT_CONNECTED;
     return (domeCommand("a\n", NULL, 'A', SERIAL_BUFFER_SIZE));
 }
 
@@ -446,6 +506,9 @@ int CNexDome::setHomeAz(double dAz)
     int err = 0;
     char buf[SERIAL_BUFFER_SIZE];
 
+    if(!bIsConnected)
+        return NOT_CONNECTED;
+    
     snprintf(buf, SERIAL_BUFFER_SIZE, "j %3.2f\n", dAz);
     err = domeCommand(buf, NULL, 'J', SERIAL_BUFFER_SIZE);
     if(err)
@@ -467,6 +530,9 @@ int CNexDome::setParkAz(double dAz)
 {
     int err = 0;
     char buf[SERIAL_BUFFER_SIZE];
+
+    if(!bIsConnected)
+        return NOT_CONNECTED;
 
     snprintf(buf, SERIAL_BUFFER_SIZE, "l %3.2f\n", dAz);
     err = domeCommand(buf, NULL, 'L', SERIAL_BUFFER_SIZE);
