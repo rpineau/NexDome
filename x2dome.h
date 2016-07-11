@@ -152,5 +152,7 @@ private:
     CNexDome    nexDome;
     bool        mHasShutterControl;
     bool        mOpenUpperShutterOnly;
+    bool        mHomingDome;
+
     // bool        mIsRollOffRoof;
 };

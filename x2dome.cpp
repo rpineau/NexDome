@@ -35,6 +35,8 @@ X2Dome::X2Dome(const char* pszSelection,
 	m_pTickCount					= pTickCount;
 
 	m_bLinked = false;
+    mHomingDome = false;
+
     nexDome.SetSerxPointer(pSerX);
 
     if (m_pIniUtil)
@@ -151,12 +153,16 @@ int X2Dome::execModalSettingsDialog()
         dx->setChecked("hasShutterCtrl",false);
     }
     
-    // disable Auto Calibrate for now
-    dx->setEnabled("autoCalibrate",false);
+    if(m_bLinked)
+        dx->setEnabled("autoCalibrate",true);
+    else
+        dx->setEnabled("autoCalibrate",false);
 
     dx->setPropertyInt("ticksPerRev","value", nexDome.getNbTicksPerRev());
     dx->setPropertyDouble("homePosition","value", nexDome.getHomeAz());
     dx->setPropertyDouble("parkPosition","value", nexDome.getParkAz());
+
+    mHomingDome = false;
 
     //Display the user interface
     if ((nErr = ui->exec(bPressedOK)))
@@ -190,24 +196,48 @@ int X2Dome::execModalSettingsDialog()
 
 void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
 {
+    bool complete;
+    
     if (!strcmp(pszEvent, "on_timer"))
     {
-        if(uiex->isChecked("hasShutterCtrl"))
-        {
-            uiex->setEnabled("openUpperShutterOnly", true);
-            uiex->setEnabled("isRoolOffRoof", true);
-            uiex->setEnabled("groupBoxShutter", true);
-            uiex->setEnabled("radioButtonShutterAnyAz", true);
-        }
-        else
-        {
-            uiex->setEnabled("openUpperShutterOnly", false);
-            uiex->setEnabled("isRoolOffRoof", false);
-            uiex->setEnabled("groupBoxShutter", false);
-            uiex->setEnabled("radioButtonShutterAnyAz", false);
-            
+        if(m_bLinked) {
+            // are we going to Home position to calibrate ?
+            if(mHomingDome) {
+                // are we home ?
+                nexDome.isFindHomeComplete(complete);
+                if(complete) {
+                    mHomingDome = false;
+                    nexDome.calibrate();
+                }
+
+            }
+
+            // are we still calibrating ?
+            nexDome.isCalibratingComplete(complete);
+            if(!complete)
+                return;
+
+            // enable "ok" and "calibrate"
+            uiex->setEnabled("autoCalibrate",true);
+            uiex->setEnabled("pushButtonOK",true);
+            uiex->setEnabled("pushButtonCancel",true);
+            // read step per rev from dome
+            uiex->setPropertyInt("ticksPerRev","value", nexDome.getNbTicksPerRev());
         }
     }
+    if (!strcmp(pszEvent, "on_autoCalibrate_clicked"))
+    {
+        if(m_bLinked) {
+            // disable "ok" and "calibrate"
+            uiex->setEnabled("autoCalibrate",false);
+            uiex->setEnabled("pushButtonOK",false);
+            uiex->setEnabled("pushButtonCancel",false);
+
+            nexDome.goHome();
+            mHomingDome = true;
+        }
+    }
+
 }
 
 //

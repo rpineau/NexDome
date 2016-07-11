@@ -20,7 +20,7 @@ CNexDome::CNexDome()
     pSerx = NULL;
     bIsConnected = false;
 
-    mNbTicksPerRev = 0;
+    mNbStepPerRev = 0;
 
     mCurrentAzPosition = 0.0;
     mCurrentElPosition = 0.0;
@@ -32,8 +32,6 @@ CNexDome::CNexDome()
     
     mParked = true;
     mHomed = false;
-
-    mCalibrating  = false;
 }
 
 CNexDome::~CNexDome()
@@ -204,6 +202,24 @@ int CNexDome::getShutterState(int &state)
     return err;
 }
 
+
+int CNexDome::getDomeStepPerRev(int &stepPerRev)
+{
+    int err = 0;
+    char resp[SERIAL_BUFFER_SIZE];
+
+    if(!bIsConnected)
+        return NOT_CONNECTED;
+
+    err = domeCommand("t\n", resp, 'T', SERIAL_BUFFER_SIZE);
+    if(err)
+        return err;
+
+    stepPerRev = atoi(resp);
+
+    return err;
+}
+
 bool CNexDome::isDomeMoving()
 {
     bool isMoving;
@@ -316,6 +332,19 @@ int CNexDome::goHome()
         return NOT_CONNECTED;
 
     return (domeCommand("h\n", NULL, 'H', SERIAL_BUFFER_SIZE));
+}
+
+int CNexDome::calibrate()
+{
+    int err = 0;
+    if(!bIsConnected)
+        return NOT_CONNECTED;
+
+
+    err = domeCommand("c\n", NULL, 'C', SERIAL_BUFFER_SIZE);
+    if(err)
+        return err;
+    return err;
 }
 
 int CNexDome::isGoToComplete(bool &complete)
@@ -453,7 +482,41 @@ int CNexDome::isFindHomeComplete(bool &complete)
         return err;
     }
 
-    getDomeAz(domeAz);
+    err = getDomeAz(domeAz);
+
+    if (mHomeAz == domeAz)
+    {
+        mHomed = true;
+        complete = true;
+        err = getDomeStepPerRev(mNbStepPerRev);
+    }
+    else {
+        // we're not moving and we're not at the final destination !!!
+        complete = false;
+        mHomed = false;
+        mParked = false;
+        err = ERR_CMDFAILED;
+    }
+
+    return err;
+}
+
+
+int CNexDome::isCalibratingComplete(bool &complete)
+{
+    int err = 0;
+    double domeAz;
+
+    if(!bIsConnected)
+        return NOT_CONNECTED;
+
+    if(isDomeMoving()) {
+        mHomed = false;
+        complete = false;
+        return err;
+    }
+
+    err = getDomeAz(domeAz);
 
     if (mHomeAz == domeAz)
     {
@@ -471,10 +534,6 @@ int CNexDome::isFindHomeComplete(bool &complete)
     return err;
 }
 
-bool CNexDome::isCalibrating()
-{
-    return mCalibrating;
-}
 
 int CNexDome::abortCurrentCommand()
 {
@@ -487,12 +546,12 @@ int CNexDome::abortCurrentCommand()
 
 int CNexDome::getNbTicksPerRev()
 {
-    return mNbTicksPerRev;
+    return mNbStepPerRev;
 }
 
 void CNexDome::setNbTicksPerRev(int nbTicksPerRev)
 {
-    mNbTicksPerRev = nbTicksPerRev;
+    mNbStepPerRev = nbTicksPerRev;
 }
 
 

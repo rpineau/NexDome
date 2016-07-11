@@ -40,7 +40,8 @@ public:
     int closeShutter();
     int getFirmwareVersion(char *version, int strMaxLen);
     int goHome();
-    
+    int calibrate();
+
     // command complete functions
     int isGoToComplete(bool &complete);
     int isOpenComplete(bool &complete);
@@ -48,7 +49,8 @@ public:
     int isParkComplete(bool &complete);
     int isUnparkComplete(bool &complete);
     int isFindHomeComplete(bool &complete);
-    bool isCalibrating();
+    int isCalibratingComplete(bool &complete);
+
     int abortCurrentCommand();
 
     // getter/setter
@@ -77,6 +79,8 @@ protected:
     int             getDomeHomeAz(double &Az);
     int             getDomeParkAz(double &Az);
     int             getShutterState(int &state);
+    int             getDomeStepPerRev(int &stepPerRev);
+
     bool            isDomeMoving();
     int             domeCommand(const char *cmd, char *result, char respCmdCode, int resultMaxLen);
 
@@ -85,7 +89,7 @@ protected:
     bool            mParked;
     bool            mShutterOpened;
     
-    unsigned        mNbTicksPerRev;
+    int             mNbStepPerRev;
 
     double          mHomeAz;
     
@@ -99,7 +103,6 @@ protected:
     SerXInterface   *pSerx;
     
     char            firmwareVersion[SERIAL_BUFFER_SIZE];
-    bool            mCalibrating;
     bool            mShutterOnly; // roll off roof so the arduino is running the shutter firmware only.
 
 };
