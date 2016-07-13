@@ -82,6 +82,8 @@ protected:
     int             getDomeStepPerRev(int &stepPerRev);
 
     bool            isDomeMoving();
+    bool            isDomeAtHome();
+    
     int             domeCommand(const char *cmd, char *result, char respCmdCode, int resultMaxLen);
 
     bool            bIsConnected;

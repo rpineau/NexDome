@@ -22,11 +22,12 @@ CNexDome::CNexDome()
 
     mNbStepPerRev = 0;
 
+    mHomeAz = 180;
+    mParkAz = 180;
+
     mCurrentAzPosition = 0.0;
     mCurrentElPosition = 0.0;
 
-    mHomeAz = 0;
-    mParkAz = 0;
 
     mShutterOpened = false;
     
@@ -54,7 +55,6 @@ bool CNexDome::Connect(const char *szPort)
         return false;
 
     pSerx->purgeTxRx();
-
     err = getFirmwareVersion(firmwareVersion, SERIAL_BUFFER_SIZE);
     if(err)
     {
@@ -79,13 +79,21 @@ int CNexDome::readResponse(char *respBuffer, int bufferLen)
 {
     int err = ND_OK;
     unsigned long nBytesRead = 0;
+    char *bufPtr;
+    
     memset(respBuffer, 0, (size_t) bufferLen);
+    bufPtr = respBuffer;
     // Look for a CR  character, until time out occurs or MAX_BUFFER characters was read
-    while (*respBuffer != '\n' || nBytesRead < bufferLen )
+    err = pSerx->readFile(bufPtr, 1, nBytesRead, MAX_TIMEOUT);
+    while (*bufPtr != '\n' && nBytesRead < bufferLen )
     {
-        err = pSerx->readFile(respBuffer, 1, nBytesRead, MAX_TIMEOUT);
-        if (nBytesRead !=1) // timeout
+        bufPtr++;
+        err = pSerx->readFile(bufPtr, 1, nBytesRead, MAX_TIMEOUT);
+        
+        if (nBytesRead !=1) {// timeout
             err = ND_BAD_CMD_RESPONSE;
+            break;
+        }
     }
 
     return err;
@@ -100,6 +108,7 @@ int CNexDome::domeCommand(const char *cmd, char *result, char respCmdCode, int r
 
     memset(buf,0,SERIAL_BUFFER_SIZE);
     strncpy(buf,cmd,SERIAL_BUFFER_SIZE);
+    pSerx->purgeTxRx();
     err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
 
     // read response
@@ -129,6 +138,8 @@ int CNexDome::getDomeAz(double &domeAz)
     
     // convert Az string to double
     domeAz = atof(resp);
+    mCurrentAzPosition = domeAz;
+
     return err;
 }
 
@@ -146,6 +157,8 @@ int CNexDome::getDomeEl(double &domeEl)
     
     // convert El string to double
     domeEl = atof(resp);
+    mCurrentElPosition = domeEl;
+    
     return err;
 }
 
@@ -212,8 +225,12 @@ int CNexDome::getDomeStepPerRev(int &stepPerRev)
         return NOT_CONNECTED;
 
     err = domeCommand("t\n", resp, 'T', SERIAL_BUFFER_SIZE);
-    if(err)
+    if(err) {
+        printf("Error on command t\n");
+        printf("Response = %s\n", resp);
         return err;
+        
+    }
 
     stepPerRev = atoi(resp);
 
@@ -240,6 +257,31 @@ bool CNexDome::isDomeMoving()
         isMoving = true;
 
     return isMoving;
+}
+
+bool CNexDome::isDomeAtHome()
+{
+    bool athome;
+    int tmp;
+    int err = 0;
+    char resp[SERIAL_BUFFER_SIZE];
+    
+    if(!bIsConnected)
+        return NOT_CONNECTED;
+    
+    err = domeCommand("z\n", resp, 'Z', SERIAL_BUFFER_SIZE);
+    if(err){
+        printf("Erro getting home status\n");
+        return false;
+    }
+    
+    athome = false;
+    tmp = atoi(resp);
+    if(tmp)
+        athome = true;
+    
+    return athome;
+  
 }
 
 int CNexDome::syncDome(double dAz, double El)
@@ -272,6 +314,7 @@ int CNexDome::parkDome(void)
 int CNexDome::unparkDome(void)
 {
     mParked = false;
+    mCurrentAzPosition = mParkAz;
     return 0;
 }
 
@@ -284,7 +327,9 @@ int CNexDome::gotoAzimuth(double newAz)
         return NOT_CONNECTED;
 
     snprintf(buf, SERIAL_BUFFER_SIZE, "g %3.2f\n", newAz);
+    printf("[CNexDome::gotoAzimuth] Goto %s\n",buf);
     err = domeCommand(buf, NULL, 'G', SERIAL_BUFFER_SIZE);
+    printf("CNexDome::gotoAzimuth] err = %d\n", err);
     if(err)
         return err;
 
@@ -357,15 +402,17 @@ int CNexDome::isGoToComplete(bool &complete)
 
     if(isDomeMoving()) {
         complete = false;
+        getDomeAz(domeAz);
         return err;
     }
 
     getDomeAz(domeAz);
 
-    if (mGotoAz == domeAz)
+    if (int(mGotoAz) == int(domeAz))
         complete = true;
     else {
         // we're not moving and we're not at the final destination !!!
+        printf("[CNexDome::isGoToComplete] domeAz = %d, mGotoAz = %d\n", int(domeAz), int(mGotoAz));
         complete = false;
         err = ERR_CMDFAILED;
     }
@@ -433,13 +480,14 @@ int CNexDome::isParkComplete(bool &complete)
         return NOT_CONNECTED;
 
     if(isDomeMoving()) {
+        getDomeAz(domeAz);
         complete = false;
         return err;
     }
 
     getDomeAz(domeAz);
 
-    if (mParkAz == domeAz)
+    if (int(mParkAz) == int(domeAz))
     {
         mParked = true;
         complete = true;
@@ -471,7 +519,6 @@ int CNexDome::isUnparkComplete(bool &complete)
 int CNexDome::isFindHomeComplete(bool &complete)
 {
     int err = 0;
-    double domeAz;
 
     if(!bIsConnected)
         return NOT_CONNECTED;
@@ -479,19 +526,21 @@ int CNexDome::isFindHomeComplete(bool &complete)
     if(isDomeMoving()) {
         mHomed = false;
         complete = false;
+        printf("[CNexDome::isFindHomeComplete] Still moving\n");
         return err;
     }
 
-    err = getDomeAz(domeAz);
-
-    if (mHomeAz == domeAz)
-    {
+    if(isDomeAtHome()){
         mHomed = true;
         complete = true;
+        printf("[CNexDome::isFindHomeComplete] At Home\n");
         err = getDomeStepPerRev(mNbStepPerRev);
+        printf("[CNexDome::isFindHomeComplete] err = %d\n", err);
+        printf("[CNexDome::isFindHomeComplete] mNbStepPerRev = %d\n", mNbStepPerRev);
     }
     else {
         // we're not moving and we're not at the final destination !!!
+        printf("[CNexDome::isFindHomeComplete] Not moving and not at home !!!");
         complete = false;
         mHomed = false;
         mParked = false;
@@ -511,6 +560,7 @@ int CNexDome::isCalibratingComplete(bool &complete)
         return NOT_CONNECTED;
 
     if(isDomeMoving()) {
+        getDomeAz(domeAz);
         mHomed = false;
         complete = false;
         return err;
@@ -518,7 +568,7 @@ int CNexDome::isCalibratingComplete(bool &complete)
 
     err = getDomeAz(domeAz);
 
-    if (mHomeAz == domeAz)
+    if (int(mHomeAz) == int(domeAz))
     {
         mHomed = true;
         complete = true;

@@ -42,7 +42,7 @@ X2Dome::X2Dome(const char* pszSelection,
     if (m_pIniUtil)
     {   
         nexDome.setNbTicksPerRev( m_pIniUtil->readInt(PARENT_KEY, CHILD_KEY_TICKS_PER_REV, 0) );
-        nexDome.setHomeAz( m_pIniUtil->readDouble(PARENT_KEY, CHILD_KEY_HOME_AZ, 0) );
+        nexDome.setHomeAz( m_pIniUtil->readDouble(PARENT_KEY, CHILD_KEY_HOME_AZ, 180) );
         nexDome.setParkAz( m_pIniUtil->readDouble(PARENT_KEY, CHILD_KEY_PARK_AZ, 180) );
         mHasShutterControl = m_pIniUtil->readInt(PARENT_KEY, CHILD_KEY_SHUTTER_CONTROL, false);
     }
@@ -154,9 +154,9 @@ int X2Dome::execModalSettingsDialog()
     }
     
     if(m_bLinked)
-        dx->setEnabled("autoCalibrate",true);
+        dx->setEnabled("pushButton",true);
     else
-        dx->setEnabled("autoCalibrate",false);
+        dx->setEnabled("pushButton",false);
 
     dx->setPropertyInt("ticksPerRev","value", nexDome.getNbTicksPerRev());
     dx->setPropertyDouble("homePosition","value", nexDome.getHomeAz());
@@ -197,9 +197,13 @@ int X2Dome::execModalSettingsDialog()
 void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
 {
     bool complete;
-    
+    printf("event = %s\n", pszEvent);
+    if (!strcmp(pszEvent, "on_ppushButtonCancel_clicked"))
+        nexDome.abortCurrentCommand();
+
     if (!strcmp(pszEvent, "on_timer"))
     {
+        printf("Timer\n");
         if(m_bLinked) {
             // are we going to Home position to calibrate ?
             if(mHomingDome) {
@@ -218,20 +222,22 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
                 return;
 
             // enable "ok" and "calibrate"
-            uiex->setEnabled("autoCalibrate",true);
+            uiex->setEnabled("pushButton",true);
             uiex->setEnabled("pushButtonOK",true);
-            uiex->setEnabled("pushButtonCancel",true);
+            // uiex->setEnabled("pushButtonCancel",true);
             // read step per rev from dome
             uiex->setPropertyInt("ticksPerRev","value", nexDome.getNbTicksPerRev());
         }
     }
-    if (!strcmp(pszEvent, "on_autoCalibrate_clicked"))
+
+    if (!strcmp(pszEvent, "on_pushButton_clicked"))
     {
+        printf("Calibrate clicked");
         if(m_bLinked) {
             // disable "ok" and "calibrate"
-            uiex->setEnabled("autoCalibrate",false);
+            uiex->setEnabled("pushButton",false);
             uiex->setEnabled("pushButtonOK",false);
-            uiex->setEnabled("pushButtonCancel",false);
+            // uiex->setEnabled("pushButtonCancel",false);
 
             nexDome.goHome();
             mHomingDome = true;
@@ -321,6 +327,7 @@ int X2Dome::dapiGotoAzEl(double dAz, double dEl)
     if(!m_bLinked)
         return ERR_NOLINK;
 
+    printf("[X2Dome::dapiGotoAzEl] dAz = %f, dEl = %f\n",dAz, dEl);
     err = nexDome.gotoAzimuth(dAz);
 
     if(err)
@@ -522,6 +529,7 @@ int X2Dome::dapiIsFindHomeComplete(bool* pbComplete)
         return ERR_NOLINK;
 
     err = nexDome.isFindHomeComplete(*pbComplete);
+    printf("[X2Dome::dapiIsFindHomeComplete] err = %d\n", err);
     if(err)
         return ERR_CMDFAILED;
 

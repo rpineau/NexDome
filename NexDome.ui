@@ -95,7 +95,7 @@
           </layout>
          </item>
          <item row="0" column="1">
-          <widget class="QPushButton" name="autoCalibrate">
+          <widget class="QPushButton" name="pushButton">
            <property name="text">
             <string>Auto Calibrate</string>
            </property>
@@ -141,7 +141,7 @@
          </item>
         </layout>
         <zorder>hasShutterCtrl</zorder>
-        <zorder>autoCalibrate</zorder>
+        <zorder>pushButton</zorder>
        </widget>
       </item>
       <item row="1" column="0">
