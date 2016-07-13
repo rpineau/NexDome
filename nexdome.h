@@ -66,8 +66,6 @@ public:
     double getCurrentAz();
     double getCurrentEl();
 
-    void setCurrentAz(double dAz);
-
     char* getVersion();
     void setShutterOnly(bool bMode);
 

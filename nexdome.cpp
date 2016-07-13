@@ -607,6 +607,9 @@ void CNexDome::setNbTicksPerRev(int nbTicksPerRev)
 
 double CNexDome::getHomeAz()
 {
+    if(bIsConnected)
+        getDomeHomeAz(mHomeAz);
+    
     return mHomeAz;
 }
 
@@ -631,6 +634,9 @@ int CNexDome::setHomeAz(double dAz)
 
 double CNexDome::getParkAz()
 {
+    if(bIsConnected)
+        getDomeParkAz(mParkAz);
+
     return mParkAz;
 
 }
@@ -656,18 +662,20 @@ int CNexDome::setParkAz(double dAz)
 
 double CNexDome::getCurrentAz()
 {
+    if(bIsConnected)
+        getDomeAz(mCurrentAzPosition);
+    
     return mCurrentAzPosition;
 }
 
 double CNexDome::getCurrentEl()
 {
+    if(bIsConnected)
+        getDomeEl(mCurrentElPosition);
+    
     return mCurrentElPosition;
 }
 
-void CNexDome::setCurrentAz(double dAz)
-{
-    mCurrentAzPosition = dAz;
-}
 
 char * CNexDome::getVersion()
 {
