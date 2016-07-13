@@ -600,11 +600,6 @@ int CNexDome::getNbTicksPerRev()
     return mNbStepPerRev;
 }
 
-void CNexDome::setNbTicksPerRev(int nbTicksPerRev)
-{
-    mNbStepPerRev = nbTicksPerRev;
-}
-
 
 double CNexDome::getHomeAz()
 {

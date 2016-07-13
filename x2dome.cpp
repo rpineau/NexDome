@@ -126,11 +126,10 @@ int X2Dome::execModalSettingsDialog()
     X2GUIInterface*					ui = uiutil.X2UI();
     X2GUIExchangeInterface*			dx = NULL;//Comes after ui is loaded
     bool bPressedOK = false;
-
+    char tmpBuf[16];
     double dHomeAz;
     double dParkAz;
     bool operateAnyAz;
-    int nTicksPerRev;
 
     if (NULL == ui)
         return ERR_POINTER;
@@ -152,12 +151,19 @@ int X2Dome::execModalSettingsDialog()
         dx->setChecked("hasShutterCtrl",false);
     }
     
-    if(m_bLinked)
+    if(m_bLinked) {
+        snprintf(tmpBuf,16,"%d",nexDome.getNbTicksPerRev());
+        dx->setPropertyString("ticksPerRev","text", tmpBuf);
+        nexDome.getFirmwareVersion(tmpBuf, 16);
+        dx->setPropertyString("firmwareVersion","text", tmpBuf);
         dx->setEnabled("pushButton",true);
-    else
+    }
+    else {
+        snprintf(tmpBuf,16,"NA");
+        dx->setPropertyString("ticksPerRev","text", tmpBuf);
+        dx->setPropertyString("firmwareVersion","text", "NA");
         dx->setEnabled("pushButton",false);
-
-    dx->setPropertyInt("ticksPerRev","value", nexDome.getNbTicksPerRev());
+    }
     dx->setPropertyDouble("homePosition","value", nexDome.getHomeAz());
     dx->setPropertyDouble("parkPosition","value", nexDome.getParkAz());
 

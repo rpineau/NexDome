@@ -55,7 +55,6 @@ public:
 
     // getter/setter
     int getNbTicksPerRev();
-    void setNbTicksPerRev(int nbTicksPerRev);
 
     double getHomeAz();
     int setHomeAz(double dAz);
