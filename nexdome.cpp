@@ -284,7 +284,7 @@ bool CNexDome::isDomeAtHome()
   
 }
 
-int CNexDome::syncDome(double dAz, double El)
+int CNexDome::syncDome(double dAz, double dEl)
 {
     int err = 0;
     char buf[SERIAL_BUFFER_SIZE];
@@ -296,6 +296,7 @@ int CNexDome::syncDome(double dAz, double El)
     snprintf(buf, SERIAL_BUFFER_SIZE, "s %3.2f\n", dAz);
     err = domeCommand(buf, NULL, 'S', SERIAL_BUFFER_SIZE);
     // TODO : Also set Elevation when supported by the firware.
+    // mCurrentElPosition = dEl;
     return err;
 }
 
@@ -618,16 +619,13 @@ int CNexDome::setHomeAz(double dAz)
     int err = 0;
     char buf[SERIAL_BUFFER_SIZE];
 
+    mHomeAz = dAz;
+    
     if(!bIsConnected)
         return NOT_CONNECTED;
     
     snprintf(buf, SERIAL_BUFFER_SIZE, "j %3.2f\n", dAz);
     err = domeCommand(buf, NULL, 'J', SERIAL_BUFFER_SIZE);
-    if(err)
-        return err;
-
-    mHomeAz = dAz;
-
     return err;
 }
 
@@ -646,16 +644,13 @@ int CNexDome::setParkAz(double dAz)
     int err = 0;
     char buf[SERIAL_BUFFER_SIZE];
 
+    mParkAz = dAz;
+    
     if(!bIsConnected)
         return NOT_CONNECTED;
 
     snprintf(buf, SERIAL_BUFFER_SIZE, "l %3.2f\n", dAz);
     err = domeCommand(buf, NULL, 'L', SERIAL_BUFFER_SIZE);
-    if(err)
-        return err;
-
-    mParkAz = dAz;
-
     return err;
 }
 
@@ -676,11 +671,6 @@ double CNexDome::getCurrentEl()
     return mCurrentElPosition;
 }
 
-
-char * CNexDome::getVersion()
-{
-    return firmwareVersion;
-}
 
 void CNexDome::setShutterOnly(bool bMode)
 {
