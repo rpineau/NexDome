@@ -65,7 +65,7 @@ bool CNexDome::Connect(const char *szPort)
 }
 
 
-void CNexDome::Disconnect(void)
+void CNexDome::Disconnect()
 {
     if(bIsConnected)
     {
@@ -299,7 +299,7 @@ int CNexDome::syncDome(double dAz, double El)
     return err;
 }
 
-int CNexDome::parkDome(void)
+int CNexDome::parkDome()
 {
     int err;
 
@@ -311,7 +311,7 @@ int CNexDome::parkDome(void)
 
 }
 
-int CNexDome::unparkDome(void)
+int CNexDome::unparkDome()
 {
     mParked = false;
     mCurrentAzPosition = mParkAz;
