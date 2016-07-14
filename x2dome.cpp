@@ -45,6 +45,8 @@ X2Dome::X2Dome(const char* pszSelection,
         nexDome.setParkAz( m_pIniUtil->readDouble(PARENT_KEY, CHILD_KEY_PARK_AZ, 180) );
         mHasShutterControl = m_pIniUtil->readInt(PARENT_KEY, CHILD_KEY_SHUTTER_CONTROL, false);
     }
+    printf("\n\n\n\n[ ****** X2Dome::X2Dome ******]\n\n\n\n");
+    printf("[X2Dome::X2Dome] HomeAz = %f\tParkAz = %f\n", nexDome.getHomeAz(),nexDome.getParkAz());
 }
 
 
@@ -84,6 +86,7 @@ int X2Dome::establishLink(void)
     // if(mIsRollOffRoof)
     //    nexDome.setShutterOnly(true);
 
+    printf("[X2Dome::establishLink] HomeAz = %f\tParkAz = %f\n", nexDome.getHomeAz(),nexDome.getParkAz());
 	return SB_OK;
 }
 
@@ -126,7 +129,7 @@ int X2Dome::execModalSettingsDialog()
     X2GUIInterface*					ui = uiutil.X2UI();
     X2GUIExchangeInterface*			dx = NULL;//Comes after ui is loaded
     bool bPressedOK = false;
-    char tmpBuf[16];
+    char tmpBuf[SERIAL_BUFFER_SIZE];
     double dHomeAz;
     double dParkAz;
     bool operateAnyAz;
@@ -140,6 +143,7 @@ int X2Dome::execModalSettingsDialog()
     if (NULL == (dx = uiutil.X2DX()))
         return ERR_POINTER;
 
+    memset(tmpBuf,0,SERIAL_BUFFER_SIZE);
     // set controls state depending on the connection state
     if(mHasShutterControl)
     {
@@ -150,18 +154,17 @@ int X2Dome::execModalSettingsDialog()
     {
         dx->setChecked("hasShutterCtrl",false);
     }
+
+    printf("[X2Dome::queryAbstraction] HomeAz = %f\tParkAz = %f\n", nexDome.getHomeAz(),nexDome.getParkAz());
     
     if(m_bLinked) {
         snprintf(tmpBuf,16,"%d",nexDome.getNbTicksPerRev());
         dx->setPropertyString("ticksPerRev","text", tmpBuf);
-        nexDome.getFirmwareVersion(tmpBuf, 16);
-        dx->setPropertyString("firmwareVersion","text", tmpBuf);
         dx->setEnabled("pushButton",true);
     }
     else {
         snprintf(tmpBuf,16,"NA");
         dx->setPropertyString("ticksPerRev","text", tmpBuf);
-        dx->setPropertyString("firmwareVersion","text", "NA");
         dx->setEnabled("pushButton",false);
     }
     dx->setPropertyDouble("homePosition","value", nexDome.getHomeAz());
@@ -186,7 +189,9 @@ int X2Dome::execModalSettingsDialog()
             nexDome.setHomeAz(dHomeAz);
             nexDome.setParkAz(dParkAz);
         }
-
+        printf("dHomeAz = %f\n", dHomeAz);
+        printf("dParkAz = %f\n", dParkAz);
+        
         // save the values to persistent storage
         nErr |= m_pIniUtil->writeDouble(PARENT_KEY, CHILD_KEY_HOME_AZ, dHomeAz);
         nErr |= m_pIniUtil->writeDouble(PARENT_KEY, CHILD_KEY_PARK_AZ, dParkAz);
@@ -220,8 +225,10 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
 
             // are we still calibrating ?
             nexDome.isCalibratingComplete(complete);
-            if(!complete)
+            if(!complete) {
+                printf("Calibrating\n");
                 return;
+            }
 
             // enable "ok" and "calibrate"
             uiex->setEnabled("pushButton",true);

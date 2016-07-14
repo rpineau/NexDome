@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>332</width>
-    <height>350</height>
+    <height>311</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -136,24 +136,6 @@
            </item>
            <item>
             <widget class="QLabel" name="ticksPerRev">
-             <property name="text">
-              <string>00000000</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item row="1" column="0">
-          <layout class="QHBoxLayout" name="horizontalLayout_5">
-           <item>
-            <widget class="QLabel" name="label_4">
-             <property name="text">
-              <string>Firmware Version :</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="firmwareVersion">
              <property name="text">
               <string>00000000</string>
              </property>

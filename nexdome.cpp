@@ -61,6 +61,9 @@ bool CNexDome::Connect(const char *szPort)
         bIsConnected = false; // if this fails we're not properly connectiong.
         pSerx->close();
     }
+    // assume the dome was parked
+    getDomeParkAz(mCurrentAzPosition);
+    
     return bIsConnected;
 }
 
@@ -151,6 +154,12 @@ int CNexDome::getDomeEl(double &domeEl)
     if(!bIsConnected)
         return NOT_CONNECTED;
 
+    if(!mShutterOpened)
+    {
+        domeEl = 0.0;
+        return err;
+    }
+        
     err = domeCommand("b\n", resp, 'B', SERIAL_BUFFER_SIZE);
     if(err)
         return err;
@@ -171,12 +180,13 @@ int CNexDome::getDomeHomeAz(double &Az)
     if(!bIsConnected)
         return NOT_CONNECTED;
 
-    err = domeCommand("z\n", resp, 'Z', SERIAL_BUFFER_SIZE);
+    err = domeCommand("i\n", resp, 'I', SERIAL_BUFFER_SIZE);
     if(err)
         return err;
 
     // convert Az string to double
     Az = atof(resp);
+    mHomeAz = Az;
     return err;
 }
 
@@ -194,6 +204,7 @@ int CNexDome::getDomeParkAz(double &Az)
 
     // convert Az string to double
     Az = atof(resp);
+    mParkAz = Az;
     return err;
 }
 
@@ -225,15 +236,11 @@ int CNexDome::getDomeStepPerRev(int &stepPerRev)
         return NOT_CONNECTED;
 
     err = domeCommand("t\n", resp, 'T', SERIAL_BUFFER_SIZE);
-    if(err) {
-        printf("Error on command t\n");
-        printf("Response = %s\n", resp);
+    if(err)
         return err;
-        
-    }
 
     stepPerRev = atoi(resp);
-
+    mNbStepPerRev = stepPerRev;
     return err;
 }
 
@@ -270,11 +277,9 @@ bool CNexDome::isDomeAtHome()
         return NOT_CONNECTED;
     
     err = domeCommand("z\n", resp, 'Z', SERIAL_BUFFER_SIZE);
-    if(err){
-        printf("Erro getting home status\n");
+    if(err)
         return false;
-    }
-    
+
     athome = false;
     tmp = atoi(resp);
     if(tmp)
@@ -316,6 +321,7 @@ int CNexDome::unparkDome()
 {
     mParked = false;
     mCurrentAzPosition = mParkAz;
+    syncDome(mCurrentAzPosition,mCurrentElPosition);
     return 0;
 }
 
@@ -328,9 +334,7 @@ int CNexDome::gotoAzimuth(double newAz)
         return NOT_CONNECTED;
 
     snprintf(buf, SERIAL_BUFFER_SIZE, "g %3.2f\n", newAz);
-    printf("[CNexDome::gotoAzimuth] Goto %s\n",buf);
     err = domeCommand(buf, NULL, 'G', SERIAL_BUFFER_SIZE);
-    printf("CNexDome::gotoAzimuth] err = %d\n", err);
     if(err)
         return err;
 
@@ -409,11 +413,11 @@ int CNexDome::isGoToComplete(bool &complete)
 
     getDomeAz(domeAz);
 
-    if (int(mGotoAz) == int(domeAz))
+    if (ceil(mGotoAz) == ceil(domeAz))
         complete = true;
     else {
         // we're not moving and we're not at the final destination !!!
-        printf("[CNexDome::isGoToComplete] domeAz = %d, mGotoAz = %d\n", int(domeAz), int(mGotoAz));
+        printf("[CNexDome::isGoToComplete] domeAz = %d, mGotoAz = %d\n", ceil(domeAz), ceil(mGotoAz));
         complete = false;
         err = ERR_CMDFAILED;
     }
@@ -488,7 +492,7 @@ int CNexDome::isParkComplete(bool &complete)
 
     getDomeAz(domeAz);
 
-    if (int(mParkAz) == int(domeAz))
+    if (ceil(mParkAz) == ceil(domeAz))
     {
         mParked = true;
         complete = true;
@@ -527,17 +531,13 @@ int CNexDome::isFindHomeComplete(bool &complete)
     if(isDomeMoving()) {
         mHomed = false;
         complete = false;
-        printf("[CNexDome::isFindHomeComplete] Still moving\n");
         return err;
     }
 
     if(isDomeAtHome()){
         mHomed = true;
         complete = true;
-        printf("[CNexDome::isFindHomeComplete] At Home\n");
         err = getDomeStepPerRev(mNbStepPerRev);
-        printf("[CNexDome::isFindHomeComplete] err = %d\n", err);
-        printf("[CNexDome::isFindHomeComplete] mNbStepPerRev = %d\n", mNbStepPerRev);
     }
     else {
         // we're not moving and we're not at the final destination !!!
@@ -569,7 +569,7 @@ int CNexDome::isCalibratingComplete(bool &complete)
 
     err = getDomeAz(domeAz);
 
-    if (int(mHomeAz) == int(domeAz))
+    if (ceil(mHomeAz) == ceil(domeAz))
     {
         mHomed = true;
         complete = true;
@@ -605,7 +605,6 @@ double CNexDome::getHomeAz()
 {
     if(bIsConnected)
         getDomeHomeAz(mHomeAz);
-    
     return mHomeAz;
 }
 
