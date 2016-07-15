@@ -19,6 +19,7 @@ fi
 
 cp "/tmp/NexDome_X2/domelist NexDome.txt" "$TheSkyX_Path/Resources/Common/Miscellaneous Files/"
 cp "/tmp/NexDome_X2/NexDome.ui" "$TheSkyX_Path/Resources/Common/PlugIns/DomePlugIns/"
+cp "/tmp/NexDome_X2/NexDome.png" "$TheSkyX_Path/Resources/Common/PlugIns/DomePlugIns/"
 cp "/tmp/NexDome_X2/libNexDome.dylib" "$TheSkyX_Path/Resources/Common/PlugIns/DomePlugIns/"
 
 rm -rf /tmp/NexDome_X2

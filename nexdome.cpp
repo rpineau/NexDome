@@ -417,7 +417,9 @@ int CNexDome::isGoToComplete(bool &complete)
         complete = true;
     else {
         // we're not moving and we're not at the final destination !!!
-        printf("[CNexDome::isGoToComplete] domeAz = %d, mGotoAz = %d\n", ceil(domeAz), ceil(mGotoAz));
+        snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::isGoToComplete] domeAz = %f, mGotoAz = %f\n", ceil(domeAz), ceil(mGotoAz));
+        mLogger->out(mLogBuffer);
+
         complete = false;
         err = ERR_CMDFAILED;
     }
@@ -540,8 +542,10 @@ int CNexDome::isFindHomeComplete(bool &complete)
         err = getDomeStepPerRev(mNbStepPerRev);
     }
     else {
-        // we're not moving and we're not at the final destination !!!
-        printf("[CNexDome::isFindHomeComplete] Not moving and not at home !!!");
+        // we're not moving and we're not at the home position !!!
+        snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::isFindHomeComplete] Not moving and not at home !!!\n");
+        mLogger->out(mLogBuffer);
+
         complete = false;
         mHomed = false;
         mParked = false;
@@ -663,6 +667,14 @@ double CNexDome::getCurrentEl()
         getDomeEl(mCurrentElPosition);
     
     return mCurrentElPosition;
+}
+
+int CNexDome::getCurrentShutterState()
+{
+    if(bIsConnected)
+        getShutterState(mShutterState);
+
+    return mShutterState;
 }
 
 

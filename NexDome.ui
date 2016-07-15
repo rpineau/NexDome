@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>332</width>
-    <height>311</height>
+    <width>357</width>
+    <height>371</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -26,7 +26,92 @@
       <string/>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="3" column="0">
+      <item row="1" column="0">
+       <widget class="QGroupBox" name="MaxDomeIIParams">
+        <property name="title">
+         <string>NexDome Params</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_2">
+         <item row="10" column="0">
+          <layout class="QHBoxLayout" name="horizontalLayout_3">
+           <item>
+            <spacer name="horizontalSpacer_2">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_3">
+             <property name="text">
+              <string>Park Postition (Deg.) :</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QDoubleSpinBox" name="parkPosition">
+             <property name="maximum">
+              <double>359.990000000000009</double>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="2" column="0">
+          <widget class="QPushButton" name="pushButton">
+           <property name="text">
+            <string>Calibrate</string>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="0" rowspan="2">
+          <layout class="QHBoxLayout" name="horizontalLayout_2">
+           <item>
+            <spacer name="horizontalSpacer">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_2">
+             <property name="text">
+              <string>Home Position (Deg.) :</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QDoubleSpinBox" name="homePosition">
+             <property name="maximum">
+              <double>359.990000000000009</double>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="11" column="0">
+          <widget class="QCheckBox" name="hasShutterCtrl">
+           <property name="text">
+            <string>Has shutter control</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="4" column="0">
        <layout class="QHBoxLayout" name="horizontalLayout_4">
         <item>
          <spacer name="horizontalSpacer_4">
@@ -60,66 +145,7 @@
         </item>
        </layout>
       </item>
-      <item row="0" column="0">
-       <widget class="QGroupBox" name="MaxDomeIIParams">
-        <property name="title">
-         <string>NexDome Params</string>
-        </property>
-        <layout class="QGridLayout" name="gridLayout_2">
-         <item row="5" column="0" rowspan="2">
-          <layout class="QHBoxLayout" name="horizontalLayout_2">
-           <item>
-            <widget class="QLabel" name="label_2">
-             <property name="text">
-              <string>Home Position (Deg.) :</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QDoubleSpinBox" name="homePosition">
-             <property name="maximum">
-              <double>359.990000000000009</double>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item row="9" column="0">
-          <widget class="QCheckBox" name="hasShutterCtrl">
-           <property name="text">
-            <string>Has shutter control</string>
-           </property>
-          </widget>
-         </item>
-         <item row="8" column="0">
-          <layout class="QHBoxLayout" name="horizontalLayout_3">
-           <item>
-            <widget class="QLabel" name="label_3">
-             <property name="text">
-              <string>Park Postition (Deg.) :</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QDoubleSpinBox" name="parkPosition">
-             <property name="maximum">
-              <double>359.990000000000009</double>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item row="0" column="0">
-          <widget class="QPushButton" name="pushButton">
-           <property name="text">
-            <string>Calibrate</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-      </item>
-      <item row="2" column="0">
+      <item row="3" column="0">
        <widget class="QGroupBox" name="groupBox">
         <property name="title">
          <string>Controller Informations</string>
@@ -144,6 +170,19 @@
           </layout>
          </item>
         </layout>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_logo">
+        <property name="text">
+         <string/>
+        </property>
+        <property name="pixmap">
+         <pixmap>NexDome.png</pixmap>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
        </widget>
       </item>
      </layout>

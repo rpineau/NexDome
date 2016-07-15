@@ -35,7 +35,7 @@ class TickCountInterface;
 #endif
 
 enum lastCommand {AzGoto = 0, ShutterOpen, ShutterClose};
-
+#define LOG_BUFFER_SIZE 256
 /*!
 \brief The X2Dome example.
 
@@ -153,6 +153,7 @@ private:
     bool        mHasShutterControl;
     bool        mOpenUpperShutterOnly;
     bool        mHomingDome;
+    char        mLogBuffer[LOG_BUFFER_SIZE];
 
     // bool        mIsRollOffRoof;
 };

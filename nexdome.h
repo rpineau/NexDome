@@ -10,9 +10,11 @@
 #include <math.h>
 #include "../../licensedinterfaces/sberrorx.h"
 #include "../../licensedinterfaces/serxinterface.h"
+#include "../../licensedinterfaces/loggerinterface.h"
 
 #define SERIAL_BUFFER_SIZE 20
 #define MAX_TIMEOUT 500
+#define ND_LOG_BUFFER_SIZE 256
 
 // error codes
 // Error code
@@ -30,6 +32,7 @@ public:
     bool        IsConnected(void) { return bIsConnected; }
 
     void        SetSerxPointer(SerXInterface *p) { pSerx = p; }
+    void        setLogger(LoggerInterface *pLogger) { mLogger = pLogger; };
 
     // Dome commands
     int syncDome(double dAz, double dEl);
@@ -65,6 +68,7 @@ public:
     double getCurrentAz();
     double getCurrentEl();
 
+    int getCurrentShutterState();
     void setShutterOnly(bool bMode);
 
 protected:
@@ -81,6 +85,8 @@ protected:
     bool            isDomeAtHome();
     
     int             domeCommand(const char *cmd, char *result, char respCmdCode, int resultMaxLen);
+
+    LoggerInterface *mLogger;
 
     bool            bIsConnected;
     bool            mHomed;
@@ -101,7 +107,9 @@ protected:
     SerXInterface   *pSerx;
     
     char            firmwareVersion[SERIAL_BUFFER_SIZE];
+    int             mShutterState;
     bool            mShutterOnly; // roll off roof so the arduino is running the shutter firmware only.
+    char            mLogBuffer[ND_LOG_BUFFER_SIZE];
 
 };
 

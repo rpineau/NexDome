@@ -38,6 +38,7 @@ X2Dome::X2Dome(const char* pszSelection,
     mHomingDome = false;
 
     nexDome.SetSerxPointer(pSerX);
+    nexDome.setLogger(pLogger);
 
     if (m_pIniUtil)
     {   
@@ -45,8 +46,10 @@ X2Dome::X2Dome(const char* pszSelection,
         nexDome.setParkAz( m_pIniUtil->readDouble(PARENT_KEY, CHILD_KEY_PARK_AZ, 180) );
         mHasShutterControl = m_pIniUtil->readInt(PARENT_KEY, CHILD_KEY_SHUTTER_CONTROL, false);
     }
-    printf("\n\n\n\n[ ****** X2Dome::X2Dome ******]\n\n\n\n");
-    printf("[X2Dome::X2Dome] HomeAz = %f\tParkAz = %f\n", nexDome.getHomeAz(),nexDome.getParkAz());
+    snprintf(mLogBuffer,LOG_BUFFER_SIZE,"\n\n\n\n[ ****** X2Dome::X2Dome ******]\n\n\n\n");
+    m_pLogger->out(mLogBuffer);
+    snprintf(mLogBuffer,LOG_BUFFER_SIZE,"[X2Dome::X2Dome] HomeAz = %f\tParkAz = %f\n", nexDome.getHomeAz(),nexDome.getParkAz());
+    m_pLogger->out(mLogBuffer);
 }
 
 
@@ -87,6 +90,8 @@ int X2Dome::establishLink(void)
     //    nexDome.setShutterOnly(true);
 
     printf("[X2Dome::establishLink] HomeAz = %f\tParkAz = %f\n", nexDome.getHomeAz(),nexDome.getParkAz());
+    printf("[X2Dome::establishLink] Shutter state = %d\n",nexDome.getCurrentShutterState());
+
 	return SB_OK;
 }
 
