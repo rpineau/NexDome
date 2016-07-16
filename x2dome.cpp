@@ -209,6 +209,9 @@ int X2Dome::execModalSettingsDialog()
 void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
 {
     bool complete;
+    int err;
+    char errorMessage[LOG_BUFFER_SIZE];
+    
     // printf("event = %s\n", pszEvent);
     if (!strcmp(pszEvent, "on_pushButtonCancel_clicked"))
         nexDome.abortCurrentCommand();
@@ -219,27 +222,48 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
             // are we going to Home position to calibrate ?
             if(mHomingDome) {
                 // are we home ?
-                nexDome.isFindHomeComplete(complete);
+                err = nexDome.isFindHomeComplete(complete);
+                if (err) {
+                    uiex->setEnabled("pushButton",true);
+                    uiex->setEnabled("pushButtonOK",true);
+                    snprintf(errorMessage, LOG_BUFFER_SIZE, "Error calibrating dome : Error %d", err);
+                    uiex->messageBox("NexDome Calibrate", errorMessage);
+                    mHomingDome = false;
+                    mCalibratingDome = false;
+                    return;
+                }
                 if(complete) {
                     mHomingDome = false;
+                    mCalibratingDome = true;
                     nexDome.calibrate();
                     return;
                 }
 
             }
-
-            // are we still calibrating ?
-            nexDome.isCalibratingComplete(complete);
-            if(!complete) {
-                printf("Calibrating\n");
-                return;
+            if(mCalibratingDome) {
+                // are we still calibrating ?
+                err = nexDome.isCalibratingComplete(complete);
+                if (err) {
+                    uiex->setEnabled("pushButton",true);
+                    uiex->setEnabled("pushButtonOK",true);
+                    snprintf(errorMessage, LOG_BUFFER_SIZE, "Error calibrating dome : Error %d", err);
+                    uiex->messageBox("NexDome Calibrate", errorMessage);
+                    mHomingDome = false;
+                    mCalibratingDome = false;
+                    return;;
+                }
+                
+                if(!complete) {
+                    return;
+                }
+                
+                // enable "ok" and "calibrate"
+                uiex->setEnabled("pushButton",true);
+                uiex->setEnabled("pushButtonOK",true);
+                // read step per rev from dome
+                uiex->setPropertyInt("ticksPerRev","value", nexDome.getNbTicksPerRev());
+                mCalibratingDome = false;
             }
-
-            // enable "ok" and "calibrate"
-            uiex->setEnabled("pushButton",true);
-            uiex->setEnabled("pushButtonOK",true);
-            // read step per rev from dome
-            uiex->setPropertyInt("ticksPerRev","value", nexDome.getNbTicksPerRev());
         }
     }
 
@@ -249,7 +273,6 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
             // disable "ok" and "calibrate"
             uiex->setEnabled("pushButton",false);
             uiex->setEnabled("pushButtonOK",false);
-
             nexDome.goHome();
             mHomingDome = true;
         }

@@ -545,7 +545,6 @@ int CNexDome::isFindHomeComplete(bool &complete)
         // we're not moving and we're not at the home position !!!
         snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::isFindHomeComplete] Not moving and not at home !!!\n");
         mLogger->out(mLogBuffer);
-
         complete = false;
         mHomed = false;
         mParked = false;
@@ -580,6 +579,8 @@ int CNexDome::isCalibratingComplete(bool &complete)
     }
     else {
         // we're not moving and we're not at the final destination !!!
+        snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::isCalibratingComplete] Not moving and not at home !!!\n");
+        mLogger->out(mLogBuffer);
         complete = false;
         mHomed = false;
         mParked = false;
