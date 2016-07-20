@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>357</width>
-    <height>371</height>
+    <width>332</width>
+    <height>370</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -26,7 +26,58 @@
       <string/>
      </property>
      <layout class="QGridLayout" name="gridLayout">
-      <item row="1" column="0">
+      <item row="0" column="0">
+       <layout class="QHBoxLayout" name="horizontalLayout_5">
+        <item>
+         <widget class="QLabel" name="label_logo">
+          <property name="text">
+           <string/>
+          </property>
+          <property name="pixmap">
+           <pixmap>NexDome.png</pixmap>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="label_4">
+          <property name="text">
+           <string>© RTI-Zone.org, 2016</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="4" column="0">
+       <widget class="QGroupBox" name="groupBox">
+        <property name="title">
+         <string>Controller Informations</string>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_3">
+         <item row="0" column="0">
+          <layout class="QHBoxLayout" name="horizontalLayout">
+           <item>
+            <widget class="QLabel" name="label">
+             <property name="text">
+              <string>Number of Ticks per revolution :</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="ticksPerRev">
+             <property name="text">
+              <string>00000000</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="2" column="0">
        <widget class="QGroupBox" name="MaxDomeIIParams">
         <property name="title">
          <string>NexDome Params</string>
@@ -111,7 +162,7 @@
         </layout>
        </widget>
       </item>
-      <item row="4" column="0">
+      <item row="5" column="0">
        <layout class="QHBoxLayout" name="horizontalLayout_4">
         <item>
          <spacer name="horizontalSpacer_4">
@@ -144,46 +195,6 @@
          </widget>
         </item>
        </layout>
-      </item>
-      <item row="3" column="0">
-       <widget class="QGroupBox" name="groupBox">
-        <property name="title">
-         <string>Controller Informations</string>
-        </property>
-        <layout class="QGridLayout" name="gridLayout_3">
-         <item row="0" column="0">
-          <layout class="QHBoxLayout" name="horizontalLayout">
-           <item>
-            <widget class="QLabel" name="label">
-             <property name="text">
-              <string>Number of Ticks per revolution :</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="ticksPerRev">
-             <property name="text">
-              <string>00000000</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-        </layout>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <widget class="QLabel" name="label_logo">
-        <property name="text">
-         <string/>
-        </property>
-        <property name="pixmap">
-         <pixmap>NexDome.png</pixmap>
-        </property>
-        <property name="alignment">
-         <set>Qt::AlignCenter</set>
-        </property>
-       </widget>
       </item>
      </layout>
     </widget>
