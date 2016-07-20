@@ -39,6 +39,9 @@
           <property name="alignment">
            <set>Qt::AlignCenter</set>
           </property>
+          <property name="X2_PhotoFileName" stdset="0">
+           <string>NexDome.png</string>
+          </property>
          </widget>
         </item>
         <item>
