@@ -69,6 +69,7 @@ public:
     double getCurrentEl();
 
     int getCurrentShutterState();
+    int getCurrentShutterbattery(double &volts);
     void setShutterOnly(bool bMode);
 
 protected:

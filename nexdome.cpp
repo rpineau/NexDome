@@ -226,6 +226,23 @@ int CNexDome::getShutterState(int &state)
     return err;
 }
 
+int CNexDome::getCurrentShutterbattery(double &volts)
+{
+    int err = 0;
+    char resp[SERIAL_BUFFER_SIZE];
+
+    if(!bIsConnected)
+        return NOT_CONNECTED;
+
+    err = domeCommand("k\n", resp, 'K', SERIAL_BUFFER_SIZE);
+    if(err)
+        return err;
+
+    // convert battery vols value string to double
+    volts = atof(resp);
+    return err;
+
+}
 
 int CNexDome::getDomeStepPerRev(int &stepPerRev)
 {
