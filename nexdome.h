@@ -58,6 +58,7 @@ public:
 
     // getter/setter
     int getNbTicksPerRev();
+    int getBatteryLevel();
 
     double getHomeAz();
     int setHomeAz(double dAz);
@@ -69,8 +70,7 @@ public:
     double getCurrentEl();
 
     int getCurrentShutterState();
-    int getCurrentShutterbattery(double &volts);
-    void setShutterOnly(bool bMode);
+    int getBatteryLevels(double &domeVolts, double &shutterVolts);
 
 protected:
     
@@ -95,7 +95,7 @@ protected:
     bool            mShutterOpened;
     
     int             mNbStepPerRev;
-
+    double          mShutterBatteryVolts;
     double          mHomeAz;
     
     double          mParkAz;

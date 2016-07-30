@@ -21,7 +21,8 @@ CNexDome::CNexDome()
     bIsConnected = false;
 
     mNbStepPerRev = 0;
-
+    mShutterBatteryVolts = 0.0;
+    
     mHomeAz = 180;
     mParkAz = 180;
 
@@ -226,23 +227,6 @@ int CNexDome::getShutterState(int &state)
     return err;
 }
 
-int CNexDome::getCurrentShutterbattery(double &volts)
-{
-    int err = 0;
-    char resp[SERIAL_BUFFER_SIZE];
-
-    if(!bIsConnected)
-        return NOT_CONNECTED;
-
-    err = domeCommand("k\n", resp, 'K', SERIAL_BUFFER_SIZE);
-    if(err)
-        return err;
-
-    // convert battery vols value string to double
-    volts = atof(resp);
-    return err;
-
-}
 
 int CNexDome::getDomeStepPerRev(int &stepPerRev)
 {
@@ -258,6 +242,47 @@ int CNexDome::getDomeStepPerRev(int &stepPerRev)
 
     stepPerRev = atoi(resp);
     mNbStepPerRev = stepPerRev;
+    return err;
+}
+
+int CNexDome::getBatteryLevels(double &domeVolts, double &shutterVolts)
+{
+    int err = 0;
+    int i = 0;
+    int j = 0;
+    char resp[SERIAL_BUFFER_SIZE];
+    char voltData[4];
+    
+    if(!bIsConnected)
+        return NOT_CONNECTED;
+
+    
+    err = domeCommand("k\n", resp, 'K', SERIAL_BUFFER_SIZE);
+    if(err)
+        return err;
+
+    
+    // convert battery vols value string to int
+    memset(voltData,0,4);
+    // skip the spaces:
+    while(resp[j]==' ')
+        j++;
+    while(resp[j]!=' ' && i<4)
+        voltData[i++]=resp[j++];
+    domeVolts = atof(voltData);
+
+    // skip the spaces:
+    while(resp[j]==' ')
+        j++;
+    memset(voltData,0,4);
+    i = 0;
+    while(resp[j]!=0 && i<4)
+        voltData[i++]=resp[j++];
+    shutterVolts = atof(voltData);
+
+    // the battery levels are going through a voltage divider by 3 and then connected to the A0 analog pin of the arduinos
+    domeVolts = domeVolts / 100.0 * 3;
+    shutterVolts = shutterVolts / 100.0 * 3;
     return err;
 }
 
@@ -619,6 +644,8 @@ int CNexDome::abortCurrentCommand()
 
 int CNexDome::getNbTicksPerRev()
 {
+    if(bIsConnected)
+        getDomeStepPerRev(mNbStepPerRev);
     return mNbStepPerRev;
 }
 
@@ -695,8 +722,3 @@ int CNexDome::getCurrentShutterState()
     return mShutterState;
 }
 
-
-void CNexDome::setShutterOnly(bool bMode)
-{
-    mShutterOnly = bMode;
-}

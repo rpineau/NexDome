@@ -137,7 +137,9 @@ int X2Dome::execModalSettingsDialog()
     char tmpBuf[SERIAL_BUFFER_SIZE];
     double dHomeAz;
     double dParkAz;
-    bool operateAnyAz;
+    double domeBattery;
+    double shutterBattery;
+    
 
     if (NULL == ui)
         return ERR_POINTER;
@@ -153,7 +155,6 @@ int X2Dome::execModalSettingsDialog()
     if(mHasShutterControl)
     {
         dx->setChecked("hasShutterCtrl",true);
-
     }
     else
     {
@@ -165,11 +166,23 @@ int X2Dome::execModalSettingsDialog()
     if(m_bLinked) {
         snprintf(tmpBuf,16,"%d",nexDome.getNbTicksPerRev());
         dx->setPropertyString("ticksPerRev","text", tmpBuf);
+        nexDome.getBatteryLevels(domeBattery, shutterBattery);
+        snprintf(tmpBuf,16,"%2.2f V",domeBattery);
+        dx->setPropertyString("domeBatteryLevel","text", tmpBuf);
+        if(mHasShutterControl) {
+            snprintf(tmpBuf,16,"%2.2f V",shutterBattery);
+            dx->setPropertyString("shutterBatteryLevel","text", tmpBuf);
+        }
+        else {
+            snprintf(tmpBuf,16,"NA");
+            dx->setPropertyString("shutterBatteryLevel","text", tmpBuf);
+        }
         dx->setEnabled("pushButton",true);
     }
     else {
         snprintf(tmpBuf,16,"NA");
         dx->setPropertyString("ticksPerRev","text", tmpBuf);
+        dx->setPropertyString("shutterBatteryLevel","text", tmpBuf);
         dx->setEnabled("pushButton",false);
     }
     dx->setPropertyDouble("homePosition","value", nexDome.getHomeAz());
@@ -186,7 +199,6 @@ int X2Dome::execModalSettingsDialog()
     {
         dx->propertyDouble("homePosition", "value", dHomeAz);
         dx->propertyDouble("parkPosition", "value", dParkAz);
-        operateAnyAz = dx->isChecked("radioButtonShutterAnyAz");
         mHasShutterControl = dx->isChecked("hasShutterCtrl");
 
         if(m_bLinked)
@@ -210,6 +222,11 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
 {
     bool complete;
     int err;
+    double domeBattery;
+    double shutterBattery;
+    char tmpBuf[SERIAL_BUFFER_SIZE];
+
+    
     char errorMessage[LOG_BUFFER_SIZE];
     
     // printf("event = %s\n", pszEvent);
@@ -240,6 +257,7 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
                 }
 
             }
+            
             if(mCalibratingDome) {
                 // are we still calibrating ?
                 err = nexDome.isCalibratingComplete(complete);
@@ -264,6 +282,22 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
                 uiex->setPropertyInt("ticksPerRev","value", nexDome.getNbTicksPerRev());
                 mCalibratingDome = false;
             }
+            
+            if(mHasShutterControl && !mHomingDome && !mCalibratingDome) {
+                nexDome.getBatteryLevels(domeBattery, shutterBattery);
+                snprintf(tmpBuf,16,"%2.2f V",domeBattery);
+                uiex->setPropertyString("domeBatteryLevel","text", tmpBuf);
+                if(mHasShutterControl) {
+                    snprintf(tmpBuf,16,"%2.2f V",shutterBattery);
+                    uiex->setPropertyString("shutterBatteryLevel","text", tmpBuf);
+                }
+                else {
+                    snprintf(tmpBuf,16,"NA");
+                    uiex->setPropertyString("shutterBatteryLevel","text", tmpBuf);
+                }
+            }
+
+            
         }
     }
 
