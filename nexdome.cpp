@@ -280,9 +280,8 @@ int CNexDome::getBatteryLevels(double &domeVolts, double &shutterVolts)
         voltData[i++]=resp[j++];
     shutterVolts = atof(voltData);
 
-    // the battery levels are going through a voltage divider by 3 and then connected to the A0 analog pin of the arduinos
-    domeVolts = domeVolts / 100.0 * 3;
-    shutterVolts = shutterVolts / 100.0 * 3;
+    domeVolts = domeVolts / 100.0;
+    shutterVolts = shutterVolts / 100.0;
     return err;
 }
 
