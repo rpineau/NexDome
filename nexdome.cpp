@@ -251,7 +251,7 @@ int CNexDome::getBatteryLevels(double &domeVolts, double &shutterVolts)
     int i = 0;
     int j = 0;
     char resp[SERIAL_BUFFER_SIZE];
-    char voltData[4];
+    char voltData[SERIAL_BUFFER_SIZE];
     
     if(!bIsConnected)
         return NOT_CONNECTED;
@@ -263,20 +263,20 @@ int CNexDome::getBatteryLevels(double &domeVolts, double &shutterVolts)
 
     
     // convert battery vols value string to int
-    memset(voltData,0,4);
+    memset(voltData,0,SERIAL_BUFFER_SIZE);
     // skip the spaces:
     while(resp[j]==' ')
         j++;
-    while(resp[j]!=' ' && i<4)
+    while(resp[j]!=' ' && i<(SERIAL_BUFFER_SIZE - 1))
         voltData[i++]=resp[j++];
     domeVolts = atof(voltData);
 
     // skip the spaces:
     while(resp[j]==' ')
         j++;
-    memset(voltData,0,4);
+    memset(voltData,0,SERIAL_BUFFER_SIZE);
     i = 0;
-    while(resp[j]!=0 && i<4)
+    while(resp[j]!=0 && i<(SERIAL_BUFFER_SIZE - 1))
         voltData[i++]=resp[j++];
     shutterVolts = atof(voltData);
 

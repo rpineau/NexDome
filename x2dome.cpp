@@ -235,6 +235,7 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
 
     if (!strcmp(pszEvent, "on_timer"))
     {
+        mHasShutterControl = uiex->isChecked("hasShutterCtrl");
         if(m_bLinked) {
             // are we going to Home position to calibrate ?
             if(mHomingDome) {
