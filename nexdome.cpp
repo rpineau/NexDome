@@ -267,7 +267,7 @@ int CNexDome::getBatteryLevels(double &domeVolts, double &shutterVolts)
     // skip the spaces:
     while(resp[j]==' ')
         j++;
-    while(resp[j]!=' ' && i<(SERIAL_BUFFER_SIZE - 1))
+    while(resp[j]!=' ' && i<SERIAL_BUFFER_SIZE)
         voltData[i++]=resp[j++];
     domeVolts = atof(voltData);
 
@@ -276,7 +276,7 @@ int CNexDome::getBatteryLevels(double &domeVolts, double &shutterVolts)
         j++;
     memset(voltData,0,SERIAL_BUFFER_SIZE);
     i = 0;
-    while(resp[j]!=0 && i<(SERIAL_BUFFER_SIZE - 1))
+    while(resp[j]!=0 && i<SERIAL_BUFFER_SIZE)
         voltData[i++]=resp[j++];
     shutterVolts = atof(voltData);
 
