@@ -175,6 +175,7 @@ int X2Dome::execModalSettingsDialog()
     else {
         snprintf(tmpBuf,16,"NA");
         dx->setPropertyString("ticksPerRev","text", tmpBuf);
+        dx->setPropertyString("domeBatteryLevel","text", tmpBuf);
         dx->setPropertyString("shutterBatteryLevel","text", tmpBuf);
         dx->setEnabled("pushButton",false);
     }
