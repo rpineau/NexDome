@@ -86,11 +86,6 @@ int X2Dome::establishLink(void)
         return ERR_COMMNOLINK;
 
     m_bLinked = true;
-    // if(mIsRollOffRoof)
-    //    nexDome.setShutterOnly(true);
-
-    printf("[X2Dome::establishLink] HomeAz = %f\tParkAz = %f\n", nexDome.getHomeAz(),nexDome.getParkAz());
-    printf("[X2Dome::establishLink] Shutter state = %d\n",nexDome.getCurrentShutterState());
 
 	return SB_OK;
 }
@@ -161,8 +156,6 @@ int X2Dome::execModalSettingsDialog()
         dx->setChecked("hasShutterCtrl",false);
     }
 
-    printf("[X2Dome::queryAbstraction] HomeAz = %f\tParkAz = %f\n", nexDome.getHomeAz(),nexDome.getParkAz());
-    
     if(m_bLinked) {
         snprintf(tmpBuf,16,"%d",nexDome.getNbTicksPerRev());
         dx->setPropertyString("ticksPerRev","text", tmpBuf);
@@ -206,9 +199,7 @@ int X2Dome::execModalSettingsDialog()
             nexDome.setHomeAz(dHomeAz);
             nexDome.setParkAz(dParkAz);
         }
-        printf("dHomeAz = %f\n", dHomeAz);
-        printf("dParkAz = %f\n", dParkAz);
-        
+
         // save the values to persistent storage
         nErr |= m_pIniUtil->writeDouble(PARENT_KEY, CHILD_KEY_HOME_AZ, dHomeAz);
         nErr |= m_pIniUtil->writeDouble(PARENT_KEY, CHILD_KEY_PARK_AZ, dParkAz);
@@ -229,7 +220,6 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
     
     char errorMessage[LOG_BUFFER_SIZE];
     
-    // printf("event = %s\n", pszEvent);
     if (!strcmp(pszEvent, "on_pushButtonCancel_clicked"))
         nexDome.abortCurrentCommand();
 
@@ -322,22 +312,21 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
 
 void X2Dome::deviceInfoNameShort(BasicStringInterface& str) const					
 {
-    printf("deviceInfoNameShort\n");
 	str = "NexDome";
 }
+
 void X2Dome::deviceInfoNameLong(BasicStringInterface& str) const					
 {
-    printf("deviceInfoNameLong\n");
     str = "NexDome Dome Control System";
 }
+
 void X2Dome::deviceInfoDetailedDescription(BasicStringInterface& str) const		
 {
-    printf("deviceInfoDetailedDescription\n");
     str = "NexDome Dome Control System by Rodolphe Pineau";
 }
+
  void X2Dome::deviceInfoFirmwareVersion(BasicStringInterface& str)					
 {
-    printf("deviceInfoFirmwareVersion\n");
     if(m_bLinked) {
         char cFirmware[SERIAL_BUFFER_SIZE];
         nexDome.getFirmwareVersion(cFirmware, SERIAL_BUFFER_SIZE);
@@ -350,8 +339,6 @@ void X2Dome::deviceInfoDetailedDescription(BasicStringInterface& str) const
 
 void X2Dome::deviceInfoModel(BasicStringInterface& str)
 {
-    printf("deviceInfoModel\n");
-
     str = "NexDome";
 }
 
@@ -396,9 +383,7 @@ int X2Dome::dapiGotoAzEl(double dAz, double dEl)
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    printf("[X2Dome::dapiGotoAzEl] dAz = %f, dEl = %f\n",dAz, dEl);
     err = nexDome.gotoAzimuth(dAz);
-
     if(err)
         return ERR_CMDFAILED;
 
@@ -598,7 +583,6 @@ int X2Dome::dapiIsFindHomeComplete(bool* pbComplete)
         return ERR_NOLINK;
 
     err = nexDome.isFindHomeComplete(*pbComplete);
-    printf("[X2Dome::dapiIsFindHomeComplete] err = %d\n", err);
     if(err)
         return ERR_CMDFAILED;
 
