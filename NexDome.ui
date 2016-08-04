@@ -102,7 +102,7 @@
            <item>
             <widget class="QLabel" name="label_5">
              <property name="text">
-              <string>Shutter Battery level :</string>
+              <string>Shutter battery level :</string>
              </property>
             </widget>
            </item>
@@ -133,7 +133,7 @@
            <item>
             <widget class="QLabel" name="label">
              <property name="text">
-              <string>Number of Ticks per revolution :</string>
+              <string>Number of steps per revolution :</string>
              </property>
             </widget>
            </item>
@@ -164,7 +164,7 @@
            <item>
             <widget class="QLabel" name="label_7">
              <property name="text">
-              <string>Dome Battery level :</string>
+              <string>Dome battery level :</string>
              </property>
             </widget>
            </item>
@@ -258,7 +258,7 @@
          <item row="11" column="0">
           <widget class="QCheckBox" name="hasShutterCtrl">
            <property name="text">
-            <string>Has shutter control</string>
+            <string>Shutter controller present</string>
            </property>
           </widget>
          </item>
