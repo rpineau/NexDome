@@ -89,7 +89,7 @@ int CNexDome::readResponse(char *respBuffer, int bufferLen)
     bufPtr = respBuffer;
     // Look for a CR  character, until time out occurs or MAX_BUFFER characters was read
     err = pSerx->readFile(bufPtr, 1, nBytesRead, MAX_TIMEOUT);
-    while (*bufPtr != '\n' && nBytesRead < bufferLen )
+    while (*bufPtr != '\n' && nBytesRead < (bufferLen-1) )
     {
         bufPtr++;
         err = pSerx->readFile(bufPtr, 1, nBytesRead, MAX_TIMEOUT);
@@ -267,7 +267,7 @@ int CNexDome::getBatteryLevels(double &domeVolts, double &shutterVolts)
     // skip the spaces:
     while(resp[j]==' ')
         j++;
-    while(resp[j]!=' ' && i<SERIAL_BUFFER_SIZE)
+    while(resp[j] != ' ' && i < (SERIAL_BUFFER_SIZE-1))
         voltData[i++]=resp[j++];
     domeVolts = atof(voltData);
 
@@ -276,7 +276,7 @@ int CNexDome::getBatteryLevels(double &domeVolts, double &shutterVolts)
         j++;
     memset(voltData,0,SERIAL_BUFFER_SIZE);
     i = 0;
-    while(resp[j]!=0 && i<SERIAL_BUFFER_SIZE)
+    while(resp[j] != 0 && i < (SERIAL_BUFFER_SIZE-1))
         voltData[i++]=resp[j++];
     shutterVolts = atof(voltData);
 
