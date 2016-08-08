@@ -36,6 +36,7 @@ X2Dome::X2Dome(const char* pszSelection,
 
 	m_bLinked = false;
     mHomingDome = false;
+    mCalibratingDome = false;
 
     nexDome.SetSerxPointer(pSerX);
     nexDome.setLogger(pLogger);
@@ -466,6 +467,13 @@ int X2Dome::dapiUnpark(void)
 
     if(!m_bLinked)
         return ERR_NOLINK;
+
+    if(mHasShutterControl)
+    {
+        err = nexDome.openShutter();
+        if(err)
+            return ERR_CMDFAILED;
+    }
 
     err = nexDome.unparkDome();
     if(err)

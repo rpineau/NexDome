@@ -106,14 +106,11 @@ int CNexDome::readResponse(char *respBuffer, int bufferLen)
 int CNexDome::domeCommand(const char *cmd, char *result, char respCmdCode, int resultMaxLen)
 {
     int err = 0;
-    char buf[SERIAL_BUFFER_SIZE];
     char resp[SERIAL_BUFFER_SIZE];
     unsigned long  nBytesWrite;
 
-    memset(buf,0,SERIAL_BUFFER_SIZE);
-    strncpy(buf,cmd,SERIAL_BUFFER_SIZE);
     pSerx->purgeTxRx();
-    err = pSerx->writeFile(buf, strlen(buf), nBytesWrite);
+    err = pSerx->writeFile((void *)cmd, strlen(cmd), nBytesWrite);
 
     // read response
     err = readResponse(resp, SERIAL_BUFFER_SIZE);
