@@ -1,3 +1,3 @@
 //See hardwarelist.txt for details on this file format.
-//Version|Manufacturer|Model|Comment|MapsTo|PlugInDllName
-2|X2 Dome|NexDome|NexDome | |libNexDome||0|1|0|
+//Version|Manufacturer|Model|Comment|MapsTo|PlugInDllName|X2Developer|Windows|Mac|Linux|
+2|X2 Dome|NexDome|NexDome| |libNexDome||0|1|0|
