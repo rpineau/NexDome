@@ -47,10 +47,6 @@ X2Dome::X2Dome(const char* pszSelection,
         nexDome.setParkAz( m_pIniUtil->readDouble(PARENT_KEY, CHILD_KEY_PARK_AZ, 180) );
         mHasShutterControl = m_pIniUtil->readInt(PARENT_KEY, CHILD_KEY_SHUTTER_CONTROL, false);
     }
-    snprintf(mLogBuffer,LOG_BUFFER_SIZE,"\n\n\n\n[ ****** X2Dome::X2Dome ******]\n\n\n\n");
-    m_pLogger->out(mLogBuffer);
-    snprintf(mLogBuffer,LOG_BUFFER_SIZE,"[X2Dome::X2Dome] HomeAz = %f\tParkAz = %f\n", nexDome.getHomeAz(),nexDome.getParkAz());
-    m_pLogger->out(mLogBuffer);
 }
 
 
