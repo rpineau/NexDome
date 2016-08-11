@@ -8,6 +8,7 @@
 #ifndef __NEXDOME__
 #define __NEXDOME__
 #include <math.h>
+#include <string.h>
 #include "../../licensedinterfaces/sberrorx.h"
 #include "../../licensedinterfaces/serxinterface.h"
 #include "../../licensedinterfaces/loggerinterface.h"

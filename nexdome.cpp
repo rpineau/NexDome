@@ -45,21 +45,21 @@ bool CNexDome::Connect(const char *szPort)
 {
     int err;
     
-    // 19200 8N1
+    // 9600 8N1
     if(pSerx->open(szPort,9600) == 0)
         bIsConnected = true;
     else
         bIsConnected = false;
 
-    // Check to see if we can't even connect to the device
     if(!bIsConnected)
         return false;
 
     pSerx->purgeTxRx();
+    // if this fails we're not properly connected.
     err = getFirmwareVersion(firmwareVersion, SERIAL_BUFFER_SIZE);
     if(err)
     {
-        bIsConnected = false; // if this fails we're not properly connectiong.
+        bIsConnected = false;
         pSerx->close();
     }
     // assume the dome was parked

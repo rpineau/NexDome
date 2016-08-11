@@ -4,7 +4,7 @@
 #include "x2dome.h"
 
 
-#define PLUGIN_NAME "X2Dome example" 
+#define PLUGIN_NAME "X2Dome NexDome" 
 
 extern "C" PlugInExport int sbPlugInName2(BasicStringInterface& str)
 {

@@ -34,7 +34,6 @@ class TickCountInterface;
 #define DEF_PORT_NAME					"/dev/COM0"
 #endif
 
-enum lastCommand {AzGoto = 0, ShutterOpen, ShutterClose};
 #define LOG_BUFFER_SIZE 256
 /*!
 \brief The X2Dome example.
