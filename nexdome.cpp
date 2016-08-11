@@ -10,9 +10,9 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <memory.h>
-// #ifdef SB_MAC_BUILD
+#ifdef SB_MAC_BUILD
 #include <unistd.h>
-// #endif
+#endif
 
 CNexDome::CNexDome()
 {
