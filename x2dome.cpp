@@ -347,7 +347,7 @@ void X2Dome::deviceInfoModel(BasicStringInterface& str)
 
  void	X2Dome::driverInfoDetailedInfo(BasicStringInterface& str) const	
 {
-    str = "NexDome X2 plugin v1.0 beta";
+    str = "NexDome X2 plugin v1.0";
 }
 
 double	X2Dome::driverInfoVersion(void) const
