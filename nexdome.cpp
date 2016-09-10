@@ -34,6 +34,8 @@ CNexDome::CNexDome()
     
     mParked = true;
     mHomed = false;
+    memset(firmwareVersion,0,SERIAL_BUFFER_SIZE);
+    memset(mLogBuffer,0,ND_LOG_BUFFER_SIZE);
 }
 
 CNexDome::~CNexDome()
@@ -54,7 +56,6 @@ bool CNexDome::Connect(const char *szPort)
     if(!bIsConnected)
         return false;
 
-    pSerx->purgeTxRx();
     // if this fails we're not properly connected.
     err = getFirmwareVersion(firmwareVersion, SERIAL_BUFFER_SIZE);
     if(err)
@@ -99,7 +100,7 @@ int CNexDome::readResponse(char *respBuffer, int bufferLen)
             break;
         }
     }
-
+    *bufPtr = 0; //remove the \n
     return err;
 }
 
