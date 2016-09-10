@@ -85,21 +85,29 @@ int CNexDome::readResponse(char *respBuffer, int bufferLen)
 {
     int err = ND_OK;
     unsigned long nBytesRead = 0;
+    unsigned long totalBytesRead = 0;
     char *bufPtr;
     
     memset(respBuffer, 0, (size_t) bufferLen);
     bufPtr = respBuffer;
     // Look for a CR  character, until time out occurs or MAX_BUFFER characters was read
     err = pSerx->readFile(bufPtr, 1, nBytesRead, MAX_TIMEOUT);
-    while (*bufPtr != '\n' && nBytesRead < (bufferLen-1) )
+    if(err)
+        return err;
+    totalBytesRead += nBytesRead;
+    
+    while (*bufPtr != '\n' && totalBytesRead < bufferLen )
     {
         bufPtr++;
         err = pSerx->readFile(bufPtr, 1, nBytesRead, MAX_TIMEOUT);
+        if(err)
+            return err;
         
         if (nBytesRead !=1) {// timeout
             err = ND_BAD_CMD_RESPONSE;
             break;
         }
+        totalBytesRead += nBytesRead;
     }
     *bufPtr = 0; //remove the \n
     return err;
