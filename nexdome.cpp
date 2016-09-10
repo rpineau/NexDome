@@ -63,9 +63,10 @@ bool CNexDome::Connect(const char *szPort)
         bIsConnected = false;
         pSerx->close();
     }
+
     // assume the dome was parked
     getDomeParkAz(mCurrentAzPosition);
-    
+
     return bIsConnected;
 }
 
