@@ -90,7 +90,7 @@ int CNexDome::readResponse(char *respBuffer, int bufferLen)
     
     memset(respBuffer, 0, (size_t) bufferLen);
     bufPtr = respBuffer;
-    // Look for a CR  character, until time out occurs or MAX_BUFFER characters was read
+    // Look for a LF  character, until time out occurs or MAX_BUFFER characters was read
     err = pSerx->readFile(bufPtr, 1, nBytesRead, MAX_TIMEOUT);
     if(err)
         return err;
