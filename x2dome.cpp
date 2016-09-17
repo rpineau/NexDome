@@ -72,19 +72,19 @@ X2Dome::~X2Dome()
 
 int X2Dome::establishLink(void)					
 {
-    bool connected;
+    int err;
     char szPort[DRIVER_MAX_STRING];
 
     X2MutexLocker ml(GetMutex());
     // get serial port device name
     portNameOnToCharPtr(szPort,DRIVER_MAX_STRING);
-    connected = nexDome.Connect(szPort);
-    if(!connected)
-        return ERR_COMMNOLINK;
+    err = nexDome.Connect(szPort);
+    if(err)
+        m_bLinked = false;
+    else
+        m_bLinked = true;
 
-    m_bLinked = true;
-
-	return SB_OK;
+	return err;
 }
 
 int X2Dome::terminateLink(void)					

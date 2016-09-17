@@ -43,7 +43,7 @@ CNexDome::~CNexDome()
 
 }
 
-bool CNexDome::Connect(const char *szPort)
+int CNexDome::Connect(const char *szPort)
 {
     int err;
     
@@ -54,7 +54,7 @@ bool CNexDome::Connect(const char *szPort)
         bIsConnected = false;
 
     if(!bIsConnected)
-        return false;
+        return ERR_COMMNOLINK;
 
     // if this fails we're not properly connected.
     err = getFirmwareVersion(firmwareVersion, SERIAL_BUFFER_SIZE);
@@ -62,12 +62,13 @@ bool CNexDome::Connect(const char *szPort)
     {
         bIsConnected = false;
         pSerx->close();
+        return FIRMWARE_NOT_SUPPORTED;
     }
 
     // assume the dome was parked
     getDomeParkAz(mCurrentAzPosition);
 
-    return bIsConnected;
+    return SB_OK;
 }
 
 
@@ -92,19 +93,30 @@ int CNexDome::readResponse(char *respBuffer, int bufferLen)
     bufPtr = respBuffer;
     // Look for a LF  character, until time out occurs or MAX_BUFFER characters was read
     err = pSerx->readFile(bufPtr, 1, nBytesRead, MAX_TIMEOUT);
-    if(err)
+    if(err) {
+        printf("[CNexDome::readResponse] Read Error on first read ");
         return err;
+    }
+    if (nBytesRead !=1) {// timeout
+        err = ND_BAD_CMD_RESPONSE;
+        printf("[CNexDome::readResponse] Timeout Error on first read ");
+        return err;
+    }
+
     totalBytesRead += nBytesRead;
     
     while (*bufPtr != '\n' && totalBytesRead < bufferLen )
     {
         bufPtr++;
         err = pSerx->readFile(bufPtr, 1, nBytesRead, MAX_TIMEOUT);
-        if(err)
+        if(err) {
+            printf("[CNexDome::readResponse] Read Error on read ");
             return err;
-        
+        }
+
         if (nBytesRead !=1) {// timeout
             err = ND_BAD_CMD_RESPONSE;
+            printf("[CNexDome::readResponse] Timeout Error on read ");
             break;
         }
         totalBytesRead += nBytesRead;
@@ -112,6 +124,36 @@ int CNexDome::readResponse(char *respBuffer, int bufferLen)
     *bufPtr = 0; //remove the \n
     return err;
 }
+
+int CNexDome::readResponse2(char *respBuffer, int bufferLen)
+{
+    int err = ND_OK;
+    unsigned long nBytesRead = 0;
+    unsigned long totalBytesRead = 0;
+    char *bufPtr;
+
+    memset(respBuffer, 0, (size_t) bufferLen);
+    bufPtr = respBuffer;
+
+    do {
+        err = pSerx->readFile(bufPtr, 1, nBytesRead, MAX_TIMEOUT);
+        if(err) {
+            printf("[CNexDome::readResponse] Read Error.\n");
+            return err;
+        }
+
+        if (nBytesRead !=1) {// timeout
+            err = ND_BAD_CMD_RESPONSE;
+            printf("[CNexDome::readResponse] Timeout Error on read.\n");
+            break;
+        }
+        totalBytesRead += nBytesRead;
+    } while (*bufPtr++ != '\n' && totalBytesRead < bufferLen );
+
+    *bufPtr = 0; //remove the \n
+    return err;
+}
+
 
 int CNexDome::domeCommand(const char *cmd, char *result, char respCmdCode, int resultMaxLen)
 {
@@ -121,9 +163,12 @@ int CNexDome::domeCommand(const char *cmd, char *result, char respCmdCode, int r
 
     pSerx->purgeTxRx();
     err = pSerx->writeFile((void *)cmd, strlen(cmd), nBytesWrite);
-
+    if(err)
+        return err;
     // read response
     err = readResponse(resp, SERIAL_BUFFER_SIZE);
+    if(err)
+        return err;
 
     if(resp[0] != respCmdCode)
         err = ND_BAD_CMD_RESPONSE;
@@ -448,7 +493,7 @@ int CNexDome::calibrate()
 int CNexDome::isGoToComplete(bool &complete)
 {
     int err = 0;
-    double domeAz;
+    double domeAz = 0;
 
     if(!bIsConnected)
         return NOT_CONNECTED;
@@ -529,7 +574,7 @@ int CNexDome::isCloseComplete(bool &complete)
 int CNexDome::isParkComplete(bool &complete)
 {
     int err = 0;
-    double domeAz;
+    double domeAz=0;
 
     if(!bIsConnected)
         return NOT_CONNECTED;
@@ -606,7 +651,7 @@ int CNexDome::isFindHomeComplete(bool &complete)
 int CNexDome::isCalibratingComplete(bool &complete)
 {
     int err = 0;
-    double domeAz;
+    double domeAz = 0;
 
     if(!bIsConnected)
         return NOT_CONNECTED;

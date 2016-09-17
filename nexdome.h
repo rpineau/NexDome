@@ -14,7 +14,7 @@
 #include "../../licensedinterfaces/loggerinterface.h"
 
 #define SERIAL_BUFFER_SIZE 20
-#define MAX_TIMEOUT 500
+#define MAX_TIMEOUT 3000
 #define ND_LOG_BUFFER_SIZE 256
 
 // error codes
@@ -28,7 +28,7 @@ public:
     CNexDome();
     ~CNexDome();
 
-    bool        Connect(const char *szPort);
+    int        Connect(const char *szPort);
     void        Disconnect(void);
     bool        IsConnected(void) { return bIsConnected; }
 
@@ -76,6 +76,7 @@ public:
 protected:
     
     int             readResponse(char *respBuffer, int bufferLen);
+    int             readResponse2(char *respBuffer, int bufferLen);
     int             getDomeAz(double &domeAz);
     int             getDomeEl(double &domeEl);
     int             getDomeHomeAz(double &Az);
