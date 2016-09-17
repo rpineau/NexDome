@@ -154,6 +154,9 @@ private:
     bool        mHomingDome;
     bool        mCalibratingDome;
     char        mLogBuffer[LOG_BUFFER_SIZE];
-
+    int         mHomingRequest;
+    int         mCalibratingRequest;
+    int         mBattRequest;
+    
     // bool        mIsRollOffRoof;
 };

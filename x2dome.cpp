@@ -37,7 +37,10 @@ X2Dome::X2Dome(const char* pszSelection,
 	m_bLinked = false;
     mHomingDome = false;
     mCalibratingDome = false;
-
+    mHomingRequest = 0;
+    mCalibratingRequest = 0;
+    mBattRequest = 0;
+    
     nexDome.SetSerxPointer(pSerX);
     nexDome.setLogger(pLogger);
 
@@ -180,7 +183,11 @@ int X2Dome::execModalSettingsDialog()
     dx->setPropertyDouble("parkPosition","value", nexDome.getParkAz());
 
     mHomingDome = false;
-
+    mHomingRequest = 0;
+    mCalibratingRequest = 0;
+    mBattRequest = 0;
+    
+    
     //Display the user interface
     if ((nErr = ui->exec(bPressedOK)))
         return nErr;
@@ -209,7 +216,7 @@ int X2Dome::execModalSettingsDialog()
 
 void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
 {
-    bool complete;
+    bool complete = false;
     int err;
     double domeBattery;
     double shutterBattery;
@@ -228,39 +235,52 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
             // are we going to Home position to calibrate ?
             if(mHomingDome) {
                 // are we home ?
-                err = nexDome.isFindHomeComplete(complete);
-                if (err) {
-                    uiex->setEnabled("pushButton",true);
-                    uiex->setEnabled("pushButtonOK",true);
-                    snprintf(errorMessage, LOG_BUFFER_SIZE, "Error calibrating dome : Error %d", err);
-                    uiex->messageBox("NexDome Calibrate", errorMessage);
-                    mHomingDome = false;
-                    mCalibratingDome = false;
-                    return;
+                complete = false;
+                // don't ask too often
+                printf("mHomingRequest = %d, mHomingRequest mod 4 = %d\n", mHomingRequest, mHomingRequest%4);
+                if (!(mHomingRequest%4)) {
+                    err = nexDome.isFindHomeComplete(complete);
+                    if (err) {
+                        printf("uiEvent isFindHomeComplete error\n");
+                        uiex->setEnabled("pushButton",true);
+                        uiex->setEnabled("pushButtonOK",true);
+                        snprintf(errorMessage, LOG_BUFFER_SIZE, "Error homing dome while calibrating dome : Error %d", err);
+                        uiex->messageBox("NexDome Calibrate", errorMessage);
+                        mHomingDome = false;
+                        mCalibratingDome = false;
+                        return;
+                    }
+                    if(complete) {
+                        mHomingDome = false;
+                        mCalibratingDome = true;
+                        nexDome.calibrate();
+                        return;
+                    }
+                
                 }
-                if(complete) {
-                    mHomingDome = false;
-                    mCalibratingDome = true;
-                    nexDome.calibrate();
-                    return;
-                }
-
+                mHomingRequest++;
             }
             
             if(mCalibratingDome) {
                 // are we still calibrating ?
-                err = nexDome.isCalibratingComplete(complete);
-                if (err) {
-                    uiex->setEnabled("pushButton",true);
-                    uiex->setEnabled("pushButtonOK",true);
-                    snprintf(errorMessage, LOG_BUFFER_SIZE, "Error calibrating dome : Error %d", err);
-                    uiex->messageBox("NexDome Calibrate", errorMessage);
-                    mHomingDome = false;
-                    mCalibratingDome = false;
-                    return;;
+                complete = false;
+                // don't ask too often
+                printf("mCalibratingRequest = %d, mCalibratingRequest mod 4 = %d\n", mCalibratingRequest, mCalibratingRequest%4);
+                if (!(mCalibratingRequest%4)) {
+                    err = nexDome.isCalibratingComplete(complete);
+                    if (err) {
+                        uiex->setEnabled("pushButton",true);
+                        uiex->setEnabled("pushButtonOK",true);
+                        snprintf(errorMessage, LOG_BUFFER_SIZE, "Error calibrating dome : Error %d", err);
+                        uiex->messageBox("NexDome Calibrate", errorMessage);
+                        mHomingDome = false;
+                        mCalibratingDome = false;
+                        return;;
+                    }
                 }
                 
                 if(!complete) {
+                    mCalibratingRequest++;
                     return;
                 }
                 
@@ -270,20 +290,26 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
                 // read step per rev from dome
                 uiex->setPropertyInt("ticksPerRev","value", nexDome.getNbTicksPerRev());
                 mCalibratingDome = false;
+                
             }
             
             if(mHasShutterControl && !mHomingDome && !mCalibratingDome) {
-                nexDome.getBatteryLevels(domeBattery, shutterBattery);
-                snprintf(tmpBuf,16,"%2.2f V",domeBattery);
-                uiex->setPropertyString("domeBatteryLevel","text", tmpBuf);
-                if(mHasShutterControl) {
-                    snprintf(tmpBuf,16,"%2.2f V",shutterBattery);
-                    uiex->setPropertyString("shutterBatteryLevel","text", tmpBuf);
+                // don't ask to often
+                printf("mBattRequest = %d, mBattRequest mod 4 = %d\n", mBattRequest, mBattRequest%4);
+                if (!(mBattRequest%4)) {
+                    nexDome.getBatteryLevels(domeBattery, shutterBattery);
+                    snprintf(tmpBuf,16,"%2.2f V",domeBattery);
+                    uiex->setPropertyString("domeBatteryLevel","text", tmpBuf);
+                    if(mHasShutterControl) {
+                        snprintf(tmpBuf,16,"%2.2f V",shutterBattery);
+                        uiex->setPropertyString("shutterBatteryLevel","text", tmpBuf);
+                    }
+                    else {
+                        snprintf(tmpBuf,16,"NA");
+                        uiex->setPropertyString("shutterBatteryLevel","text", tmpBuf);
+                    }
                 }
-                else {
-                    snprintf(tmpBuf,16,"NA");
-                    uiex->setPropertyString("shutterBatteryLevel","text", tmpBuf);
-                }
+                mBattRequest++;
             }
 
             
