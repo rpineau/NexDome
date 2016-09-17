@@ -14,7 +14,7 @@ class MutexInterface;
 class BasicIniUtilInterface;
 class TickCountInterface;
 
-#define DRIVER_VERSION      1.0
+#define DRIVER_VERSION      1.1
 
 #define PARENT_KEY			"NexDome"
 #define CHILD_KEY_PORTNAME	"PortName"
@@ -154,8 +154,6 @@ private:
     bool        mHomingDome;
     bool        mCalibratingDome;
     char        mLogBuffer[LOG_BUFFER_SIZE];
-    int         mHomingRequest;
-    int         mCalibratingRequest;
     int         mBattRequest;
     
     // bool        mIsRollOffRoof;
