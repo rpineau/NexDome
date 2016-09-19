@@ -99,19 +99,16 @@ int CNexDome::readResponse(char *respBuffer, int bufferLen)
     do {
         err = pSerx->readFile(bufPtr, 1, nBytesRead, MAX_TIMEOUT);
         if(err) {
-            printf("[CNexDome::readResponse] Read Error.\n");
             return err;
         }
 
         if (nBytesRead !=1) {// timeout
             err = ND_BAD_CMD_RESPONSE;
-            printf("[CNexDome::readResponse] Timeout Error on read.\n");
             break;
         }
         totalBytesRead += nBytesRead;
     } while (*bufPtr++ != '\n' && totalBytesRead < bufferLen );
 
-    printf("respBuffer = '%s'\n",respBuffer);
     *bufPtr = 0; //remove the \n
     return err;
 }
@@ -124,7 +121,6 @@ int CNexDome::domeCommand(const char *cmd, char *result, char respCmdCode, int r
     unsigned long  nBytesWrite;
 
     pSerx->purgeTxRx();
-    printf("Sending '%s'\n", cmd);
     err = pSerx->writeFile((void *)cmd, strlen(cmd), nBytesWrite);
     if(err)
         return err;
@@ -329,8 +325,6 @@ bool CNexDome::isDomeMoving()
 
     err = domeCommand("m\n", resp, 'M', SERIAL_BUFFER_SIZE);
     if(err) {
-        printf("[CNexDome::isDomeMoving] error : %d\n", err);
-        printf("[CNexDome::isDomeMoving] resp : %s\n", resp);
         return false;   // Not really correct but will do for now.
     }
 

@@ -235,7 +235,6 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
                 complete = false;
                 err = nexDome.isFindHomeComplete(complete);
                 if (err) {
-                    printf("uiEvent isFindHomeComplete error\n");
                     uiex->setEnabled("pushButton",true);
                     uiex->setEnabled("pushButtonOK",true);
                     snprintf(errorMessage, LOG_BUFFER_SIZE, "Error homing dome while calibrating dome : Error %d", err);
@@ -283,7 +282,6 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
             
             if(mHasShutterControl && !mHomingDome && !mCalibratingDome) {
                 // don't ask to often
-                printf("mBattRequest = %d, mBattRequest mod 4 = %d\n", mBattRequest, mBattRequest%4);
                 if (!(mBattRequest%4)) {
                     nexDome.getBatteryLevels(domeBattery, shutterBattery);
                     snprintf(tmpBuf,16,"%2.2f V",domeBattery);
