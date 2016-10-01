@@ -49,22 +49,31 @@ int CNexDome::Connect(const char *szPort)
     int err;
     
     // 9600 8N1
-    if(pSerx->open(szPort,9600) == 0)
+    if(pSerx->open(szPort,96000) == 0)
         bIsConnected = true;
     else
         bIsConnected = false;
 
     if(!bIsConnected)
         return ERR_COMMNOLINK;
+    //snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::Connect] Connected.\n");
+    //mLogger->out(mLogBuffer);
 
+    //snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::Connect] Getting Firmware.\n");
+    //mLogger->out(mLogBuffer);
+    
     // if this fails we're not properly connected.
     err = getFirmwareVersion(firmwareVersion, SERIAL_BUFFER_SIZE);
-    if(err)
-    {
+    if(err) {
+        snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::Connect] Error Getting Firmware.\n");
+        mLogger->out(mLogBuffer);
         bIsConnected = false;
         pSerx->close();
         return FIRMWARE_NOT_SUPPORTED;
     }
+
+    //snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::Connect] Got Firmware.\n");
+    //mLogger->out(mLogBuffer);
 
     // assume the dome was parked
     getDomeParkAz(mCurrentAzPosition);
@@ -77,8 +86,7 @@ int CNexDome::Connect(const char *szPort)
 
 void CNexDome::Disconnect()
 {
-    if(bIsConnected)
-    {
+    if(bIsConnected) {
         pSerx->purgeTxRx();
         pSerx->close();
     }
@@ -99,14 +107,21 @@ int CNexDome::readResponse(char *respBuffer, int bufferLen)
     do {
         err = pSerx->readFile(bufPtr, 1, nBytesRead, MAX_TIMEOUT);
         if(err) {
+            //snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::readResponse] readFile error.\n");
+            //mLogger->out(mLogBuffer);
             return err;
         }
-
+        //snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::readResponse] respBuffer = %s\n",respBuffer);
+        //mLogger->out(mLogBuffer);
         if (nBytesRead !=1) {// timeout
+            //snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::readResponse] readFile Timeout.\n");
+            //mLogger->out(mLogBuffer);
             err = ND_BAD_CMD_RESPONSE;
             break;
         }
         totalBytesRead += nBytesRead;
+        //snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::readResponse] nBytesRead = %lu\n",nBytesRead);
+        //mLogger->out(mLogBuffer);
     } while (*bufPtr++ != '\n' && totalBytesRead < bufferLen );
 
     *bufPtr = 0; //remove the \n
@@ -121,10 +136,14 @@ int CNexDome::domeCommand(const char *cmd, char *result, char respCmdCode, int r
     unsigned long  nBytesWrite;
 
     pSerx->purgeTxRx();
+    //snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::domeCommand] Sending %s\n",cmd);
+    //mLogger->out(mLogBuffer);
     err = pSerx->writeFile((void *)cmd, strlen(cmd), nBytesWrite);
     if(err)
         return err;
     // read response
+    //snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::domeCommand] Getting response.\n");
+    //mLogger->out(mLogBuffer);
     err = readResponse(resp, SERIAL_BUFFER_SIZE);
     if(err)
         return err;
