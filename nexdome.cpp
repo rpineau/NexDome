@@ -17,6 +17,8 @@
 CNexDome::CNexDome()
 {
     // set some sane values
+    bDebugLog = false;
+    
     pSerx = NULL;
     bIsConnected = false;
 
@@ -56,25 +58,30 @@ int CNexDome::Connect(const char *szPort)
 
     if(!bIsConnected)
         return ERR_COMMNOLINK;
-    //snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::Connect] Connected.\n");
-    //mLogger->out(mLogBuffer);
 
-    //snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::Connect] Getting Firmware.\n");
-    //mLogger->out(mLogBuffer);
-    
+    if (bDebugLog) {
+        snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::Connect] Connected.\n");
+        mLogger->out(mLogBuffer);
+
+        snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::Connect] Getting Firmware.\n");
+        mLogger->out(mLogBuffer);
+    }
     // if this fails we're not properly connected.
     err = getFirmwareVersion(firmwareVersion, SERIAL_BUFFER_SIZE);
     if(err) {
-        snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::Connect] Error Getting Firmware.\n");
-        mLogger->out(mLogBuffer);
+        if (bDebugLog) {
+            snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::Connect] Error Getting Firmware.\n");
+            mLogger->out(mLogBuffer);
+        }
         bIsConnected = false;
         pSerx->close();
         return FIRMWARE_NOT_SUPPORTED;
     }
 
-    //snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::Connect] Got Firmware.\n");
-    //mLogger->out(mLogBuffer);
-
+    if (bDebugLog) {
+        snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::Connect] Got Firmware.\n");
+        mLogger->out(mLogBuffer);
+    }
     // assume the dome was parked
     getDomeParkAz(mCurrentAzPosition);
 
@@ -107,21 +114,31 @@ int CNexDome::readResponse(char *respBuffer, int bufferLen)
     do {
         err = pSerx->readFile(bufPtr, 1, nBytesRead, MAX_TIMEOUT);
         if(err) {
-            //snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::readResponse] readFile error.\n");
-            //mLogger->out(mLogBuffer);
+            if (bDebugLog) {
+                snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::readResponse] readFile error.\n");
+                mLogger->out(mLogBuffer);
+            }
             return err;
         }
-        //snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::readResponse] respBuffer = %s\n",respBuffer);
-        //mLogger->out(mLogBuffer);
+
+        if (bDebugLog) {
+            snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::readResponse] respBuffer = %s\n",respBuffer);
+            mLogger->out(mLogBuffer);
+        }
+        
         if (nBytesRead !=1) {// timeout
-            //snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::readResponse] readFile Timeout.\n");
-            //mLogger->out(mLogBuffer);
+            if (bDebugLog) {
+                snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::readResponse] readFile Timeout.\n");
+                mLogger->out(mLogBuffer);
+            }
             err = ND_BAD_CMD_RESPONSE;
             break;
         }
         totalBytesRead += nBytesRead;
-        //snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::readResponse] nBytesRead = %lu\n",nBytesRead);
-        //mLogger->out(mLogBuffer);
+        if (bDebugLog) {
+            snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::readResponse] nBytesRead = %lu\n",nBytesRead);
+            mLogger->out(mLogBuffer);
+        }
     } while (*bufPtr++ != '\n' && totalBytesRead < bufferLen );
 
     *bufPtr = 0; //remove the \n
@@ -136,14 +153,18 @@ int CNexDome::domeCommand(const char *cmd, char *result, char respCmdCode, int r
     unsigned long  nBytesWrite;
 
     pSerx->purgeTxRx();
-    //snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::domeCommand] Sending %s\n",cmd);
-    //mLogger->out(mLogBuffer);
+    if (bDebugLog) {
+        snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::domeCommand] Sending %s\n",cmd);
+        mLogger->out(mLogBuffer);
+    }
     err = pSerx->writeFile((void *)cmd, strlen(cmd), nBytesWrite);
     if(err)
         return err;
     // read response
-    //snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::domeCommand] Getting response.\n");
-    //mLogger->out(mLogBuffer);
+    if (bDebugLog) {
+        snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::domeCommand] Getting response.\n");
+        mLogger->out(mLogBuffer);
+    }
     err = readResponse(resp, SERIAL_BUFFER_SIZE);
     if(err)
         return err;
@@ -330,6 +351,11 @@ int CNexDome::getBatteryLevels(double &domeVolts, double &shutterVolts)
     domeVolts = domeVolts / 100.0;
     shutterVolts = shutterVolts / 100.0;
     return err;
+}
+
+void CNexDome::setDebugLog(bool enable)
+{
+    bDebugLog = enable;
 }
 
 bool CNexDome::isDomeMoving()
@@ -520,9 +546,10 @@ int CNexDome::isGoToComplete(bool &complete)
         complete = true;
     else {
         // we're not moving and we're not at the final destination !!!
-        snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::isGoToComplete] domeAz = %f, mGotoAz = %f\n", ceil(domeAz), ceil(mGotoAz));
-        mLogger->out(mLogBuffer);
-
+        if (bDebugLog) {
+            snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::isGoToComplete] domeAz = %f, mGotoAz = %f\n", ceil(domeAz), ceil(mGotoAz));
+            mLogger->out(mLogBuffer);
+        }
         complete = false;
         err = ERR_CMDFAILED;
     }
@@ -645,8 +672,10 @@ int CNexDome::isFindHomeComplete(bool &complete)
     }
     else {
         // we're not moving and we're not at the home position !!!
-        snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::isFindHomeComplete] Not moving and not at home !!!\n");
-        mLogger->out(mLogBuffer);
+        if (bDebugLog) {
+            snprintf(mLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::isFindHomeComplete] Not moving and not at home !!!\n");
+            mLogger->out(mLogBuffer);
+        }
         complete = false;
         mHomed = false;
         mParked = false;

@@ -73,6 +73,8 @@ public:
     int getCurrentShutterState();
     int getBatteryLevels(double &domeVolts, double &shutterVolts);
 
+    void setDebugLog(bool enable);
+
 protected:
     
     int             readResponse(char *respBuffer, int bufferLen);
@@ -89,7 +91,8 @@ protected:
     int             domeCommand(const char *cmd, char *result, char respCmdCode, int resultMaxLen);
 
     LoggerInterface *mLogger;
-
+    bool            bDebugLog;
+    
     bool            bIsConnected;
     bool            mHomed;
     bool            mParked;
