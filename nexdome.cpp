@@ -51,7 +51,7 @@ int CNexDome::Connect(const char *szPort)
     int err;
     
     // 9600 8N1
-    if(pSerx->open(szPort,96000) == 0)
+    if(pSerx->open(szPort, 9600, SerXInterface::B_NOPARITY, "-DTR_CONTROL 1") == 0)
         bIsConnected = true;
     else
         bIsConnected = false;
