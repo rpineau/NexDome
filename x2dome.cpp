@@ -217,9 +217,7 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
     int err;
     double domeBattery;
     double shutterBattery;
-    char tmpBuf[SERIAL_BUFFER_SIZE];
-
-    
+    char tmpBuf[SERIAL_BUFFER_SIZE];    
     char errorMessage[LOG_BUFFER_SIZE];
     
     if (!strcmp(pszEvent, "on_pushButtonCancel_clicked"))

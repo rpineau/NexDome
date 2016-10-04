@@ -705,8 +705,7 @@ int CNexDome::isCalibratingComplete(bool &complete)
     err = getDomeAz(domeAz);
 
     if (ceil(mHomeAz) != ceil(domeAz)) {
-        // we're not moving and we're not at Home!
-        // We need to reset the current position to the home position (bug in firmware)
+        // We need to resync the current position to the home position.
         mCurrentAzPosition = mHomeAz;
         syncDome(mCurrentAzPosition,mCurrentElPosition);
         mHomed = true;
