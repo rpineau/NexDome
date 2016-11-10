@@ -158,6 +158,7 @@ int CNexDome::domeCommand(const char *cmd, char *result, char respCmdCode, int r
         mLogger->out(mLogBuffer);
     }
     err = pSerx->writeFile((void *)cmd, strlen(cmd), nBytesWrite);
+    pSerx->flushTx();
     if(err)
         return err;
     // read response
