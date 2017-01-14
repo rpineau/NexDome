@@ -22,7 +22,7 @@ cp "./NexDome.ui" "$TheSkyX_Path/Resources/Common/PlugIns/DomePlugIns/"
 cp "./NexDome.png" "$TheSkyX_Path/Resources/Common/PlugIns/DomePlugIns/"
 cp "./libNexDome.so" "$TheSkyX_Path/Resources/Common/PlugIns/DomePlugIns/"
 
-app_owner=`/usr/bin/stat -n -f "%u" "$TheSkyX_Path" | xargs id -n -u`
+app_owner=`/usr/bin/stat -c "%u" "$TheSkyX_Path" | xargs id -n -u`
 if [ ! -z "$app_owner" ]; then
 	chown $app_owner "$TheSkyX_Path/Resources/Common/Miscellaneous Files/domelist NexDome.txt"
 	chown $app_owner "$TheSkyX_Path/Resources/Common/PlugIns/DomePlugIns/NexDome.ui"
