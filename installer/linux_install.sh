@@ -31,5 +31,3 @@ if [ ! -z "$app_owner" ]; then
 fi
 chmod  755 "$TheSkyX_Path/Resources/Common/PlugIns/DomePlugIns/libNexDome.so"
 
-rm -rf /tmp/NexDome_X2
-
