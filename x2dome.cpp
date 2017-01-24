@@ -325,12 +325,12 @@ void X2Dome::deviceInfoNameShort(BasicStringInterface& str) const
 
 void X2Dome::deviceInfoNameLong(BasicStringInterface& str) const					
 {
-    str = "NexDome Dome Control System";
+    str = "Nexdome Dome Rotation Kit";
 }
 
 void X2Dome::deviceInfoDetailedDescription(BasicStringInterface& str) const		
 {
-    str = "NexDome Dome Control System by Rodolphe Pineau";
+    str = "Nexdome Dome Rotation Kit";
 }
 
  void X2Dome::deviceInfoFirmwareVersion(BasicStringInterface& str)					
@@ -347,7 +347,7 @@ void X2Dome::deviceInfoDetailedDescription(BasicStringInterface& str) const
 
 void X2Dome::deviceInfoModel(BasicStringInterface& str)
 {
-    str = "NexDome";
+    str = "Nexdome Dome Rotation Kit";
 }
 
 //
@@ -357,7 +357,7 @@ void X2Dome::deviceInfoModel(BasicStringInterface& str)
 
  void	X2Dome::driverInfoDetailedInfo(BasicStringInterface& str) const	
 {
-    str = "NexDome X2 plugin v1.0";
+    str = "Nexdome Dome Rotation Kit X2 plugin by Rodolphe Pineau";
 }
 
 double	X2Dome::driverInfoVersion(void) const
