@@ -315,10 +315,9 @@ int CNexDome::getDomeStepPerRev(int &stepPerRev)
 int CNexDome::getBatteryLevels(double &domeVolts, double &shutterVolts)
 {
     int err = 0;
-    int i = 0;
-    int j = 0;
+    int rc = 0;
     char resp[SERIAL_BUFFER_SIZE];
-    char voltData[SERIAL_BUFFER_SIZE];
+
     
     if(!bIsConnected)
         return NOT_CONNECTED;
@@ -330,24 +329,10 @@ int CNexDome::getBatteryLevels(double &domeVolts, double &shutterVolts)
     if(err)
         return err;
 
-    
-    // convert battery vols value string to int
-    memset(voltData,0,SERIAL_BUFFER_SIZE);
-    // skip the spaces:
-    while(resp[j]==' ')
-        j++;
-    while(resp[j] != ' ' && i < (SERIAL_BUFFER_SIZE-1))
-        voltData[i++]=resp[j++];
-    domeVolts = atof(voltData);
-
-    // skip the spaces:
-    while(resp[j]==' ')
-        j++;
-    memset(voltData,0,SERIAL_BUFFER_SIZE);
-    i = 0;
-    while(resp[j] != 0 && i < (SERIAL_BUFFER_SIZE-1))
-        voltData[i++]=resp[j++];
-    shutterVolts = atof(voltData);
+    rc = sscanf(resp, "%lf %lf", &domeVolts, &shutterVolts);
+    if(rc == 0) {
+        return COMMAND_FAILED;
+    }
 
     domeVolts = domeVolts / 100.0;
     shutterVolts = shutterVolts / 100.0;
