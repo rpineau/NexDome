@@ -402,10 +402,14 @@ int X2Dome::dapiGotoAzEl(double dAz, double dEl)
 int X2Dome::dapiAbort(void)
 {
 
+    X2MutexLocker ml(GetMutex());
+
     if(!m_bLinked)
         return ERR_NOLINK;
+
     nexDome.abortCurrentCommand();
-	return SB_OK;
+
+    return SB_OK;
 }
 
 int X2Dome::dapiOpen(void)
@@ -451,14 +455,15 @@ int X2Dome::dapiPark(void)
 
     if(!m_bLinked)
         return ERR_NOLINK;
-
+    /*
     if(mHasShutterControl)
     {
         err = nexDome.closeShutter();
         if(err)
             return ERR_CMDFAILED;
     }
-
+     */
+    
     err = nexDome.parkDome();
     if(err)
         return ERR_CMDFAILED;
@@ -473,14 +478,15 @@ int X2Dome::dapiUnpark(void)
 
     if(!m_bLinked)
         return ERR_NOLINK;
-
+    /*
     if(mHasShutterControl)
     {
         err = nexDome.openShutter();
         if(err)
             return ERR_CMDFAILED;
     }
-
+     */
+    
     err = nexDome.unparkDome();
     if(err)
         return ERR_CMDFAILED;
