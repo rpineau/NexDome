@@ -14,7 +14,7 @@ class MutexInterface;
 class BasicIniUtilInterface;
 class TickCountInterface;
 
-#define DRIVER_VERSION      1.1
+#define DRIVER_VERSION      1.2
 
 #define PARENT_KEY			"NexDome"
 #define CHILD_KEY_PORTNAME	"PortName"
@@ -111,15 +111,15 @@ public:
 	virtual int dapiSync(double dAz, double dEl);
 
     //SerialPortParams2Interface
-    virtual void			portName(BasicStringInterface& str) const			;
-    virtual void			setPortName(const char* szPort)						;
+    virtual void			portName(BasicStringInterface& str) const;
+    virtual void			setPortName(const char* szPort);
     virtual unsigned int	baudRate() const			{return 9600;};
     virtual void			setBaudRate(unsigned int)	{};
-    virtual bool			isBaudRateFixed() const		{return true;}
+    virtual bool			isBaudRateFixed() const		{return true;};
 
-    virtual SerXInterface::Parity	parity() const				{return SerXInterface::B_NOPARITY;}
+    virtual SerXInterface::Parity	parity() const				{return SerXInterface::B_NOPARITY;};
     virtual void					setParity(const SerXInterface::Parity& parity){parity;};
-    virtual bool					isParityFixed() const		{return true;}
+    virtual bool					isParityFixed() const		{return true;};
 
 
 
@@ -147,14 +147,14 @@ private:
 
 
 	int         m_nPrivateISIndex;
-	bool         m_bLinked;
-    CNexDome    nexDome;
-    bool        mHasShutterControl;
-    bool        mOpenUpperShutterOnly;
-    bool        mHomingDome;
-    bool        mCalibratingDome;
-    char        mLogBuffer[LOG_BUFFER_SIZE];
-    int         mBattRequest;
+	bool        m_bLinked;
+    CNexDome    NexDome;
+    bool        m_bHasShutterControl;
+    bool        m_bOpenUpperShutterOnly;
+    bool        m_bHomingDome;
+    bool        m_bCalibratingDome;
+    char        m_szLogBuffer[LOG_BUFFER_SIZE];
+    int         m_nBattRequest;
     
     // bool        mIsRollOffRoof;
 };

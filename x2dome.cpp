@@ -35,18 +35,18 @@ X2Dome::X2Dome(const char* pszSelection,
 	m_pTickCount					= pTickCount;
 
 	m_bLinked = false;
-    mHomingDome = false;
-    mCalibratingDome = false;
-    mBattRequest = 0;
+    m_bHomingDome = false;
+    m_bCalibratingDome = false;
+    m_nBattRequest = 0;
     
-    nexDome.SetSerxPointer(pSerX);
-    nexDome.setLogger(pLogger);
+    NexDome.SetSerxPointer(pSerX);
+    NexDome.setLogger(pLogger);
 
     if (m_pIniUtil)
     {   
-        nexDome.setHomeAz( m_pIniUtil->readDouble(PARENT_KEY, CHILD_KEY_HOME_AZ, 180) );
-        nexDome.setParkAz( m_pIniUtil->readDouble(PARENT_KEY, CHILD_KEY_PARK_AZ, 180) );
-        mHasShutterControl = m_pIniUtil->readInt(PARENT_KEY, CHILD_KEY_SHUTTER_CONTROL, false);
+        NexDome.setHomeAz( m_pIniUtil->readDouble(PARENT_KEY, CHILD_KEY_HOME_AZ, 180) );
+        NexDome.setParkAz( m_pIniUtil->readDouble(PARENT_KEY, CHILD_KEY_PARK_AZ, 180) );
+        m_bHasShutterControl = m_pIniUtil->readInt(PARENT_KEY, CHILD_KEY_SHUTTER_CONTROL, false);
     }
 }
 
@@ -73,25 +73,25 @@ X2Dome::~X2Dome()
 
 int X2Dome::establishLink(void)					
 {
-    int err;
+    int nErr;
     char szPort[DRIVER_MAX_STRING];
 
     X2MutexLocker ml(GetMutex());
     // get serial port device name
     portNameOnToCharPtr(szPort,DRIVER_MAX_STRING);
-    err = nexDome.Connect(szPort);
-    if(err)
+    nErr = NexDome.Connect(szPort);
+    if(nErr)
         m_bLinked = false;
     else
         m_bLinked = true;
 
-	return err;
+	return nErr;
 }
 
 int X2Dome::terminateLink(void)					
 {
     X2MutexLocker ml(GetMutex());
-    nexDome.Disconnect();
+    NexDome.Disconnect();
 	m_bLinked = false;
 	return SB_OK;
 }
@@ -127,11 +127,11 @@ int X2Dome::execModalSettingsDialog()
     X2GUIInterface*					ui = uiutil.X2UI();
     X2GUIExchangeInterface*			dx = NULL;//Comes after ui is loaded
     bool bPressedOK = false;
-    char tmpBuf[SERIAL_BUFFER_SIZE];
+    char szTmpBuf[SERIAL_BUFFER_SIZE];
     double dHomeAz;
     double dParkAz;
-    double domeBattery;
-    double shutterBattery;
+    double dDomeBattery;
+    double dShutterBattery;
     
 
     if (NULL == ui)
@@ -143,9 +143,9 @@ int X2Dome::execModalSettingsDialog()
     if (NULL == (dx = uiutil.X2DX()))
         return ERR_POINTER;
 
-    memset(tmpBuf,0,SERIAL_BUFFER_SIZE);
+    memset(szTmpBuf,0,SERIAL_BUFFER_SIZE);
     // set controls state depending on the connection state
-    if(mHasShutterControl)
+    if(m_bHasShutterControl)
     {
         dx->setChecked("hasShutterCtrl",true);
     }
@@ -155,33 +155,33 @@ int X2Dome::execModalSettingsDialog()
     }
 
     if(m_bLinked) {
-        snprintf(tmpBuf,16,"%d",nexDome.getNbTicksPerRev());
-        dx->setPropertyString("ticksPerRev","text", tmpBuf);
-        nexDome.getBatteryLevels(domeBattery, shutterBattery);
-        snprintf(tmpBuf,16,"%2.2f V",domeBattery);
-        dx->setPropertyString("domeBatteryLevel","text", tmpBuf);
-        if(mHasShutterControl) {
-            snprintf(tmpBuf,16,"%2.2f V",shutterBattery);
-            dx->setPropertyString("shutterBatteryLevel","text", tmpBuf);
+        snprintf(szTmpBuf,16,"%d",NexDome.getNbTicksPerRev());
+        dx->setPropertyString("ticksPerRev","text", szTmpBuf);
+        NexDome.getBatteryLevels(dDomeBattery, dShutterBattery);
+        snprintf(szTmpBuf,16,"%2.2f V",dDomeBattery);
+        dx->setPropertyString("domeBatteryLevel","text", szTmpBuf);
+        if(m_bHasShutterControl) {
+            snprintf(szTmpBuf,16,"%2.2f V",dShutterBattery);
+            dx->setPropertyString("shutterBatteryLevel","text", szTmpBuf);
         }
         else {
-            snprintf(tmpBuf,16,"NA");
-            dx->setPropertyString("shutterBatteryLevel","text", tmpBuf);
+            snprintf(szTmpBuf,16,"NA");
+            dx->setPropertyString("shutterBatteryLevel","text", szTmpBuf);
         }
         dx->setEnabled("pushButton",true);
     }
     else {
-        snprintf(tmpBuf,16,"NA");
-        dx->setPropertyString("ticksPerRev","text", tmpBuf);
-        dx->setPropertyString("domeBatteryLevel","text", tmpBuf);
-        dx->setPropertyString("shutterBatteryLevel","text", tmpBuf);
+        snprintf(szTmpBuf,16,"NA");
+        dx->setPropertyString("ticksPerRev","text", szTmpBuf);
+        dx->setPropertyString("domeBatteryLevel","text", szTmpBuf);
+        dx->setPropertyString("shutterBatteryLevel","text", szTmpBuf);
         dx->setEnabled("pushButton",false);
     }
-    dx->setPropertyDouble("homePosition","value", nexDome.getHomeAz());
-    dx->setPropertyDouble("parkPosition","value", nexDome.getParkAz());
+    dx->setPropertyDouble("homePosition","value", NexDome.getHomeAz());
+    dx->setPropertyDouble("parkPosition","value", NexDome.getParkAz());
 
-    mHomingDome = false;
-    mBattRequest = 0;
+    m_bHomingDome = false;
+    m_nBattRequest = 0;
     
     X2MutexLocker ml(GetMutex());
 
@@ -194,18 +194,18 @@ int X2Dome::execModalSettingsDialog()
     {
         dx->propertyDouble("homePosition", "value", dHomeAz);
         dx->propertyDouble("parkPosition", "value", dParkAz);
-        mHasShutterControl = dx->isChecked("hasShutterCtrl");
+        m_bHasShutterControl = dx->isChecked("hasShutterCtrl");
 
         if(m_bLinked)
         {
-            nexDome.setHomeAz(dHomeAz);
-            nexDome.setParkAz(dParkAz);
+            NexDome.setHomeAz(dHomeAz);
+            NexDome.setParkAz(dParkAz);
         }
 
         // save the values to persistent storage
         nErr |= m_pIniUtil->writeDouble(PARENT_KEY, CHILD_KEY_HOME_AZ, dHomeAz);
         nErr |= m_pIniUtil->writeDouble(PARENT_KEY, CHILD_KEY_PARK_AZ, dParkAz);
-        nErr |= m_pIniUtil->writeInt(PARENT_KEY, CHILD_KEY_SHUTTER_CONTROL, mHasShutterControl);
+        nErr |= m_pIniUtil->writeInt(PARENT_KEY, CHILD_KEY_SHUTTER_CONTROL, m_bHasShutterControl);
     }
     return nErr;
 
@@ -213,58 +213,58 @@ int X2Dome::execModalSettingsDialog()
 
 void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
 {
-    bool complete = false;
-    int err;
-    double domeBattery;
-    double shutterBattery;
-    char tmpBuf[SERIAL_BUFFER_SIZE];    
-    char errorMessage[LOG_BUFFER_SIZE];
+    bool bComplete = false;
+    int nErr;
+    double dDomeBattery;
+    double dShutterBattery;
+    char szTmpBuf[SERIAL_BUFFER_SIZE];    
+    char szErrorMessage[LOG_BUFFER_SIZE];
     
     if (!strcmp(pszEvent, "on_pushButtonCancel_clicked"))
-        nexDome.abortCurrentCommand();
+        NexDome.abortCurrentCommand();
 
     if (!strcmp(pszEvent, "on_timer"))
     {
-        mHasShutterControl = uiex->isChecked("hasShutterCtrl");
+        m_bHasShutterControl = uiex->isChecked("hasShutterCtrl");
         if(m_bLinked) {
             // are we going to Home position to calibrate ?
-            if(mHomingDome) {
+            if(m_bHomingDome) {
                 // are we home ?
-                complete = false;
-                err = nexDome.isFindHomeComplete(complete);
-                if (err) {
+                bComplete = false;
+                nErr = NexDome.isFindHomeComplete(bComplete);
+                if(nErr) {
                     uiex->setEnabled("pushButton",true);
                     uiex->setEnabled("pushButtonOK",true);
-                    snprintf(errorMessage, LOG_BUFFER_SIZE, "Error homing dome while calibrating dome : Error %d", err);
-                    uiex->messageBox("NexDome Calibrate", errorMessage);
-                    mHomingDome = false;
-                    mCalibratingDome = false;
+                    snprintf(szErrorMessage, LOG_BUFFER_SIZE, "Error homing dome while calibrating dome : Error %d", nErr);
+                    uiex->messageBox("NexDome Calibrate", szErrorMessage);
+                    m_bHomingDome = false;
+                    m_bCalibratingDome = false;
                     return;
                 }
-                if(complete) {
-                    mHomingDome = false;
-                    mCalibratingDome = true;
-                    nexDome.calibrate();
+                if(bComplete) {
+                    m_bHomingDome = false;
+                    m_bCalibratingDome = true;
+                    NexDome.calibrate();
                     return;
                 }
                 
             }
             
-            if(mCalibratingDome) {
+            if(m_bCalibratingDome) {
                 // are we still calibrating ?
-                complete = false;
-                err = nexDome.isCalibratingComplete(complete);
-                if (err) {
+                bComplete = false;
+                nErr = NexDome.isCalibratingComplete(bComplete);
+                if(nErr) {
                     uiex->setEnabled("pushButton",true);
                     uiex->setEnabled("pushButtonOK",true);
-                    snprintf(errorMessage, LOG_BUFFER_SIZE, "Error calibrating dome : Error %d", err);
-                    uiex->messageBox("NexDome Calibrate", errorMessage);
-                    mHomingDome = false;
-                    mCalibratingDome = false;
+                    snprintf(szErrorMessage, LOG_BUFFER_SIZE, "Error calibrating dome : Error %d", nErr);
+                    uiex->messageBox("NexDome Calibrate", szErrorMessage);
+                    m_bHomingDome = false;
+                    m_bCalibratingDome = false;
                     return;;
                 }
                 
-                if(!complete) {
+                if(!bComplete) {
                     return;
                 }
                 
@@ -272,28 +272,28 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
                 uiex->setEnabled("pushButton",true);
                 uiex->setEnabled("pushButtonOK",true);
                 // read step per rev from dome
-                snprintf(tmpBuf,16,"%d",nexDome.getNbTicksPerRev());
-                uiex->setPropertyString("ticksPerRev","text", tmpBuf);
-                mCalibratingDome = false;
+                snprintf(szTmpBuf,16,"%d",NexDome.getNbTicksPerRev());
+                uiex->setPropertyString("ticksPerRev","text", szTmpBuf);
+                m_bCalibratingDome = false;
                 
             }
             
-            if(mHasShutterControl && !mHomingDome && !mCalibratingDome) {
+            if(m_bHasShutterControl && !m_bHomingDome && !m_bCalibratingDome) {
                 // don't ask to often
-                if (!(mBattRequest%4)) {
-                    nexDome.getBatteryLevels(domeBattery, shutterBattery);
-                    snprintf(tmpBuf,16,"%2.2f V",domeBattery);
-                    uiex->setPropertyString("domeBatteryLevel","text", tmpBuf);
-                    if(mHasShutterControl) {
-                        snprintf(tmpBuf,16,"%2.2f V",shutterBattery);
-                        uiex->setPropertyString("shutterBatteryLevel","text", tmpBuf);
+                if (!(m_nBattRequest%4)) {
+                    NexDome.getBatteryLevels(dDomeBattery, dShutterBattery);
+                    snprintf(szTmpBuf,16,"%2.2f V",dDomeBattery);
+                    uiex->setPropertyString("domeBatteryLevel","text", szTmpBuf);
+                    if(m_bHasShutterControl) {
+                        snprintf(szTmpBuf,16,"%2.2f V",dShutterBattery);
+                        uiex->setPropertyString("shutterBatteryLevel","text", szTmpBuf);
                     }
                     else {
-                        snprintf(tmpBuf,16,"NA");
-                        uiex->setPropertyString("shutterBatteryLevel","text", tmpBuf);
+                        snprintf(szTmpBuf,16,"NA");
+                        uiex->setPropertyString("shutterBatteryLevel","text", szTmpBuf);
                     }
                 }
-                mBattRequest++;
+                m_nBattRequest++;
             }
 
             
@@ -306,8 +306,8 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
             // disable "ok" and "calibrate"
             uiex->setEnabled("pushButton",false);
             uiex->setEnabled("pushButtonOK",false);
-            nexDome.goHome();
-            mHomingDome = true;
+            NexDome.goHome();
+            m_bHomingDome = true;
         }
     }
 
@@ -337,7 +337,7 @@ void X2Dome::deviceInfoDetailedDescription(BasicStringInterface& str) const
 {
     if(m_bLinked) {
         char cFirmware[SERIAL_BUFFER_SIZE];
-        nexDome.getFirmwareVersion(cFirmware, SERIAL_BUFFER_SIZE);
+        NexDome.getFirmwareVersion(cFirmware, SERIAL_BUFFER_SIZE);
         str = cFirmware;
 
     }
@@ -377,22 +377,22 @@ int X2Dome::dapiGetAzEl(double* pdAz, double* pdEl)
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    *pdAz = nexDome.getCurrentAz();
-    *pdEl = nexDome.getCurrentEl();
+    *pdAz = NexDome.getCurrentAz();
+    *pdEl = NexDome.getCurrentEl();
     return SB_OK;
 }
 
 int X2Dome::dapiGotoAzEl(double dAz, double dEl)
 {
-    int err;
+    int nErr;
 
     X2MutexLocker ml(GetMutex());
 
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    err = nexDome.gotoAzimuth(dAz);
-    if(err)
+    nErr = NexDome.gotoAzimuth(dAz);
+    if(nErr)
         return ERR_CMDFAILED;
 
     else
@@ -402,25 +402,29 @@ int X2Dome::dapiGotoAzEl(double dAz, double dEl)
 int X2Dome::dapiAbort(void)
 {
 
-    if(!m_bLinked)
-        return ERR_NOLINK;
-    nexDome.abortCurrentCommand();
-	return SB_OK;
-}
-
-int X2Dome::dapiOpen(void)
-{
-    int err;
     X2MutexLocker ml(GetMutex());
 
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    if(!mHasShutterControl)
+    NexDome.abortCurrentCommand();
+
+    return SB_OK;
+}
+
+int X2Dome::dapiOpen(void)
+{
+    int nErr;
+    X2MutexLocker ml(GetMutex());
+
+    if(!m_bLinked)
+        return ERR_NOLINK;
+
+    if(!m_bHasShutterControl)
         return SB_OK;
 
-    err = nexDome.openShutter();
-    if(err)
+    nErr = NexDome.openShutter();
+    if(nErr)
         return ERR_CMDFAILED;
 
 	return SB_OK;
@@ -428,17 +432,17 @@ int X2Dome::dapiOpen(void)
 
 int X2Dome::dapiClose(void)
 {
-    int err;
+    int nErr;
     X2MutexLocker ml(GetMutex());
 
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    if(!mHasShutterControl)
+    if(!m_bHasShutterControl)
         return SB_OK;
 
-    err = nexDome.closeShutter();
-    if(err)
+    nErr = NexDome.closeShutter();
+    if(nErr)
         return ERR_CMDFAILED;
 
 	return SB_OK;
@@ -446,21 +450,22 @@ int X2Dome::dapiClose(void)
 
 int X2Dome::dapiPark(void)
 {
-    int err;
+    int nErr;
     X2MutexLocker ml(GetMutex());
 
     if(!m_bLinked)
         return ERR_NOLINK;
-
-    if(mHasShutterControl)
+    /*
+    if(m_bHasShutterControl)
     {
-        err = nexDome.closeShutter();
-        if(err)
+        nErr = nexDome.closeShutter();
+        if(nErr)
             return ERR_CMDFAILED;
     }
-
-    err = nexDome.parkDome();
-    if(err)
+     */
+    
+    nErr = NexDome.parkDome();
+    if(nErr)
         return ERR_CMDFAILED;
 
 	return SB_OK;
@@ -468,21 +473,22 @@ int X2Dome::dapiPark(void)
 
 int X2Dome::dapiUnpark(void)
 {
-    int err;
+    int nErr;
     X2MutexLocker ml(GetMutex());
 
     if(!m_bLinked)
         return ERR_NOLINK;
-
-    if(mHasShutterControl)
+    /*
+    if(m_bHasShutterControl)
     {
-        err = nexDome.openShutter();
-        if(err)
+        nErr = nexDome.openShutter();
+        if(nErr)
             return ERR_CMDFAILED;
     }
-
-    err = nexDome.unparkDome();
-    if(err)
+     */
+    
+    nErr = NexDome.unparkDome();
+    if(nErr)
         return ERR_CMDFAILED;
 
 	return SB_OK;
@@ -490,14 +496,14 @@ int X2Dome::dapiUnpark(void)
 
 int X2Dome::dapiFindHome(void)
 {
-    int err;
+    int nErr;
     X2MutexLocker ml(GetMutex());
 
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    err = nexDome.goHome();
-    if(err)
+    nErr = NexDome.goHome();
+    if(nErr)
         return ERR_CMDFAILED;
 
     return SB_OK;
@@ -505,34 +511,34 @@ int X2Dome::dapiFindHome(void)
 
 int X2Dome::dapiIsGotoComplete(bool* pbComplete)
 {
-    int err;
+    int nErr;
     X2MutexLocker ml(GetMutex());
 
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    err = nexDome.isGoToComplete(*pbComplete);
-    if(err)
+    nErr = NexDome.isGoToComplete(*pbComplete);
+    if(nErr)
         return ERR_CMDFAILED;
     return SB_OK;
 }
 
 int X2Dome::dapiIsOpenComplete(bool* pbComplete)
 {
-    int err;
+    int nErr;
     X2MutexLocker ml(GetMutex());
 
     if(!m_bLinked)
         return ERR_NOLINK;
     
-    if(!mHasShutterControl)
+    if(!m_bHasShutterControl)
     {
         *pbComplete = true;
         return SB_OK;
     }
 
-    err = nexDome.isOpenComplete(*pbComplete);
-    if(err)
+    nErr = NexDome.isOpenComplete(*pbComplete);
+    if(nErr)
         return ERR_CMDFAILED;
 
     return SB_OK;
@@ -540,20 +546,20 @@ int X2Dome::dapiIsOpenComplete(bool* pbComplete)
 
 int	X2Dome::dapiIsCloseComplete(bool* pbComplete)
 {
-    int err;
+    int nErr;
     X2MutexLocker ml(GetMutex());
 
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    if(!mHasShutterControl)
+    if(!m_bHasShutterControl)
     {
         *pbComplete = true;
         return SB_OK;
     }
 
-    err = nexDome.isCloseComplete(*pbComplete);
-    if(err)
+    nErr = NexDome.isCloseComplete(*pbComplete);
+    if(nErr)
         return ERR_CMDFAILED;
 
     return SB_OK;
@@ -561,14 +567,14 @@ int	X2Dome::dapiIsCloseComplete(bool* pbComplete)
 
 int X2Dome::dapiIsParkComplete(bool* pbComplete)
 {
-    int err;
+    int nErr;
     X2MutexLocker ml(GetMutex());
 
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    err = nexDome.isParkComplete(*pbComplete);
-    if(err)
+    nErr = NexDome.isParkComplete(*pbComplete);
+    if(nErr)
         return ERR_CMDFAILED;
 
     return SB_OK;
@@ -576,14 +582,14 @@ int X2Dome::dapiIsParkComplete(bool* pbComplete)
 
 int X2Dome::dapiIsUnparkComplete(bool* pbComplete)
 {
-    int err;
+    int nErr;
     X2MutexLocker ml(GetMutex());
 
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    err = nexDome.isUnparkComplete(*pbComplete);
-    if(err)
+    nErr = NexDome.isUnparkComplete(*pbComplete);
+    if(nErr)
         return ERR_CMDFAILED;
 
     return SB_OK;
@@ -591,14 +597,14 @@ int X2Dome::dapiIsUnparkComplete(bool* pbComplete)
 
 int X2Dome::dapiIsFindHomeComplete(bool* pbComplete)
 {
-    int err;
+    int nErr;
     X2MutexLocker ml(GetMutex());
 
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    err = nexDome.isFindHomeComplete(*pbComplete);
-    if(err)
+    nErr = NexDome.isFindHomeComplete(*pbComplete);
+    if(nErr)
         return ERR_CMDFAILED;
 
     return SB_OK;
@@ -606,15 +612,15 @@ int X2Dome::dapiIsFindHomeComplete(bool* pbComplete)
 
 int X2Dome::dapiSync(double dAz, double dEl)
 {
-    int err;
+    int nErr;
 
     X2MutexLocker ml(GetMutex());
 
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    err = nexDome.syncDome(dAz, dEl);
-    if (err)
+    nErr = NexDome.syncDome(dAz, dEl);
+    if(nErr)
         return ERR_CMDFAILED;
 	return SB_OK;
 }
