@@ -30,30 +30,30 @@ public:
 
     int        Connect(const char *szPort);
     void        Disconnect(void);
-    bool        IsConnected(void) { return bIsConnected; }
+    bool        IsConnected(void) { return m_bIsConnected; }
 
-    void        SetSerxPointer(SerXInterface *p) { pSerx = p; }
-    void        setLogger(LoggerInterface *pLogger) { mLogger = pLogger; };
+    void        SetSerxPointer(SerXInterface *p) { m_pSerx = p; }
+    void        setLogger(LoggerInterface *pLogger) { m_pLogger = pLogger; };
 
     // Dome commands
     int syncDome(double dAz, double dEl);
     int parkDome(void);
     int unparkDome(void);
-    int gotoAzimuth(double newAz);
+    int gotoAzimuth(double dNewAz);
     int openShutter();
     int closeShutter();
-    int getFirmwareVersion(char *version, int strMaxLen);
+    int getFirmwareVersion(char *szVersion, int nStrMaxLen);
     int goHome();
     int calibrate();
 
     // command complete functions
-    int isGoToComplete(bool &complete);
-    int isOpenComplete(bool &complete);
-    int isCloseComplete(bool &complete);
-    int isParkComplete(bool &complete);
-    int isUnparkComplete(bool &complete);
-    int isFindHomeComplete(bool &complete);
-    int isCalibratingComplete(bool &complete);
+    int isGoToComplete(bool &bComplete);
+    int isOpenComplete(bool &bComplete);
+    int isCloseComplete(bool &bComplete);
+    int isParkComplete(bool &bComplete);
+    int isUnparkComplete(bool &bComplete);
+    int isFindHomeComplete(bool &bComplete);
+    int isCalibratingComplete(bool &bComplete);
 
     int abortCurrentCommand();
 
@@ -71,9 +71,9 @@ public:
     double getCurrentEl();
 
     int getCurrentShutterState();
-    int getBatteryLevels(double &domeVolts, double &shutterVolts);
+    int getBatteryLevels(double &dDomeVolts, double &dShutterVolts);
 
-    void setDebugLog(bool enable);
+    void setDebugLog(bool bEnable);
 
 protected:
     
@@ -90,32 +90,32 @@ protected:
     
     int             domeCommand(const char *cmd, char *result, char respCmdCode, int resultMaxLen);
 
-    LoggerInterface *mLogger;
-    bool            bDebugLog;
+    SerXInterface   *m_pSerx;
+    LoggerInterface *m_pLogger;
+    bool            m_bDebugLog;
     
-    bool            bIsConnected;
-    bool            mHomed;
-    bool            mParked;
-    bool            mShutterOpened;
-    bool            bCalibrating;
+    bool            m_bIsConnected;
+    bool            m_bHomed;
+    bool            m_bParked;
+    bool            m_bShutterOpened;
+    bool            m_bCalibrating;
     
-    int             mNbStepPerRev;
-    double          mShutterBatteryVolts;
-    double          mHomeAz;
+    int             m_nNbStepPerRev;
+    double          m_dShutterBatteryVolts;
+    double          m_dHomeAz;
     
-    double          mParkAz;
+    double          m_dParkAz;
 
-    double          mCurrentAzPosition;
-    double          mCurrentElPosition;
+    double          m_dCurrentAzPosition;
+    double          m_dCurrentElPosition;
 
-    double          mGotoAz;
+    double          m_dGotoAz;
     
-    SerXInterface   *pSerx;
-    
-    char            firmwareVersion[SERIAL_BUFFER_SIZE];
-    int             mShutterState;
-    bool            mShutterOnly; // roll off roof so the arduino is running the shutter firmware only.
-    char            mLogBuffer[ND_LOG_BUFFER_SIZE];
+
+    char            m_szFirmwareVersion[SERIAL_BUFFER_SIZE];
+    int             m_nShutterState;
+    bool            m_bShutterOnly; // roll off roof so the arduino is running the shutter firmware only.
+    char            m_szLogBuffer[ND_LOG_BUFFER_SIZE];
 
 };
 
