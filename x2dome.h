@@ -147,14 +147,14 @@ private:
 
 
 	int         m_nPrivateISIndex;
-	bool         m_bLinked;
-    CNexDome    nexDome;
-    bool        mHasShutterControl;
-    bool        mOpenUpperShutterOnly;
-    bool        mHomingDome;
-    bool        mCalibratingDome;
-    char        mLogBuffer[LOG_BUFFER_SIZE];
-    int         mBattRequest;
+	bool        m_bLinked;
+    CNexDome    NexDome;
+    bool        m_bHasShutterControl;
+    bool        m_bOpenUpperShutterOnly;
+    bool        m_bHomingDome;
+    bool        m_bCalibratingDome;
+    char        m_szLogBuffer[LOG_BUFFER_SIZE];
+    int         m_nBattRequest;
     
     // bool        mIsRollOffRoof;
 };
