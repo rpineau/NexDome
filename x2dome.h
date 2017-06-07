@@ -148,7 +148,7 @@ private:
 
 	int         m_nPrivateISIndex;
 	bool        m_bLinked;
-    CNexDome    NexDome;
+    CNexDome    m_NexDome;
     bool        m_bHasShutterControl;
     bool        m_bOpenUpperShutterOnly;
     bool        m_bHomingDome;
