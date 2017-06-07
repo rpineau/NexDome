@@ -39,13 +39,13 @@ X2Dome::X2Dome(const char* pszSelection,
     m_bCalibratingDome = false;
     m_nBattRequest = 0;
     
-    NexDome.SetSerxPointer(pSerX);
-    NexDome.setLogger(pLogger);
+    m_NexDome.SetSerxPointer(pSerX);
+    m_NexDome.setLogger(pLogger);
 
     if (m_pIniUtil)
     {   
-        NexDome.setHomeAz( m_pIniUtil->readDouble(PARENT_KEY, CHILD_KEY_HOME_AZ, 180) );
-        NexDome.setParkAz( m_pIniUtil->readDouble(PARENT_KEY, CHILD_KEY_PARK_AZ, 180) );
+        m_NexDome.setHomeAz( m_pIniUtil->readDouble(PARENT_KEY, CHILD_KEY_HOME_AZ, 180) );
+        m_NexDome.setParkAz( m_pIniUtil->readDouble(PARENT_KEY, CHILD_KEY_PARK_AZ, 180) );
         m_bHasShutterControl = m_pIniUtil->readInt(PARENT_KEY, CHILD_KEY_SHUTTER_CONTROL, false);
     }
 }
@@ -79,7 +79,7 @@ int X2Dome::establishLink(void)
     X2MutexLocker ml(GetMutex());
     // get serial port device name
     portNameOnToCharPtr(szPort,DRIVER_MAX_STRING);
-    nErr = NexDome.Connect(szPort);
+    nErr = m_NexDome.Connect(szPort);
     if(nErr)
         m_bLinked = false;
     else
@@ -91,7 +91,7 @@ int X2Dome::establishLink(void)
 int X2Dome::terminateLink(void)					
 {
     X2MutexLocker ml(GetMutex());
-    NexDome.Disconnect();
+    m_NexDome.Disconnect();
 	m_bLinked = false;
 	return SB_OK;
 }
@@ -155,9 +155,9 @@ int X2Dome::execModalSettingsDialog()
     }
 
     if(m_bLinked) {
-        snprintf(szTmpBuf,16,"%d",NexDome.getNbTicksPerRev());
+        snprintf(szTmpBuf,16,"%d",m_NexDome.getNbTicksPerRev());
         dx->setPropertyString("ticksPerRev","text", szTmpBuf);
-        NexDome.getBatteryLevels(dDomeBattery, dShutterBattery);
+        m_NexDome.getBatteryLevels(dDomeBattery, dShutterBattery);
         snprintf(szTmpBuf,16,"%2.2f V",dDomeBattery);
         dx->setPropertyString("domeBatteryLevel","text", szTmpBuf);
         if(m_bHasShutterControl) {
@@ -177,8 +177,8 @@ int X2Dome::execModalSettingsDialog()
         dx->setPropertyString("shutterBatteryLevel","text", szTmpBuf);
         dx->setEnabled("pushButton",false);
     }
-    dx->setPropertyDouble("homePosition","value", NexDome.getHomeAz());
-    dx->setPropertyDouble("parkPosition","value", NexDome.getParkAz());
+    dx->setPropertyDouble("homePosition","value", m_NexDome.getHomeAz());
+    dx->setPropertyDouble("parkPosition","value", m_NexDome.getParkAz());
 
     m_bHomingDome = false;
     m_nBattRequest = 0;
@@ -198,8 +198,8 @@ int X2Dome::execModalSettingsDialog()
 
         if(m_bLinked)
         {
-            NexDome.setHomeAz(dHomeAz);
-            NexDome.setParkAz(dParkAz);
+            m_NexDome.setHomeAz(dHomeAz);
+            m_NexDome.setParkAz(dParkAz);
         }
 
         // save the values to persistent storage
@@ -221,7 +221,7 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
     char szErrorMessage[LOG_BUFFER_SIZE];
     
     if (!strcmp(pszEvent, "on_pushButtonCancel_clicked"))
-        NexDome.abortCurrentCommand();
+        m_NexDome.abortCurrentCommand();
 
     if (!strcmp(pszEvent, "on_timer"))
     {
@@ -231,7 +231,7 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
             if(m_bHomingDome) {
                 // are we home ?
                 bComplete = false;
-                nErr = NexDome.isFindHomeComplete(bComplete);
+                nErr = m_NexDome.isFindHomeComplete(bComplete);
                 if(nErr) {
                     uiex->setEnabled("pushButton",true);
                     uiex->setEnabled("pushButtonOK",true);
@@ -244,7 +244,7 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
                 if(bComplete) {
                     m_bHomingDome = false;
                     m_bCalibratingDome = true;
-                    NexDome.calibrate();
+                    m_NexDome.calibrate();
                     return;
                 }
                 
@@ -253,7 +253,7 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
             if(m_bCalibratingDome) {
                 // are we still calibrating ?
                 bComplete = false;
-                nErr = NexDome.isCalibratingComplete(bComplete);
+                nErr = m_NexDome.isCalibratingComplete(bComplete);
                 if(nErr) {
                     uiex->setEnabled("pushButton",true);
                     uiex->setEnabled("pushButtonOK",true);
@@ -272,7 +272,7 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
                 uiex->setEnabled("pushButton",true);
                 uiex->setEnabled("pushButtonOK",true);
                 // read step per rev from dome
-                snprintf(szTmpBuf,16,"%d",NexDome.getNbTicksPerRev());
+                snprintf(szTmpBuf,16,"%d",m_NexDome.getNbTicksPerRev());
                 uiex->setPropertyString("ticksPerRev","text", szTmpBuf);
                 m_bCalibratingDome = false;
                 
@@ -281,7 +281,7 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
             if(m_bHasShutterControl && !m_bHomingDome && !m_bCalibratingDome) {
                 // don't ask to often
                 if (!(m_nBattRequest%4)) {
-                    NexDome.getBatteryLevels(dDomeBattery, dShutterBattery);
+                    m_NexDome.getBatteryLevels(dDomeBattery, dShutterBattery);
                     snprintf(szTmpBuf,16,"%2.2f V",dDomeBattery);
                     uiex->setPropertyString("domeBatteryLevel","text", szTmpBuf);
                     if(m_bHasShutterControl) {
@@ -306,7 +306,7 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
             // disable "ok" and "calibrate"
             uiex->setEnabled("pushButton",false);
             uiex->setEnabled("pushButtonOK",false);
-            NexDome.goHome();
+            m_NexDome.goHome();
             m_bHomingDome = true;
         }
     }
@@ -337,7 +337,7 @@ void X2Dome::deviceInfoDetailedDescription(BasicStringInterface& str) const
 {
     if(m_bLinked) {
         char cFirmware[SERIAL_BUFFER_SIZE];
-        NexDome.getFirmwareVersion(cFirmware, SERIAL_BUFFER_SIZE);
+        m_NexDome.getFirmwareVersion(cFirmware, SERIAL_BUFFER_SIZE);
         str = cFirmware;
 
     }
@@ -377,8 +377,8 @@ int X2Dome::dapiGetAzEl(double* pdAz, double* pdEl)
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    *pdAz = NexDome.getCurrentAz();
-    *pdEl = NexDome.getCurrentEl();
+    *pdAz = m_NexDome.getCurrentAz();
+    *pdEl = m_NexDome.getCurrentEl();
     return SB_OK;
 }
 
@@ -391,7 +391,7 @@ int X2Dome::dapiGotoAzEl(double dAz, double dEl)
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    nErr = NexDome.gotoAzimuth(dAz);
+    nErr = m_NexDome.gotoAzimuth(dAz);
     if(nErr)
         return ERR_CMDFAILED;
 
@@ -407,7 +407,7 @@ int X2Dome::dapiAbort(void)
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    NexDome.abortCurrentCommand();
+    m_NexDome.abortCurrentCommand();
 
     return SB_OK;
 }
@@ -423,7 +423,7 @@ int X2Dome::dapiOpen(void)
     if(!m_bHasShutterControl)
         return SB_OK;
 
-    nErr = NexDome.openShutter();
+    nErr = m_NexDome.openShutter();
     if(nErr)
         return ERR_CMDFAILED;
 
@@ -441,7 +441,7 @@ int X2Dome::dapiClose(void)
     if(!m_bHasShutterControl)
         return SB_OK;
 
-    nErr = NexDome.closeShutter();
+    nErr = m_NexDome.closeShutter();
     if(nErr)
         return ERR_CMDFAILED;
 
@@ -464,7 +464,7 @@ int X2Dome::dapiPark(void)
     }
      */
     
-    nErr = NexDome.parkDome();
+    nErr = m_NexDome.parkDome();
     if(nErr)
         return ERR_CMDFAILED;
 
@@ -487,7 +487,7 @@ int X2Dome::dapiUnpark(void)
     }
      */
     
-    nErr = NexDome.unparkDome();
+    nErr = m_NexDome.unparkDome();
     if(nErr)
         return ERR_CMDFAILED;
 
@@ -502,7 +502,7 @@ int X2Dome::dapiFindHome(void)
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    nErr = NexDome.goHome();
+    nErr = m_NexDome.goHome();
     if(nErr)
         return ERR_CMDFAILED;
 
@@ -517,7 +517,7 @@ int X2Dome::dapiIsGotoComplete(bool* pbComplete)
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    nErr = NexDome.isGoToComplete(*pbComplete);
+    nErr = m_NexDome.isGoToComplete(*pbComplete);
     if(nErr)
         return ERR_CMDFAILED;
     return SB_OK;
@@ -537,7 +537,7 @@ int X2Dome::dapiIsOpenComplete(bool* pbComplete)
         return SB_OK;
     }
 
-    nErr = NexDome.isOpenComplete(*pbComplete);
+    nErr = m_NexDome.isOpenComplete(*pbComplete);
     if(nErr)
         return ERR_CMDFAILED;
 
@@ -558,7 +558,7 @@ int	X2Dome::dapiIsCloseComplete(bool* pbComplete)
         return SB_OK;
     }
 
-    nErr = NexDome.isCloseComplete(*pbComplete);
+    nErr = m_NexDome.isCloseComplete(*pbComplete);
     if(nErr)
         return ERR_CMDFAILED;
 
@@ -573,7 +573,7 @@ int X2Dome::dapiIsParkComplete(bool* pbComplete)
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    nErr = NexDome.isParkComplete(*pbComplete);
+    nErr = m_NexDome.isParkComplete(*pbComplete);
     if(nErr)
         return ERR_CMDFAILED;
 
@@ -588,7 +588,7 @@ int X2Dome::dapiIsUnparkComplete(bool* pbComplete)
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    nErr = NexDome.isUnparkComplete(*pbComplete);
+    nErr = m_NexDome.isUnparkComplete(*pbComplete);
     if(nErr)
         return ERR_CMDFAILED;
 
@@ -603,7 +603,7 @@ int X2Dome::dapiIsFindHomeComplete(bool* pbComplete)
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    nErr = NexDome.isFindHomeComplete(*pbComplete);
+    nErr = m_NexDome.isFindHomeComplete(*pbComplete);
     if(nErr)
         return ERR_CMDFAILED;
 
@@ -619,7 +619,7 @@ int X2Dome::dapiSync(double dAz, double dEl)
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    nErr = NexDome.syncDome(dAz, dEl);
+    nErr = m_NexDome.syncDome(dAz, dEl);
     if(nErr)
         return ERR_CMDFAILED;
 	return SB_OK;
