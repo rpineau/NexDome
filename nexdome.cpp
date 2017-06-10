@@ -106,13 +106,13 @@ int CNexDome::readResponse(char *szRespBuffer, int nBufferLen)
     int nErr = ND_OK;
     unsigned long ulBytesRead = 0;
     unsigned long ulTotalBytesRead = 0;
-    char *szBufPtr;
+    char *pszBufPtr;
 
     memset(szRespBuffer, 0, (size_t) nBufferLen);
-    szBufPtr = szRespBuffer;
+    pszBufPtr = szRespBuffer;
 
     do {
-        nErr = m_pSerx->readFile(szBufPtr, 1, ulBytesRead, MAX_TIMEOUT);
+        nErr = m_pSerx->readFile(pszBufPtr, 1, ulBytesRead, MAX_TIMEOUT);
         if(nErr) {
             if (m_bDebugLog) {
                 snprintf(m_szLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::readResponse] readFile error.");
@@ -130,9 +130,11 @@ int CNexDome::readResponse(char *szRespBuffer, int nBufferLen)
             break;
         }
         ulTotalBytesRead += ulBytesRead;
-    } while (*szBufPtr++ != '\n' && ulTotalBytesRead < nBufferLen );
+    } while (*pszBufPtr++ != '\n' && ulTotalBytesRead < nBufferLen );
 
-    *szBufPtr = 0; //remove the \n
+    if(ulTotalBytesRead)
+        *(pszBufPtr-1) = 0; //remove the \n
+
     return nErr;
 }
 
