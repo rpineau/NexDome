@@ -25,8 +25,8 @@ CNexDome::CNexDome()
     m_nNbStepPerRev = 0;
     m_dShutterBatteryVolts = 0.0;
     
-    m_dHomeAz = 180;
-    m_dParkAz = 180;
+    m_dHomeAz = 0;
+    m_dParkAz = 0;
 
     m_dCurrentAzPosition = 0.0;
     m_dCurrentElPosition = 0.0;
@@ -37,6 +37,9 @@ CNexDome::CNexDome()
     
     m_bParked = true;
     m_bHomed = false;
+
+    m_fVersion = 0.0;
+
     memset(m_szFirmwareVersion,0,SERIAL_BUFFER_SIZE);
     memset(m_szLogBuffer,0,ND_LOG_BUFFER_SIZE);
 }
@@ -82,11 +85,9 @@ int CNexDome::Connect(const char *szPort)
         snprintf(m_szLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::Connect] Got Firmware %s", m_szFirmwareVersion);
         m_pLogger->out(m_szLogBuffer);
     }
-    // assume the dome was parked
+
     getDomeParkAz(m_dCurrentAzPosition);
-
-    syncDome(m_dCurrentAzPosition,m_dCurrentElPosition);
-
+    getDomeHomeAz(m_dHomeAz);
     return SB_OK;
 }
 
@@ -146,10 +147,10 @@ int CNexDome::domeCommand(const char *szCmd, char *szResult, char respCmdCode, i
     unsigned long  ulBytesWrite;
 
     m_pSerx->purgeTxRx();
-    //if (m_bDebugLog) {
-    //  snprintf(m_szLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::domeCommand] Sending %s",cmd);
-    //    m_pLogger->out(m_szLogBuffer);
-    //}
+//    if (m_bDebugLog) {
+//        snprintf(m_szLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::domeCommand] Sending %s",szCmd);
+//        m_pLogger->out(m_szLogBuffer);
+//    }
     nErr = m_pSerx->writeFile((void *)szCmd, strlen(szCmd), ulBytesWrite);
     m_pSerx->flushTx();
     if(nErr)
@@ -159,10 +160,10 @@ int CNexDome::domeCommand(const char *szCmd, char *szResult, char respCmdCode, i
     if(nErr)
         return nErr;
 
-    //if (m_bDebugLog) {
-    //    snprintf(m_szLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::domeCommand] response = %s", resp);
-    //    m_pLogger->out(m_szLogBuffer);
-    //}
+//    if (m_bDebugLog) {
+//        snprintf(m_szLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::domeCommand] response = %s", szResp);
+//        m_pLogger->out(m_szLogBuffer);
+//    }
 
     if(szResp[0] != respCmdCode)
         nErr = ND_BAD_CMD_RESPONSE;
@@ -523,6 +524,7 @@ int CNexDome::getFirmwareVersion(char *szVersion, int nStrMaxLen)
 {
     int nErr = 0;
     char szResp[SERIAL_BUFFER_SIZE];
+    std::vector<std::string> firmwareFields;
 
     if(!m_bIsConnected)
         return NOT_CONNECTED;
@@ -532,13 +534,37 @@ int CNexDome::getFirmwareVersion(char *szVersion, int nStrMaxLen)
 
     nErr = domeCommand("v\n", szResp, 'V', SERIAL_BUFFER_SIZE);
     if(nErr) {
-        snprintf(m_szLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::closeShutter] ERROR getm_szFirmwareVersion = %s", szResp);
+        snprintf(m_szLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::closeShutter] ERROR getFirmwareVersion = %s", szResp);
         m_pLogger->out(m_szLogBuffer);
         return nErr;
     }
-    
-    strncpy(szVersion, szResp, nStrMaxLen);
+
+    nErr = parseFields(szResp,firmwareFields, ' ');
+    if(nErr)
+        return nErr;
+
+    if(firmwareFields.size()>2) {
+        strncpy(szVersion, firmwareFields[2].c_str(), nStrMaxLen);
+        m_fVersion = atof(firmwareFields[2].c_str());
+    }
+    else {
+        strncpy(szVersion, szResp, nStrMaxLen);
+        m_fVersion = atof(szResp);
+    }
     return nErr;
+}
+
+int CNexDome::getFirmwareVersion(float &fVersion)
+{
+    int nErr;
+
+    if(m_fVersion == 0.0) {
+        nErr = getFirmwareVersion(m_szFirmwareVersion, SERIAL_BUFFER_SIZE);
+        if(nErr)
+            return nErr;
+    }
+
+    return m_fVersion;
 }
 
 int CNexDome::goHome()
@@ -547,9 +573,13 @@ int CNexDome::goHome()
     if(!m_bIsConnected)
         return NOT_CONNECTED;
 
-    if(m_bCalibrating)
+    if(m_bCalibrating) {
         return SB_OK;
-    
+    }
+    else if(isDomeAtHome()){
+            m_bHomed = true;
+            return ND_OK;
+    }
     nErr = domeCommand("h\n", NULL, 'H', SERIAL_BUFFER_SIZE);
     if(nErr) {
         snprintf(m_szLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::closeShutter] ERROR goHome");
@@ -726,6 +756,7 @@ int CNexDome::isFindHomeComplete(bool &bComplete)
     if(isDomeAtHome()){
         m_bHomed = true;
         bComplete = true;
+        syncDome(m_dHomeAz, m_dCurrentElPosition);
     }
     else {
         // we're not moving and we're not at the home position !!!
@@ -867,5 +898,25 @@ int CNexDome::getCurrentShutterState()
         getShutterState(m_nShutterState);
 
     return m_nShutterState;
+}
+
+
+int CNexDome::parseFields(char *pszResp, std::vector<std::string> &svFields, char cSeparator)
+{
+    int nErr = ND_OK;
+    std::string sSegment;
+    std::stringstream ssTmp(pszResp);
+
+    svFields.clear();
+    // split the string into vector elements
+    while(std::getline(ssTmp, sSegment, cSeparator))
+    {
+        svFields.push_back(sSegment);
+    }
+
+    if(svFields.size()==0) {
+        nErr = ERR_CMDFAILED;
+    }
+    return nErr;
 }
 

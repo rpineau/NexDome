@@ -9,6 +9,13 @@
 #define __NEXDOME__
 #include <math.h>
 #include <string.h>
+
+#include <string>
+#include <vector>
+#include <sstream>
+#include <iostream>
+
+
 #include "../../licensedinterfaces/sberrorx.h"
 #include "../../licensedinterfaces/serxinterface.h"
 #include "../../licensedinterfaces/loggerinterface.h"
@@ -43,6 +50,7 @@ public:
     int openShutter();
     int closeShutter();
     int getFirmwareVersion(char *szVersion, int nStrMaxLen);
+    int getFirmwareVersion(float &fVersion);
     int goHome();
     int calibrate();
 
@@ -87,8 +95,8 @@ protected:
 
     bool            isDomeMoving();
     bool            isDomeAtHome();
-    
     int             domeCommand(const char *cmd, char *result, char respCmdCode, int resultMaxLen);
+    int             parseFields(char *pszResp, std::vector<std::string> &svFields, char cSeparator);
 
     SerXInterface   *m_pSerx;
     LoggerInterface *m_pLogger;
@@ -110,7 +118,8 @@ protected:
     double          m_dCurrentElPosition;
 
     double          m_dGotoAz;
-    
+
+    float           m_fVersion;
 
     char            m_szFirmwareVersion[SERIAL_BUFFER_SIZE];
     int             m_nShutterState;
