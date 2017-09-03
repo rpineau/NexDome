@@ -18,6 +18,7 @@
 
 #include "../../licensedinterfaces/sberrorx.h"
 #include "../../licensedinterfaces/serxinterface.h"
+#include "../../licensedinterfaces/sleeperinterface.h"
 #include "../../licensedinterfaces/loggerinterface.h"
 
 #define SERIAL_BUFFER_SIZE 20
@@ -39,7 +40,8 @@ public:
     void        Disconnect(void);
     bool        IsConnected(void) { return m_bIsConnected; }
 
-    void        SetSerxPointer(SerXInterface *p) { m_pSerx = p; }
+    void        setSerxPointer(SerXInterface *p) { m_pSerx = p; }
+    void        setSleeprPinter(SleeperInterface *p) {m_pSleeper = p; }
     void        setLogger(LoggerInterface *pLogger) { m_pLogger = pLogger; };
 
     // Dome commands
@@ -99,6 +101,7 @@ protected:
     int             parseFields(char *pszResp, std::vector<std::string> &svFields, char cSeparator);
 
     SerXInterface   *m_pSerx;
+    SleeperInterface *m_pSleeper;
     LoggerInterface *m_pLogger;
     bool            m_bDebugLog;
     
