@@ -69,6 +69,11 @@ int CNexDome::Connect(const char *szPort)
         snprintf(m_szLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::Connect] Getting Firmware.");
         m_pLogger->out(m_szLogBuffer);
     }
+
+    // the arduino take over a second to start as it need to init the XBee and there is 1100 ms pause in the code :(
+    if(m_pSleeper)
+        m_pSleeper->sleep(2000);
+    
     // if this fails we're not properly connected.
     nErr = getFirmwareVersion(m_szFirmwareVersion, SERIAL_BUFFER_SIZE);
     if(nErr) {
