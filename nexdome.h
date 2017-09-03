@@ -7,15 +7,25 @@
 
 #ifndef __NEXDOME__
 #define __NEXDOME__
+
+// standard C includes
+#include <stdlib.h>
+#include <stdio.h>
+#include <ctype.h>
+#include <memory.h>
 #include <math.h>
 #include <string.h>
-
+#include <time.h>
+#ifdef SB_MAC_BUILD
+#include <unistd.h>
+#endif
+// C++ includes
 #include <string>
 #include <vector>
 #include <sstream>
 #include <iostream>
 
-
+// SB includes
 #include "../../licensedinterfaces/sberrorx.h"
 #include "../../licensedinterfaces/serxinterface.h"
 #include "../../licensedinterfaces/sleeperinterface.h"
@@ -24,6 +34,19 @@
 #define SERIAL_BUFFER_SIZE 20
 #define MAX_TIMEOUT 5000
 #define ND_LOG_BUFFER_SIZE 256
+
+// #define ND_DEBUG
+
+#ifdef ND_DEBUG
+#if defined(SB_WIN_BUILD)
+#define AAF2_LOGFILENAME "C:\\NexDomeLog.txt"
+#elif defined(SB_LINUX_BUILD)
+#define AAF2_LOGFILENAME "/tmp/NexDomeLog.txt"
+#elif defined(SB_MAC_BUILD)
+#define AAF2_LOGFILENAME "/tmp/NexDomeLog.txt"
+#endif
+#endif
+
 
 // error codes
 // Error code
@@ -36,7 +59,7 @@ public:
     CNexDome();
     ~CNexDome();
 
-    int        Connect(const char *szPort);
+    int        Connect(const char *pszPort);
     void        Disconnect(void);
     bool        IsConnected(void) { return m_bIsConnected; }
 
@@ -128,6 +151,13 @@ protected:
     int             m_nShutterState;
     bool            m_bShutterOnly; // roll off roof so the arduino is running the shutter firmware only.
     char            m_szLogBuffer[ND_LOG_BUFFER_SIZE];
+
+#ifdef ND_DEBUG
+    // timestamp for logs
+    char *timestamp;
+    time_t ltime;
+    FILE *Logfile;	  // LogFile
+#endif
 
 };
 

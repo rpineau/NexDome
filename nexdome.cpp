@@ -6,13 +6,6 @@
 
 
 #include "nexdome.h"
-#include <stdlib.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <memory.h>
-#ifdef SB_MAC_BUILD
-#include <unistd.h>
-#endif
 
 CNexDome::CNexDome()
 {
@@ -42,25 +35,56 @@ CNexDome::CNexDome()
 
     memset(m_szFirmwareVersion,0,SERIAL_BUFFER_SIZE);
     memset(m_szLogBuffer,0,ND_LOG_BUFFER_SIZE);
+
+#ifdef	ND_DEBUG
+    Logfile = fopen(AAF2_LOGFILENAME, "w");
+    ltime = time(NULL);
+    char *timestamp = asctime(localtime(&ltime));
+    timestamp[strlen(timestamp) - 1] = 0;
+    fprintf(Logfile, "[%s] CNexDome Constructor Called.\n", timestamp);
+    fflush(Logfile);
+#endif
+
 }
 
 CNexDome::~CNexDome()
 {
+#ifdef	ND_DEBUG
+    // Close LogFile
+    if (Logfile) fclose(Logfile);
+#endif
 
 }
 
-int CNexDome::Connect(const char *szPort)
+int CNexDome::Connect(const char *pszPort)
 {
     int nErr;
     
+#ifdef ND_DEBUG
+    ltime = time(NULL);
+    timestamp = asctime(localtime(&ltime));
+    timestamp[strlen(timestamp) - 1] = 0;
+    fprintf(Logfile, "[%s] CNexDome::Connect Called %s\n", timestamp, pszPort);
+    fflush(Logfile);
+#endif
+
+
     // 9600 8N1
-    if(m_pSerx->open(szPort, 9600, SerXInterface::B_NOPARITY, "-DTR_CONTROL 1") == 0)
+    if(m_pSerx->open(pszPort, 9600, SerXInterface::B_NOPARITY, "-DTR_CONTROL 1") == 0)
         m_bIsConnected = true;
     else
         m_bIsConnected = false;
 
     if(!m_bIsConnected)
         return ERR_COMMNOLINK;
+
+#ifdef ND_DEBUG
+    ltime = time(NULL);
+    timestamp = asctime(localtime(&ltime));
+    timestamp[strlen(timestamp) - 1] = 0;
+    fprintf(Logfile, "[%s] CNexDome::Connect connected to %s\n", timestamp, pszPort);
+    fflush(Logfile);
+#endif
 
     if (m_bDebugLog) {
         snprintf(m_szLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::Connect] Connected.");
@@ -73,7 +97,15 @@ int CNexDome::Connect(const char *szPort)
     // the arduino take over a second to start as it need to init the XBee and there is 1100 ms pause in the code :(
     if(m_pSleeper)
         m_pSleeper->sleep(2000);
-    
+
+#ifdef ND_DEBUG
+    ltime = time(NULL);
+    timestamp = asctime(localtime(&ltime));
+    timestamp[strlen(timestamp) - 1] = 0;
+    fprintf(Logfile, "[%s] CNexDome::Connect Getting Firmware\n", timestamp);
+    fflush(Logfile);
+#endif
+
     // if this fails we're not properly connected.
     nErr = getFirmwareVersion(m_szFirmwareVersion, SERIAL_BUFFER_SIZE);
     if(nErr) {
@@ -90,6 +122,14 @@ int CNexDome::Connect(const char *szPort)
         snprintf(m_szLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::Connect] Got Firmware %s", m_szFirmwareVersion);
         m_pLogger->out(m_szLogBuffer);
     }
+
+#ifdef ND_DEBUG
+    ltime = time(NULL);
+    timestamp = asctime(localtime(&ltime));
+    timestamp[strlen(timestamp) - 1] = 0;
+    fprintf(Logfile, "[%s] CNexDome::Connect Got Firmware %s\n", timestamp, m_szFirmwareVersion);
+    fflush(Logfile);
+#endif
 
     getDomeParkAz(m_dCurrentAzPosition);
     getDomeHomeAz(m_dHomeAz);
@@ -145,36 +185,53 @@ int CNexDome::readResponse(char *szRespBuffer, int nBufferLen)
 }
 
 
-int CNexDome::domeCommand(const char *szCmd, char *szResult, char respCmdCode, int nResultMaxLen)
+int CNexDome::domeCommand(const char *pszCmd, char *pszResult, char respCmdCode, int nResultMaxLen)
 {
     int nErr = 0;
     char szResp[SERIAL_BUFFER_SIZE];
     unsigned long  ulBytesWrite;
 
     m_pSerx->purgeTxRx();
-//    if (m_bDebugLog) {
-//        snprintf(m_szLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::domeCommand] Sending %s",szCmd);
-//        m_pLogger->out(m_szLogBuffer);
-//    }
-    nErr = m_pSerx->writeFile((void *)szCmd, strlen(szCmd), ulBytesWrite);
+
+#ifdef ND_DEBUG
+    ltime = time(NULL);
+    timestamp = asctime(localtime(&ltime));
+    timestamp[strlen(timestamp) - 1] = 0;
+    fprintf(Logfile, "[%s] CNexDome::domeCommand sending : %s\n", timestamp, pszCmd);
+    fflush(Logfile);
+#endif
+
+    nErr = m_pSerx->writeFile((void *)pszCmd, strlen(pszCmd), ulBytesWrite);
     m_pSerx->flushTx();
     if(nErr)
         return nErr;
     // read response
     nErr = readResponse(szResp, SERIAL_BUFFER_SIZE);
-    if(nErr)
-        return nErr;
+    if(nErr) {
 
-//    if (m_bDebugLog) {
-//        snprintf(m_szLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::domeCommand] response = %s", szResp);
-//        m_pLogger->out(m_szLogBuffer);
-//    }
+#ifdef ND_DEBUG
+        ltime = time(NULL);
+        timestamp = asctime(localtime(&ltime));
+        timestamp[strlen(timestamp) - 1] = 0;
+        fprintf(Logfile, "[%s] CNexDome::domeCommand ***** ERROR READING RESPONSE **** error = %d , response : %s\n", timestamp, nErr, szResp);
+        fflush(Logfile);
+#endif
+
+        return nErr;
+    }
+#ifdef ND_DEBUG
+    ltime = time(NULL);
+    timestamp = asctime(localtime(&ltime));
+    timestamp[strlen(timestamp) - 1] = 0;
+    fprintf(Logfile, "[%s] CNexDome::domeCommand response : %s\n", timestamp, szResp);
+    fflush(Logfile);
+#endif
 
     if(szResp[0] != respCmdCode)
         nErr = ND_BAD_CMD_RESPONSE;
 
-    if(szResult)
-        strncpy(szResult, &szResp[1], nResultMaxLen);
+    if(pszResult)
+        strncpy(pszResult, &szResp[1], nResultMaxLen);
 
     return nErr;
 
@@ -388,6 +445,14 @@ bool CNexDome::isDomeMoving()
     if(nTmp)
         bIsMoving = true;
 
+#ifdef ND_DEBUG
+    ltime = time(NULL);
+    timestamp = asctime(localtime(&ltime));
+    timestamp[strlen(timestamp) - 1] = 0;
+    fprintf(Logfile, "[%s] CNexDome::isDomeMoving bIsMoving : %d\n", timestamp, bIsMoving);
+    fflush(Logfile);
+#endif
+
     return bIsMoving;
 }
 
@@ -410,9 +475,16 @@ bool CNexDome::isDomeAtHome()
 
     bAthome = false;
     nTmp = atoi(szResp);
-    if(nTmp)
+    if(nTmp == 1)
         bAthome = true;
-    
+#ifdef ND_DEBUG
+    ltime = time(NULL);
+    timestamp = asctime(localtime(&ltime));
+    timestamp[strlen(timestamp) - 1] = 0;
+    fprintf(Logfile, "[%s] CNexDome::isDomeAtHome bAthome : %d\n", timestamp, bAthome);
+    fflush(Logfile);
+#endif
+
     return bAthome;
   
 }
@@ -585,8 +657,24 @@ int CNexDome::goHome()
             m_bHomed = true;
             return ND_OK;
     }
+#ifdef ND_DEBUG
+    ltime = time(NULL);
+    timestamp = asctime(localtime(&ltime));
+    timestamp[strlen(timestamp) - 1] = 0;
+    fprintf(Logfile, "[%s] CNexDome::goHome \n", timestamp);
+    fflush(Logfile);
+#endif
+
+
     nErr = domeCommand("h\n", NULL, 'H', SERIAL_BUFFER_SIZE);
     if(nErr) {
+#ifdef ND_DEBUG
+        ltime = time(NULL);
+        timestamp = asctime(localtime(&ltime));
+        timestamp[strlen(timestamp) - 1] = 0;
+        fprintf(Logfile, "[%s] CNexDome::goHome ***ERROR****\n", timestamp);
+        fflush(Logfile);
+#endif
         snprintf(m_szLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::closeShutter] ERROR goHome");
         m_pLogger->out(m_szLogBuffer);
         return nErr;
@@ -634,9 +722,25 @@ int CNexDome::isGoToComplete(bool &bComplete)
     while(ceil(dDomeAz) >= 360)
         dDomeAz = ceil(dDomeAz) - 360;
 
-    if ((ceil(m_dGotoAz) <= ceil(dDomeAz)+1) && (ceil(m_dGotoAz) >= ceil(dDomeAz)-1))
+#ifdef ND_DEBUG
+    ltime = time(NULL);
+    timestamp = asctime(localtime(&ltime));
+    timestamp[strlen(timestamp) - 1] = 0;
+    fprintf(Logfile, "[%s] CNexDome::isGoToComplete DomeAz = %3.2f\n", timestamp, dDomeAz);
+    fflush(Logfile);
+#endif
+
+    // we need to test "large" depending on the heading error , this is new in firmware 1.10 and up
+    if ((ceil(m_dGotoAz) <= ceil(dDomeAz)+3) && (ceil(m_dGotoAz) >= ceil(dDomeAz)-3))
         bComplete = true;
     else {
+#ifdef ND_DEBUG
+        ltime = time(NULL);
+        timestamp = asctime(localtime(&ltime));
+        timestamp[strlen(timestamp) - 1] = 0;
+        fprintf(Logfile, "[%s] CNexDome::isGoToComplete ***** ERROR **** DomeAz = %3.2f\n", timestamp, dDomeAz);
+        fflush(Logfile);
+#endif
         // we're not moving and we're not at the final destination !!!
         if (m_bDebugLog) {
             snprintf(m_szLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::isGoToComplete] domeAz = %f, m_dGotoAz = %f", ceil(dDomeAz), ceil(m_dGotoAz));
@@ -755,13 +859,28 @@ int CNexDome::isFindHomeComplete(bool &bComplete)
     if(isDomeMoving()) {
         m_bHomed = false;
         bComplete = false;
+#ifdef ND_DEBUG
+        ltime = time(NULL);
+        timestamp = asctime(localtime(&ltime));
+        timestamp[strlen(timestamp) - 1] = 0;
+        fprintf(Logfile, "[%s] CNexDome::isFindHomeComplete still moving\n", timestamp);
+        fflush(Logfile);
+#endif
         return nErr;
+
     }
 
     if(isDomeAtHome()){
         m_bHomed = true;
         bComplete = true;
         syncDome(m_dHomeAz, m_dCurrentElPosition);
+#ifdef ND_DEBUG
+        ltime = time(NULL);
+        timestamp = asctime(localtime(&ltime));
+        timestamp[strlen(timestamp) - 1] = 0;
+        fprintf(Logfile, "[%s] CNexDome::isFindHomeComplete At Home\n", timestamp);
+        fflush(Logfile);
+#endif
     }
     else {
         // we're not moving and we're not at the home position !!!

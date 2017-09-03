@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <string.h>
+
 #include "../../licensedinterfaces/domedriverinterface.h"
 #include "../../licensedinterfaces/serialportparams2interface.h"
 #include "../../licensedinterfaces/modalsettingsdialoginterface.h"
@@ -28,7 +29,7 @@ class MutexInterface;
 class BasicIniUtilInterface;
 class TickCountInterface;
 
-#define DRIVER_VERSION      1.31
+#define DRIVER_VERSION      1.32
 
 #define PARENT_KEY			"NexDome"
 #define CHILD_KEY_PORTNAME	"PortName"
