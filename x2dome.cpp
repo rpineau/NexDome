@@ -325,7 +325,7 @@ void X2Dome::deviceInfoNameShort(BasicStringInterface& str) const
 
 void X2Dome::deviceInfoNameLong(BasicStringInterface& str) const					
 {
-    str = "Nexdome Dome Rotation Kit";
+    str = "Nexdome";
 }
 
 void X2Dome::deviceInfoDetailedDescription(BasicStringInterface& str) const		
