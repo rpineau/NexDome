@@ -172,6 +172,14 @@ int CNexDome::readResponse(char *szRespBuffer, int nBufferLen)
                 snprintf(m_szLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::readResponse] readFile Timeout.");
                 m_pLogger->out(m_szLogBuffer);
             }
+#ifdef ND_DEBUG
+            ltime = time(NULL);
+            timestamp = asctime(localtime(&ltime));
+            timestamp[strlen(timestamp) - 1] = 0;
+            fprintf(Logfile, "[%s] CNexDome::readResponse Timeout while waiting for response from controller\n", timestamp);
+            fflush(Logfile);
+#endif
+
             nErr = ND_BAD_CMD_RESPONSE;
             break;
         }
@@ -617,8 +625,11 @@ int CNexDome::getFirmwareVersion(char *szVersion, int nStrMaxLen)
     }
 
     nErr = parseFields(szResp,firmwareFields, ' ');
-    if(nErr)
-        return nErr;
+    if(nErr) {
+        strncpy(szVersion, szResp, nStrMaxLen);
+        m_fVersion = atof(szResp);
+        return ND_OK;
+    }
 
     if(firmwareFields.size()>2) {
         strncpy(szVersion, firmwareFields[2].c_str(), nStrMaxLen);
