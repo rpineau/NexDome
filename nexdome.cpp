@@ -922,8 +922,9 @@ int CNexDome::isFindHomeComplete(bool &bComplete)
         m_bHomed = false;
         m_bParked = false;
         // sometimes we pass the home sensor and the dome doesn't rotate back enough to detect it.
+        // this is mostly the case with firmware 1.10 with the new error correction ... 
         // so give it another try
-        if(m_nHomingTries == 0) {
+        if(m_nHomingTries == 0 && m_fVersion >= 1.10) {
             m_nHomingTries = 1;
             goHome();
         }
