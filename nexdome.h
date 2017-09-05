@@ -151,7 +151,8 @@ protected:
     int             m_nShutterState;
     bool            m_bShutterOnly; // roll off roof so the arduino is running the shutter firmware only.
     char            m_szLogBuffer[ND_LOG_BUFFER_SIZE];
-
+    int             m_nHomingTries;
+    int             m_nGotoTries;
 #ifdef ND_DEBUG
     // timestamp for logs
     char *timestamp;
