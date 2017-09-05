@@ -32,6 +32,8 @@ CNexDome::CNexDome()
     m_bHomed = false;
 
     m_fVersion = 0.0;
+    m_nHomingTries = 0;
+    m_nGotoTries = 0;
 
     memset(m_szFirmwareVersion,0,SERIAL_BUFFER_SIZE);
     memset(m_szLogBuffer,0,ND_LOG_BUFFER_SIZE);
@@ -742,8 +744,10 @@ int CNexDome::isGoToComplete(bool &bComplete)
 #endif
 
     // we need to test "large" depending on the heading error , this is new in firmware 1.10 and up
-    if ((ceil(m_dGotoAz) <= ceil(dDomeAz)+3) && (ceil(m_dGotoAz) >= ceil(dDomeAz)-3))
+    if ((ceil(m_dGotoAz) <= ceil(dDomeAz)+3) && (ceil(m_dGotoAz) >= ceil(dDomeAz)-3)) {
         bComplete = true;
+        m_nGotoTries = 0;
+    }
     else {
 #ifdef ND_DEBUG
         ltime = time(NULL);
@@ -757,8 +761,15 @@ int CNexDome::isGoToComplete(bool &bComplete)
             snprintf(m_szLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::isGoToComplete] domeAz = %f, m_dGotoAz = %f", ceil(dDomeAz), ceil(m_dGotoAz));
             m_pLogger->out(m_szLogBuffer);
         }
-        bComplete = false;
-        nErr = ERR_CMDFAILED;
+        if(m_nGotoTries == 0) {
+            bComplete = false;
+            m_nGotoTries = 1;
+            gotoAzimuth(m_dGotoAz);
+        }
+        else {
+            m_nGotoTries = 0;
+            nErr = ERR_CMDFAILED;
+        }
     }
 
     return nErr;
@@ -885,6 +896,7 @@ int CNexDome::isFindHomeComplete(bool &bComplete)
         m_bHomed = true;
         bComplete = true;
         syncDome(m_dHomeAz, m_dCurrentElPosition);
+        m_nHomingTries = 0;
 #ifdef ND_DEBUG
         ltime = time(NULL);
         timestamp = asctime(localtime(&ltime));
@@ -899,10 +911,26 @@ int CNexDome::isFindHomeComplete(bool &bComplete)
             snprintf(m_szLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::isFindHomeComplete] Not moving and not at home !!!");
             m_pLogger->out(m_szLogBuffer);
         }
+#ifdef ND_DEBUG
+        ltime = time(NULL);
+        timestamp = asctime(localtime(&ltime));
+        timestamp[strlen(timestamp) - 1] = 0;
+        fprintf(Logfile, "[%s] [CNexDome::isFindHomeComplete] Not moving and not at home !!!\n", timestamp);
+        fflush(Logfile);
+#endif
         bComplete = false;
         m_bHomed = false;
         m_bParked = false;
-        nErr = ERR_CMDFAILED;
+        // sometimes we pass the home sensor and the dome doesn't rotate back enough to detect it.
+        // so give it another try
+        if(m_nHomingTries == 0) {
+            m_nHomingTries = 1;
+            goHome();
+        }
+        else {
+            m_nHomingTries = 0;
+            nErr = ERR_CMDFAILED;
+        }
     }
 
     return nErr;
