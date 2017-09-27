@@ -514,14 +514,38 @@ int CNexDome::syncDome(double dAz, double dEl)
     if(!m_bIsConnected)
         return NOT_CONNECTED;
 
-    m_dCurrentAzPosition = dAz;
-    snprintf(szBuf, SERIAL_BUFFER_SIZE, "s %3.2f\n", dAz);
-    nErr = domeCommand(szBuf, NULL, 'S', SERIAL_BUFFER_SIZE);
-    if(nErr) {
-        snprintf(m_szLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::syncDome] ERROR syncDome ");
-        m_pLogger->out(m_szLogBuffer);
+    if(m_fVersion >= 1.1) {
+        if(isDomeAtHome()) { //Sync only works for the home position
+            m_dCurrentAzPosition = dAz;
+            snprintf(szBuf, SERIAL_BUFFER_SIZE, "s %3.2f\n", dAz);
+            nErr = domeCommand(szBuf, NULL, 'S', SERIAL_BUFFER_SIZE);
+            if(nErr) {
+                snprintf(m_szLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::syncDome] ERROR syncDome.");
+                m_pLogger->out(m_szLogBuffer);
+                return nErr;
+            }
+            else {
+                snprintf(m_szLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::syncDome] Sync'd home position.");
+                m_pLogger->out(m_szLogBuffer);
+            }
+        }
+        else {
+            snprintf(m_szLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::syncDome] Can't Sync position as we're not at home.");
+            m_pLogger->out(m_szLogBuffer);
+            return COMMAND_FAILED;
+        }
     }
-    // TODO : Also set Elevation when supported by the firware.
+    else {
+        m_dCurrentAzPosition = dAz;
+        snprintf(szBuf, SERIAL_BUFFER_SIZE, "s %3.2f\n", dAz);
+        nErr = domeCommand(szBuf, NULL, 'S', SERIAL_BUFFER_SIZE);
+        if(nErr) {
+            snprintf(m_szLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::syncDome] ERROR syncDome ");
+            m_pLogger->out(m_szLogBuffer);
+            return nErr;
+        }
+    }
+    // TODO : Also set Elevation when supported by the firmware.
     // m_dCurrentElPosition = dEl;
     return nErr;
 }

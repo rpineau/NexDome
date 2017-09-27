@@ -144,14 +144,13 @@ int X2Dome::execModalSettingsDialog()
     }
 
     if(m_bLinked) {
-        nErr = m_NexDome.getDefaultDir(nReverseDir);
         nErr = m_NexDome.getFirmwareVersion(fFrimwareVersion);
-        printf("fFrimwareVersion = %f\n", fFrimwareVersion);
         if(fFrimwareVersion >=1.0) {
-        if(nReverseDir)
-            dx->setChecked("needReverse",false);
-        else
-            dx->setChecked("needReverse",true);
+            nErr = m_NexDome.getDefaultDir(nReverseDir);
+            if(nReverseDir)
+                dx->setChecked("needReverse",false);
+            else
+                dx->setChecked("needReverse",true);
         }
         else {
             dx->setChecked("needReverse",false);
@@ -199,7 +198,6 @@ int X2Dome::execModalSettingsDialog()
         m_bHasShutterControl = dx->isChecked("hasShutterCtrl");
         nReverseDir = dx->isChecked("needReverse");
         if(fFrimwareVersion >=1.0) {
-            printf("nReverseDir = %d\n", nReverseDir);
             m_NexDome.setDefaultDir(!nReverseDir);
         }
 
