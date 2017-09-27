@@ -522,8 +522,11 @@ int CNexDome::syncDome(double dAz, double dEl)
             if(nErr) {
                 snprintf(m_szLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::syncDome] ERROR syncDome ");
                 m_pLogger->out(m_szLogBuffer);
+                return nErr;
             }
         }
+        else
+            return COMMAND_FAILED;
     }
     else {
         m_dCurrentAzPosition = dAz;
