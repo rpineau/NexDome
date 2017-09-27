@@ -120,7 +120,8 @@ int X2Dome::execModalSettingsDialog()
     double dParkAz;
     double dDomeBattery;
     double dShutterBattery;
-    
+    bool nReverseDir;
+    float fFrimwareVersion;
 
     if (NULL == ui)
         return ERR_POINTER;
@@ -131,18 +132,31 @@ int X2Dome::execModalSettingsDialog()
     if (NULL == (dx = uiutil.X2DX()))
         return ERR_POINTER;
 
+    X2MutexLocker ml(GetMutex());
+
     memset(szTmpBuf,0,SERIAL_BUFFER_SIZE);
     // set controls state depending on the connection state
-    if(m_bHasShutterControl)
-    {
+    if(m_bHasShutterControl) {
         dx->setChecked("hasShutterCtrl",true);
     }
-    else
-    {
+    else {
         dx->setChecked("hasShutterCtrl",false);
     }
 
     if(m_bLinked) {
+        nErr = m_NexDome.getDefaultDir(nReverseDir);
+        nErr = m_NexDome.getFirmwareVersion(fFrimwareVersion);
+        printf("fFrimwareVersion = %f\n", fFrimwareVersion);
+        if(fFrimwareVersion >=1.0) {
+        if(nReverseDir)
+            dx->setChecked("needReverse",false);
+        else
+            dx->setChecked("needReverse",true);
+        }
+        else {
+            dx->setChecked("needReverse",false);
+            dx->setEnabled("needReverse",false);
+        }
         snprintf(szTmpBuf,16,"%d",m_NexDome.getNbTicksPerRev());
         dx->setPropertyString("ticksPerRev","text", szTmpBuf);
         m_NexDome.getBatteryLevels(dDomeBattery, dShutterBattery);
@@ -164,6 +178,8 @@ int X2Dome::execModalSettingsDialog()
         dx->setPropertyString("domeBatteryLevel","text", szTmpBuf);
         dx->setPropertyString("shutterBatteryLevel","text", szTmpBuf);
         dx->setEnabled("pushButton",false);
+        dx->setEnabled("hasShutterCtrl",false);
+        dx->setEnabled("needReverse",false);
     }
     dx->setPropertyDouble("homePosition","value", m_NexDome.getHomeAz());
     dx->setPropertyDouble("parkPosition","value", m_NexDome.getParkAz());
@@ -171,21 +187,23 @@ int X2Dome::execModalSettingsDialog()
     m_bHomingDome = false;
     m_nBattRequest = 0;
     
-    X2MutexLocker ml(GetMutex());
 
     //Display the user interface
     if ((nErr = ui->exec(bPressedOK)))
         return nErr;
 
     //Retreive values from the user interface
-    if (bPressedOK)
-    {
+    if (bPressedOK) {
         dx->propertyDouble("homePosition", "value", dHomeAz);
         dx->propertyDouble("parkPosition", "value", dParkAz);
         m_bHasShutterControl = dx->isChecked("hasShutterCtrl");
+        nReverseDir = dx->isChecked("needReverse");
+        if(fFrimwareVersion >=1.0) {
+            printf("nReverseDir = %d\n", nReverseDir);
+            m_NexDome.setDefaultDir(!nReverseDir);
+        }
 
-        if(m_bLinked)
-        {
+        if(m_bLinked) {
             m_NexDome.setHomeAz(dHomeAz);
             m_NexDome.setParkAz(dParkAz);
         }
@@ -207,7 +225,7 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
     double dShutterBattery;
     char szTmpBuf[SERIAL_BUFFER_SIZE];    
     char szErrorMessage[LOG_BUFFER_SIZE];
-    
+
     if (!strcmp(pszEvent, "on_pushButtonCancel_clicked"))
         m_NexDome.abortCurrentCommand();
 
@@ -283,8 +301,6 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
                 }
                 m_nBattRequest++;
             }
-
-            
         }
     }
 
@@ -298,7 +314,6 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
             m_bHomingDome = true;
         }
     }
-
 }
 
 //

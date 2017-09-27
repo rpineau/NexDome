@@ -106,6 +106,9 @@ public:
     int getCurrentShutterState();
     int getBatteryLevels(double &dDomeVolts, double &dShutterVolts);
 
+    int getDefaultDir(bool &bNormal);
+    int setDefaultDir(bool bNormal);
+
     void setDebugLog(bool bEnable);
 
 protected:

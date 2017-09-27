@@ -452,6 +452,13 @@ bool CNexDome::isDomeMoving()
 
     bIsMoving = false;
     nTmp = atoi(szResp);
+#ifdef ND_DEBUG
+    ltime = time(NULL);
+    timestamp = asctime(localtime(&ltime));
+    timestamp[strlen(timestamp) - 1] = 0;
+    fprintf(Logfile, "[%s] CNexDome::isDomeMoving nTmp : %d\n", timestamp, nTmp);
+    fflush(Logfile);
+#endif
     if(nTmp)
         bIsMoving = true;
 
@@ -654,7 +661,9 @@ int CNexDome::getFirmwareVersion(float &fVersion)
             return nErr;
     }
 
-    return m_fVersion;
+    fVersion = m_fVersion;
+
+    return nErr;
 }
 
 int CNexDome::goHome()
@@ -947,7 +956,7 @@ int CNexDome::isCalibratingComplete(bool &bComplete)
         return NOT_CONNECTED;
 
     if(isDomeMoving()) {
-        getDomeAz(dDomeAz);
+        // getDomeAz(dDomeAz);
         m_bHomed = false;
         bComplete = false;
         return nErr;
@@ -1063,6 +1072,56 @@ int CNexDome::getCurrentShutterState()
 
     return m_nShutterState;
 }
+
+
+int CNexDome::getDefaultDir(bool &bNormal)
+{
+    int nErr = 0;
+    char szResp[SERIAL_BUFFER_SIZE];
+
+    bNormal = true;
+    nErr = domeCommand("y\n", szResp, 'Y', SERIAL_BUFFER_SIZE);
+    if(nErr) {
+        return nErr;
+    }
+
+    bNormal = atoi(szResp) ? false:true;
+#ifdef ND_DEBUG
+    ltime = time(NULL);
+    timestamp = asctime(localtime(&ltime));
+    timestamp[strlen(timestamp) - 1] = 0;
+    fprintf(Logfile, "[%s] [CNexDome::getDefaultDir] bNormal =  %d\n", timestamp, bNormal);
+    fflush(Logfile);
+#endif
+
+
+    return nErr;
+}
+
+int CNexDome::setDefaultDir(bool bNormal)
+{
+    int nErr = 0;
+    char szBuf[SERIAL_BUFFER_SIZE];
+
+    if(!m_bIsConnected)
+        return NOT_CONNECTED;
+
+    snprintf(szBuf, SERIAL_BUFFER_SIZE, "y %1d\n", bNormal?0:1);
+
+#ifdef ND_DEBUG
+    ltime = time(NULL);
+    timestamp = asctime(localtime(&ltime));
+    timestamp[strlen(timestamp) - 1] = 0;
+    fprintf(Logfile, "[%s] [CNexDome::setDefaultDir] bNormal =  %d\n", timestamp, bNormal);
+    fprintf(Logfile, "[%s] [CNexDome::setDefaultDir] szBuf =  %s\n", timestamp, szBuf);
+    fflush(Logfile);
+#endif
+
+    nErr = domeCommand(szBuf, NULL, 'y', SERIAL_BUFFER_SIZE);
+    return nErr;
+
+}
+
 
 
 int CNexDome::parseFields(char *pszResp, std::vector<std::string> &svFields, char cSeparator)
