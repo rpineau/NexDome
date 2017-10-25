@@ -41,7 +41,7 @@ CNexDome::CNexDome()
 #ifdef	ND_DEBUG
     Logfile = fopen(AAF2_LOGFILENAME, "w");
     ltime = time(NULL);
-    char *timestamp = asctime(localtime(&ltime));
+    timestamp = asctime(localtime(&ltime));
     timestamp[strlen(timestamp) - 1] = 0;
     fprintf(Logfile, "[%s] CNexDome Constructor Called.\n", timestamp);
     fflush(Logfile);
@@ -566,7 +566,8 @@ int CNexDome::unparkDome()
 {
     m_bParked = false;
     m_dCurrentAzPosition = m_dParkAz;
-    syncDome(m_dCurrentAzPosition,m_dCurrentElPosition);
+    if(m_fVersion < 1.1)
+        syncDome(m_dCurrentAzPosition,m_dCurrentElPosition);
     return 0;
 }
 

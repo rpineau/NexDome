@@ -68,8 +68,10 @@ int X2Dome::establishLink(void)
     // get serial port device name
     portNameOnToCharPtr(szPort,DRIVER_MAX_STRING);
     nErr = m_NexDome.Connect(szPort);
-    if(nErr)
+    if(nErr) {
         m_bLinked = false;
+        nErr = ERR_COMMOPENING;
+    }
     else
         m_bLinked = true;
 
