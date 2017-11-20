@@ -778,9 +778,6 @@ int CNexDome::isGoToComplete(bool &bComplete)
     if(!m_bIsConnected)
         return NOT_CONNECTED;
 
-    getPointingError(dPointingError);
-    printf("[isGoToComplete] dPointingError = %3.2f\n", dPointingError);
-
     if(isDomeMoving()) {
         bComplete = false;
         getDomeAz(dDomeAz);
@@ -942,9 +939,6 @@ int CNexDome::isFindHomeComplete(bool &bComplete)
 
     if(!m_bIsConnected)
         return NOT_CONNECTED;
-
-    getPointingError(dPointingError);
-    printf("[isFindHomeComplete] dPointingError = %3.2f\n", dPointingError);
 
     if(isDomeMoving()) {
         m_bHomed = false;
@@ -1129,9 +1123,6 @@ double CNexDome::getCurrentAz()
 
     if(m_bIsConnected) {
         getDomeAz(m_dCurrentAzPosition);
-        printf("[getCurrentAz] m_dCurrentAzPosition = %3.2f\n", m_dCurrentAzPosition);
-        getPointingError(dPointingError);
-        printf("[getCurrentAz] dPointingError = %3.2f\n", dPointingError);
    }
     return m_dCurrentAzPosition;
 }
