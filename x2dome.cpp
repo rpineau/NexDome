@@ -123,7 +123,9 @@ int X2Dome::execModalSettingsDialog()
     double dDomeBattery;
     double dShutterBattery;
     bool nReverseDir;
-    float fFrimwareVersion;
+    float fFrimwareVersion = 0.0;
+    double dPointingError;
+    int nRainSensorStatus = NOT_RAINING;
 
     if (NULL == ui)
         return ERR_POINTER;
@@ -148,15 +150,20 @@ int X2Dome::execModalSettingsDialog()
     if(m_bLinked) {
         nErr = m_NexDome.getFirmwareVersion(fFrimwareVersion);
         if(fFrimwareVersion >=1.0) {
+            nErr = m_NexDome.wakeSutter();
             nErr = m_NexDome.getDefaultDir(nReverseDir);
             if(nReverseDir)
                 dx->setChecked("needReverse",false);
             else
                 dx->setChecked("needReverse",true);
+            m_NexDome.getPointingError(dPointingError);
+            snprintf(szTmpBuf,16,"%3.2f",dPointingError);
+            dx->setPropertyString("domePointingError","text", szTmpBuf);
         }
         else {
             dx->setChecked("needReverse",false);
             dx->setEnabled("needReverse",false);
+            dx->setPropertyString("domePointingError","text", "--");
         }
         snprintf(szTmpBuf,16,"%d",m_NexDome.getNbTicksPerRev());
         dx->setPropertyString("ticksPerRev","text", szTmpBuf);
@@ -168,22 +175,30 @@ int X2Dome::execModalSettingsDialog()
             dx->setPropertyString("shutterBatteryLevel","text", szTmpBuf);
         }
         else {
-            snprintf(szTmpBuf,16,"NA");
-            dx->setPropertyString("shutterBatteryLevel","text", szTmpBuf);
+            dx->setPropertyString("shutterBatteryLevel","text", "--");
         }
+        nErr = m_NexDome.getRainSensorStatus(nRainSensorStatus);
+        if(nErr)
+            dx->setPropertyString("rainStatus","text", "--");
+        else {
+            snprintf(szTmpBuf, 16, nRainSensorStatus==NOT_RAINING ? "Not raining" : "Raining");
+            dx->setPropertyString("rainStatus","text", szTmpBuf);
+        }
+
         dx->setEnabled("pushButton",true);
     }
     else {
-        snprintf(szTmpBuf,16,"NA");
-        dx->setPropertyString("ticksPerRev","text", szTmpBuf);
-        dx->setPropertyString("domeBatteryLevel","text", szTmpBuf);
-        dx->setPropertyString("shutterBatteryLevel","text", szTmpBuf);
+        dx->setPropertyString("ticksPerRev","text", "--");
+        dx->setPropertyString("domeBatteryLevel","text", "--");
+        dx->setPropertyString("shutterBatteryLevel","text", "--");
         dx->setEnabled("pushButton",false);
         dx->setEnabled("hasShutterCtrl",false);
         dx->setEnabled("needReverse",false);
+        dx->setPropertyString("domePointingError","text", "--");
     }
     dx->setPropertyDouble("homePosition","value", m_NexDome.getHomeAz());
     dx->setPropertyDouble("parkPosition","value", m_NexDome.getParkAz());
+
 
     m_bHomingDome = false;
     m_nBattRequest = 0;
@@ -199,11 +214,10 @@ int X2Dome::execModalSettingsDialog()
         dx->propertyDouble("parkPosition", "value", dParkAz);
         m_bHasShutterControl = dx->isChecked("hasShutterCtrl");
         nReverseDir = dx->isChecked("needReverse");
-        if(fFrimwareVersion >=1.0) {
-            m_NexDome.setDefaultDir(!nReverseDir);
-        }
-
         if(m_bLinked) {
+            if(fFrimwareVersion >=1.0) {
+                m_NexDome.setDefaultDir(!nReverseDir);
+            }
             m_NexDome.setHomeAz(dHomeAz);
             m_NexDome.setParkAz(dParkAz);
         }
@@ -225,7 +239,8 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
     double dShutterBattery;
     char szTmpBuf[SERIAL_BUFFER_SIZE];    
     char szErrorMessage[LOG_BUFFER_SIZE];
-
+    int nRainSensorStatus = NOT_RAINING;
+    
     if (!strcmp(pszEvent, "on_pushButtonCancel_clicked"))
         m_NexDome.abortCurrentCommand();
 
@@ -300,6 +315,13 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
                     }
                 }
                 m_nBattRequest++;
+                nErr = m_NexDome.getRainSensorStatus(nRainSensorStatus);
+                if(nErr)
+                    uiex->setPropertyString("rainStatus","text", "--");
+                else {
+                    snprintf(szTmpBuf, 16, nRainSensorStatus==NOT_RAINING ? "Not raining" : "Raining");
+                    uiex->setPropertyString("rainStatus","text", szTmpBuf);
+                }
             }
         }
     }
