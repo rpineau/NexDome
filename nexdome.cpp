@@ -25,7 +25,9 @@ CNexDome::CNexDome()
     m_dCurrentElPosition = 0.0;
 
     m_bCalibrating = false;
-    
+    m_bUnParking = false;
+    m_bHasBeenHome = false;
+
     m_bShutterOpened = false;
     
     m_bParked = true;
@@ -35,13 +37,15 @@ CNexDome::CNexDome()
     m_nHomingTries = 0;
     m_nGotoTries = 0;
 
+    m_nIsRaining = NOT_RAINING;
+
     memset(m_szFirmwareVersion,0,SERIAL_BUFFER_SIZE);
     memset(m_szLogBuffer,0,ND_LOG_BUFFER_SIZE);
 
 #ifdef	ND_DEBUG
     Logfile = fopen(AAF2_LOGFILENAME, "w");
     ltime = time(NULL);
-    char *timestamp = asctime(localtime(&ltime));
+    timestamp = asctime(localtime(&ltime));
     timestamp[strlen(timestamp) - 1] = 0;
     fprintf(Logfile, "[%s] CNexDome Constructor Called.\n", timestamp);
     fflush(Logfile);
@@ -135,6 +139,7 @@ int CNexDome::Connect(const char *pszPort)
 
     getDomeParkAz(m_dCurrentAzPosition);
     getDomeHomeAz(m_dHomeAz);
+
     return SB_OK;
 }
 
@@ -356,6 +361,7 @@ int CNexDome::getShutterState(int &nState)
 {
     int nErr = 0;
     char szResp[SERIAL_BUFFER_SIZE];
+    std::vector<std::string> shutterStateFileds;
 
     if(!m_bIsConnected)
         return NOT_CONNECTED;
@@ -370,7 +376,14 @@ int CNexDome::getShutterState(int &nState)
         return nErr;
     }
 
-    nState = atoi(szResp);
+    nErr = parseFields(szResp,shutterStateFileds, ' ');
+    if(shutterStateFileds.size()>1) {
+        nState = atoi(shutterStateFileds[1].c_str());
+        m_nIsRaining = atoi(shutterStateFileds[2].c_str());
+    }
+    else {
+        nState = atoi(shutterStateFileds[1].c_str());
+    }
 
     return nErr;
 }
@@ -425,6 +438,34 @@ int CNexDome::getBatteryLevels(double &domeVolts, double &shutterVolts)
 
     domeVolts = domeVolts / 100.0;
     shutterVolts = shutterVolts / 100.0;
+    return nErr;
+}
+
+int CNexDome::getPointingError(double &dPointingError)
+{
+    int nErr = 0;
+    char szResp[SERIAL_BUFFER_SIZE];
+
+    if(!m_bIsConnected)
+        return NOT_CONNECTED;
+
+    if(m_bCalibrating)
+        return nErr;
+
+    if(m_fVersion >= 1.1) {
+        nErr = domeCommand("o\n", szResp, 'O', SERIAL_BUFFER_SIZE);
+        if(nErr) {
+            snprintf(m_szLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::getPointingError] ERROR = %s", szResp);
+            m_pLogger->out(m_szLogBuffer);
+            return nErr;
+        }
+
+        // convert Az string to double
+        dPointingError = atof(szResp);
+    }
+    else {
+        dPointingError = 0.0;
+    }
     return nErr;
 }
 
@@ -514,36 +555,13 @@ int CNexDome::syncDome(double dAz, double dEl)
     if(!m_bIsConnected)
         return NOT_CONNECTED;
 
-    if(m_fVersion >= 1.1) {
-        if(isDomeAtHome()) { //Sync only works for the home position
-            m_dCurrentAzPosition = dAz;
-            snprintf(szBuf, SERIAL_BUFFER_SIZE, "s %3.2f\n", dAz);
-            nErr = domeCommand(szBuf, NULL, 'S', SERIAL_BUFFER_SIZE);
-            if(nErr) {
-                snprintf(m_szLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::syncDome] ERROR syncDome.");
-                m_pLogger->out(m_szLogBuffer);
-                return nErr;
-            }
-            else {
-                snprintf(m_szLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::syncDome] Sync'd home position.");
-                m_pLogger->out(m_szLogBuffer);
-            }
-        }
-        else {
-            snprintf(m_szLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::syncDome] Can't Sync position as we're not at home.");
-            m_pLogger->out(m_szLogBuffer);
-            return COMMAND_FAILED;
-        }
-    }
-    else {
-        m_dCurrentAzPosition = dAz;
-        snprintf(szBuf, SERIAL_BUFFER_SIZE, "s %3.2f\n", dAz);
-        nErr = domeCommand(szBuf, NULL, 'S', SERIAL_BUFFER_SIZE);
-        if(nErr) {
-            snprintf(m_szLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::syncDome] ERROR syncDome ");
-            m_pLogger->out(m_szLogBuffer);
-            return nErr;
-        }
+    m_dCurrentAzPosition = dAz;
+    snprintf(szBuf, SERIAL_BUFFER_SIZE, "s %3.2f\n", dAz);
+    nErr = domeCommand(szBuf, NULL, 'S', SERIAL_BUFFER_SIZE);
+    if(nErr) {
+        snprintf(m_szLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::syncDome] ERROR syncDome ");
+        m_pLogger->out(m_szLogBuffer);
+        return nErr;
     }
     // TODO : Also set Elevation when supported by the firmware.
     // m_dCurrentElPosition = dEl;
@@ -564,9 +582,16 @@ int CNexDome::parkDome()
 
 int CNexDome::unparkDome()
 {
-    m_bParked = false;
-    m_dCurrentAzPosition = m_dParkAz;
-    syncDome(m_dCurrentAzPosition,m_dCurrentElPosition);
+    if(!m_bHasBeenHome) {
+        m_bUnParking = true;
+        goHome();
+    }
+    else {
+        syncDome(m_dParkAz, m_dCurrentElPosition);
+        m_bParked = false;
+        m_bUnParking = false;
+    }
+
     return 0;
 }
 
@@ -748,9 +773,13 @@ int CNexDome::isGoToComplete(bool &bComplete)
 {
     int nErr = 0;
     double dDomeAz = 0;
+    double dPointingError = 0;
 
     if(!m_bIsConnected)
         return NOT_CONNECTED;
+
+    getPointingError(dPointingError);
+    printf("[isGoToComplete] dPointingError = %3.2f\n", dPointingError);
 
     if(isDomeMoving()) {
         bComplete = false;
@@ -898,8 +927,10 @@ int CNexDome::isUnparkComplete(bool &bComplete)
     if(!m_bIsConnected)
         return NOT_CONNECTED;
 
-    m_bParked = false;
-    bComplete = true;
+    if(! m_bParked)
+        bComplete = true;
+    else
+        bComplete = false;
 
     return nErr;
 }
@@ -907,9 +938,13 @@ int CNexDome::isUnparkComplete(bool &bComplete)
 int CNexDome::isFindHomeComplete(bool &bComplete)
 {
     int nErr = 0;
+    double dPointingError = 0;
 
     if(!m_bIsConnected)
         return NOT_CONNECTED;
+
+    getPointingError(dPointingError);
+    printf("[isFindHomeComplete] dPointingError = %3.2f\n", dPointingError);
 
     if(isDomeMoving()) {
         m_bHomed = false;
@@ -928,7 +963,10 @@ int CNexDome::isFindHomeComplete(bool &bComplete)
     if(isDomeAtHome()){
         m_bHomed = true;
         bComplete = true;
+        if(m_bUnParking)
+            m_bParked = false;
         syncDome(m_dHomeAz, m_dCurrentElPosition);
+        m_bHasBeenHome = true;
         m_nHomingTries = 0;
 #ifdef ND_DEBUG
         ltime = time(NULL);
@@ -1015,6 +1053,18 @@ int CNexDome::abortCurrentCommand()
     return (domeCommand("a\n", NULL, 'A', SERIAL_BUFFER_SIZE));
 }
 
+int CNexDome::wakeSutter()
+{
+    if(!m_bIsConnected)
+        return NOT_CONNECTED;
+
+    m_bCalibrating = false;
+
+    return (domeCommand("x\n", NULL, 'X', SERIAL_BUFFER_SIZE));
+}
+
+
+
 #pragma mark - Getter / Setter
 
 int CNexDome::getNbTicksPerRev()
@@ -1075,9 +1125,14 @@ int CNexDome::setParkAz(double dAz)
 
 double CNexDome::getCurrentAz()
 {
-    if(m_bIsConnected)
+    double dPointingError =0;
+
+    if(m_bIsConnected) {
         getDomeAz(m_dCurrentAzPosition);
-    
+        printf("[getCurrentAz] m_dCurrentAzPosition = %3.2f\n", m_dCurrentAzPosition);
+        getPointingError(dPointingError);
+        printf("[getCurrentAz] dPointingError = %3.2f\n", dPointingError);
+   }
     return m_dCurrentAzPosition;
 }
 
@@ -1146,7 +1201,19 @@ int CNexDome::setDefaultDir(bool bNormal)
 
 }
 
+int CNexDome::getRainSensorStatus(int &nStatus)
+{
+    int nErr = ND_OK;
+    int nShutterStatus;
 
+    if(!m_bIsConnected)
+        return NOT_CONNECTED;
+
+    nErr = getShutterState(nShutterStatus);
+    nStatus = m_nIsRaining;
+
+    return nErr;
+}
 
 int CNexDome::parseFields(char *pszResp, std::vector<std::string> &svFields, char cSeparator)
 {

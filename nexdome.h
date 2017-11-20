@@ -35,6 +35,10 @@
 #define MAX_TIMEOUT 5000
 #define ND_LOG_BUFFER_SIZE 256
 
+// RG-11
+#define NOT_RAINING    1
+#define RAINING        0
+
 // #define ND_DEBUG
 
 #ifdef ND_DEBUG
@@ -105,9 +109,14 @@ public:
 
     int getCurrentShutterState();
     int getBatteryLevels(double &dDomeVolts, double &dShutterVolts);
-
+    int getPointingError(double &dPointingError);
+    
     int getDefaultDir(bool &bNormal);
     int setDefaultDir(bool bNormal);
+
+    int getRainSensorStatus(int &nStatus);
+
+    int wakeSutter();
 
     void setDebugLog(bool bEnable);
 
@@ -156,6 +165,10 @@ protected:
     char            m_szLogBuffer[ND_LOG_BUFFER_SIZE];
     int             m_nHomingTries;
     int             m_nGotoTries;
+    bool            m_bUnParking;
+    bool            m_bHasBeenHome;
+    int             m_nIsRaining;
+
 #ifdef ND_DEBUG
     // timestamp for logs
     char *timestamp;
