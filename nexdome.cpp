@@ -42,11 +42,18 @@ CNexDome::CNexDome()
     memset(m_szFirmwareVersion,0,SERIAL_BUFFER_SIZE);
     memset(m_szLogBuffer,0,ND_LOG_BUFFER_SIZE);
 
-#ifdef	ND_DEBUG
-    Logfile = fopen(AAF2_LOGFILENAME, "w");
-    ltime = time(NULL);
-    timestamp = asctime(localtime(&ltime));
-    timestamp[strlen(timestamp) - 1] = 0;
+
+#ifdef ND_DEBUG
+#if defined(SB_WIN_BUILD)
+    m_sLogfilePath = getenv("HOMEDRIVE");
+    m_sLogfilePath += getenv("HOMEPATH");
+    m_sLogfilePath += "\\NexDomeLog.txt";
+#elif defined(SB_LINUX_BUILD)
+    m_sLogfilePath = "/tmp/NexDomeLog.txt";
+#elif defined(SB_MAC_BUILD)
+    m_sLogfilePath = "/tmp/NexDomeLog.txt";
+#endif
+    Logfile = fopen(m_sLogfilePath.c_str(), "w");
     fprintf(Logfile, "[%s] CNexDome Constructor Called.\n", timestamp);
     fflush(Logfile);
 #endif

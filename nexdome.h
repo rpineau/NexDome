@@ -41,15 +41,6 @@
 
 // #define ND_DEBUG
 
-#ifdef ND_DEBUG
-#if defined(SB_WIN_BUILD)
-#define AAF2_LOGFILENAME "C:\\NexDomeLog.txt"
-#elif defined(SB_LINUX_BUILD)
-#define AAF2_LOGFILENAME "/tmp/NexDomeLog.txt"
-#elif defined(SB_MAC_BUILD)
-#define AAF2_LOGFILENAME "/tmp/NexDomeLog.txt"
-#endif
-#endif
 
 
 // error codes
@@ -170,6 +161,7 @@ protected:
     int             m_nIsRaining;
 
 #ifdef ND_DEBUG
+    std::string m_sLogfilePath;
     // timestamp for logs
     char *timestamp;
     time_t ltime;
