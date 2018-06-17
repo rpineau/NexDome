@@ -39,7 +39,7 @@
 #define NOT_RAINING    1
 #define RAINING        0
 
-// #define ND_DEBUG
+// #define ND_DEBUG    2
 
 
 
