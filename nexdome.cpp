@@ -479,6 +479,7 @@ int CNexDome::getBatteryLevels(double &domeVolts, double &shutterVolts)
     }
 
     rc = sscanf(szResp, "%lf %lf", &domeVolts, &shutterVolts);
+    printf("domeVolts = %4.3f\n", domeVolts);
     if(rc == 0) {
 #if defined ND_DEBUG && ND_DEBUG >= 2
         ltime = time(NULL);
@@ -489,9 +490,15 @@ int CNexDome::getBatteryLevels(double &domeVolts, double &shutterVolts)
 #endif
         return COMMAND_FAILED;
     }
-
-    domeVolts = domeVolts / 100.0;
-    shutterVolts = shutterVolts / 100.0;
+    // do a proper conversion as for some reason the value is scaled weirdly ( it's multiplied by 3/2)
+    // Arduino ADC convert 0-5V to 0-1023 so we use 1024/5 to see how many unit we get per volts
+    if(m_fVersion <= 1.10f) {
+        domeVolts = (domeVolts*2) * (5.0 / 1023.0);
+        shutterVolts = (shutterVolts*2) * (5.0 / 1023.0);
+    } else { // hopefully we can fix this in the next firmware and report proper values.
+        domeVolts = domeVolts / 100.0;
+        shutterVolts = shutterVolts / 100.0;
+    }
     return nErr;
 }
 
