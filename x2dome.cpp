@@ -70,7 +70,7 @@ int X2Dome::establishLink(void)
     nErr = m_NexDome.Connect(szPort);
     if(nErr) {
         m_bLinked = false;
-        nErr = ERR_COMMOPENING;
+        // nErr = ERR_COMMOPENING;
     }
     else
         m_bLinked = true;
