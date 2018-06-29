@@ -491,10 +491,10 @@ int CNexDome::getBatteryLevels(double &domeVolts, double &shutterVolts)
         return COMMAND_FAILED;
     }
     // do a proper conversion as for some reason the value is scaled weirdly ( it's multiplied by 3/2)
-    // Arduino ADC convert 0-5V to 0-1023 so we use 1024/5 to see how many unit we get per volts
+    // Arduino ADC convert 0-5V to 0-1023 which is 0.0049V per unit
     if(m_fVersion <= 1.10f) {
-        domeVolts = (domeVolts*2) * (5.0 / 1023.0);
-        shutterVolts = (shutterVolts*2) * (5.0 / 1023.0);
+        domeVolts = (domeVolts*2) * 0.0049f;
+        shutterVolts = (shutterVolts*2) * 0.0049f;
     } else { // hopefully we can fix this in the next firmware and report proper values.
         domeVolts = domeVolts / 100.0;
         shutterVolts = shutterVolts / 100.0;
@@ -778,6 +778,8 @@ int CNexDome::getFirmwareVersion(char *szVersion, int nStrMaxLen)
     int nErr = 0;
     char szResp[SERIAL_BUFFER_SIZE];
     std::vector<std::string> firmwareFields;
+    std::vector<std::string> versionFields;
+    std::string strVersion;
 
     if(!m_bIsConnected)
         return NOT_CONNECTED;
@@ -805,8 +807,13 @@ int CNexDome::getFirmwareVersion(char *szVersion, int nStrMaxLen)
     }
 
     if(firmwareFields.size()>2) {
-        strncpy(szVersion, firmwareFields[2].c_str(), nStrMaxLen);
-        m_fVersion = atof(firmwareFields[2].c_str());
+        nErr = parseFields(firmwareFields[2].c_str(),versionFields, '.');
+        strVersion=versionFields[0]+".";
+        for(int i=1; i<versionFields.size(); i++) {
+            strVersion+=versionFields[i];
+        }
+        strncpy(szVersion, strVersion.c_str(), nStrMaxLen);
+        m_fVersion = atof(strVersion.c_str());
     }
     else {
         strncpy(szVersion, szResp, nStrMaxLen);
@@ -1323,7 +1330,7 @@ int CNexDome::getRainSensorStatus(int &nStatus)
     return nErr;
 }
 
-int CNexDome::parseFields(char *pszResp, std::vector<std::string> &svFields, char cSeparator)
+int CNexDome::parseFields(const char *pszResp, std::vector<std::string> &svFields, char cSeparator)
 {
     int nErr = ND_OK;
     std::string sSegment;

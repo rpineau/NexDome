@@ -124,7 +124,7 @@ protected:
     bool            isDomeMoving();
     bool            isDomeAtHome();
     int             domeCommand(const char *cmd, char *result, char respCmdCode, int resultMaxLen);
-    int             parseFields(char *pszResp, std::vector<std::string> &svFields, char cSeparator);
+    int             parseFields(const char *pszResp, std::vector<std::string> &svFields, char cSeparator);
 
     SerXInterface   *m_pSerx;
     SleeperInterface *m_pSleeper;
