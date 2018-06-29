@@ -140,8 +140,10 @@ int CNexDome::Connect(const char *pszPort)
     fprintf(Logfile, "[%s] CNexDome::Connect Got Firmware %s\n", timestamp, m_szFirmwareVersion);
     fflush(Logfile);
 #endif
+    //if(m_fVersion<2.0f) {
+    //    return FIRMWARE_NOT_SUPPORTED;
+    //}
 
-    wakeSutter();
     getDomeParkAz(m_dCurrentAzPosition);
     getDomeHomeAz(m_dHomeAz);
 
@@ -195,10 +197,10 @@ int CNexDome::readResponse(char *szRespBuffer, int nBufferLen)
             break;
         }
         ulTotalBytesRead += ulBytesRead;
-    } while (*pszBufPtr++ != '\n' && ulTotalBytesRead < nBufferLen );
+    } while (*pszBufPtr++ != '#' && ulTotalBytesRead < nBufferLen );
 
     if(ulTotalBytesRead)
-        *(pszBufPtr-1) = 0; //remove the \n
+        *(pszBufPtr-1) = 0; //remove the #
 
     return nErr;
 }
@@ -265,7 +267,7 @@ int CNexDome::getDomeAz(double &dDomeAz)
     if(m_bCalibrating)
         return nErr;
 
-    nErr = domeCommand("q\n", szResp, 'Q', SERIAL_BUFFER_SIZE);
+    nErr = domeCommand("g#", szResp, 'g', SERIAL_BUFFER_SIZE);
     if(nErr) {
 #if defined ND_DEBUG && ND_DEBUG >= 2
         ltime = time(NULL);
@@ -300,7 +302,7 @@ int CNexDome::getDomeEl(double &dDomeEl)
         return nErr;
     }
         
-    nErr = domeCommand("b\n", szResp, 'B', SERIAL_BUFFER_SIZE);
+    nErr = domeCommand("G#", szResp, 'G', SERIAL_BUFFER_SIZE);
     if(nErr) {
 #if defined ND_DEBUG && ND_DEBUG >= 2
         ltime = time(NULL);
@@ -331,7 +333,7 @@ int CNexDome::getDomeHomeAz(double &dAz)
     if(m_bCalibrating)
         return nErr;
 
-    nErr = domeCommand("i\n", szResp, 'I', SERIAL_BUFFER_SIZE);
+    nErr = domeCommand("i#", szResp, 'i', SERIAL_BUFFER_SIZE);
     if(nErr) {
 #if defined ND_DEBUG && ND_DEBUG >= 2
         ltime = time(NULL);
@@ -360,7 +362,7 @@ int CNexDome::getDomeParkAz(double &dAz)
     if(m_bCalibrating)
         return nErr;
 
-    nErr = domeCommand("n\n", szResp, 'N', SERIAL_BUFFER_SIZE);
+    nErr = domeCommand("l#", szResp, 'l', SERIAL_BUFFER_SIZE);
     if(nErr) {
 #if defined ND_DEBUG && ND_DEBUG >= 2
         ltime = time(NULL);
@@ -391,7 +393,7 @@ int CNexDome::getShutterState(int &nState)
     if(m_bCalibrating)
         return nErr;
 
-    nErr = domeCommand("u\n", szResp, 'U', SERIAL_BUFFER_SIZE);
+    nErr = domeCommand("M#", szResp, 'M', SERIAL_BUFFER_SIZE);
     if(nErr) {
 #if defined ND_DEBUG && ND_DEBUG >= 2
         ltime = time(NULL);
@@ -411,19 +413,7 @@ int CNexDome::getShutterState(int &nState)
     fflush(Logfile);
 #endif
 
-
-    nErr = parseFields(szResp, shutterStateFileds, ' ');
-    if(nErr)
-        return nErr;
-    if(shutterStateFileds.size()>1) {
-        nState = atoi(shutterStateFileds[1].c_str());
-        if(shutterStateFileds.size()>2)
-            m_nIsRaining = atoi(shutterStateFileds[2].c_str());
-    }
-    else {
-        nState = atoi(shutterStateFileds[1].c_str());
-    }
-
+    nState = atoi(szResp+1);
     return nErr;
 }
 
@@ -436,7 +426,7 @@ int CNexDome::getDomeStepPerRev(int &nStepPerRev)
     if(!m_bIsConnected)
         return NOT_CONNECTED;
 
-    nErr = domeCommand("t\n", szResp, 'T', SERIAL_BUFFER_SIZE);
+    nErr = domeCommand("t#", szResp, 't', SERIAL_BUFFER_SIZE);
     if(nErr) {
 #if defined ND_DEBUG && ND_DEBUG >= 2
         ltime = time(NULL);
@@ -466,7 +456,7 @@ int CNexDome::getBatteryLevels(double &domeVolts, double &shutterVolts)
     if(m_bCalibrating)
         return nErr;
     
-    nErr = domeCommand("k\n", szResp, 'K', SERIAL_BUFFER_SIZE);
+    nErr = domeCommand("k#", szResp, 'k', SERIAL_BUFFER_SIZE);
     if(nErr) {
 #if defined ND_DEBUG && ND_DEBUG >= 2
         ltime = time(NULL);
@@ -478,7 +468,7 @@ int CNexDome::getBatteryLevels(double &domeVolts, double &shutterVolts)
         return nErr;
     }
 
-    rc = sscanf(szResp, "%lf %lf", &domeVolts, &shutterVolts);
+    rc = sscanf(szResp, "%lf,%lf", &domeVolts, &shutterVolts);
     printf("domeVolts = %4.3f\n", domeVolts);
     if(rc == 0) {
 #if defined ND_DEBUG && ND_DEBUG >= 2
@@ -514,7 +504,7 @@ int CNexDome::getPointingError(double &dPointingError)
         return nErr;
 
     if(m_fVersion >= 1.1) {
-        nErr = domeCommand("o\n", szResp, 'O', SERIAL_BUFFER_SIZE);
+        nErr = domeCommand("o#", szResp, 'o', SERIAL_BUFFER_SIZE);
         if(nErr) {
 #if defined ND_DEBUG && ND_DEBUG >= 2
             ltime = time(NULL);
@@ -550,7 +540,7 @@ bool CNexDome::isDomeMoving()
     if(!m_bIsConnected)
         return NOT_CONNECTED;
 
-    nErr = domeCommand("m\n", szResp, 'M', SERIAL_BUFFER_SIZE);
+    nErr = domeCommand("m#", szResp, 'm', SERIAL_BUFFER_SIZE);
     if(nErr) {
 #if defined ND_DEBUG && ND_DEBUG >= 2
         ltime = time(NULL);
@@ -595,7 +585,7 @@ bool CNexDome::isDomeAtHome()
     if(!m_bIsConnected)
         return NOT_CONNECTED;
     
-    nErr = domeCommand("z\n", szResp, 'Z', SERIAL_BUFFER_SIZE);
+    nErr = domeCommand("z#", szResp, 'z', SERIAL_BUFFER_SIZE);
     if(nErr) {
 #if defined ND_DEBUG && ND_DEBUG >= 2
         ltime = time(NULL);
@@ -632,8 +622,8 @@ int CNexDome::syncDome(double dAz, double dEl)
         return NOT_CONNECTED;
 
     m_dCurrentAzPosition = dAz;
-    snprintf(szBuf, SERIAL_BUFFER_SIZE, "s %3.2f\n", dAz);
-    nErr = domeCommand(szBuf, NULL, 'S', SERIAL_BUFFER_SIZE);
+    snprintf(szBuf, SERIAL_BUFFER_SIZE, "s %3.2f#", dAz);
+    nErr = domeCommand(szBuf, NULL, 's', SERIAL_BUFFER_SIZE);
     if(nErr) {
 #if defined ND_DEBUG && ND_DEBUG >= 2
         ltime = time(NULL);
@@ -688,8 +678,8 @@ int CNexDome::gotoAzimuth(double dNewAz)
     while(dNewAz >= 360)
         dNewAz = dNewAz - 360;
     
-    snprintf(szBuf, SERIAL_BUFFER_SIZE, "g %3.2f\n", dNewAz);
-    nErr = domeCommand(szBuf, NULL, 'G', SERIAL_BUFFER_SIZE);
+    snprintf(szBuf, SERIAL_BUFFER_SIZE, "g %3.2f#", dNewAz);
+    nErr = domeCommand(szBuf, NULL, 'g', SERIAL_BUFFER_SIZE);
     if(nErr) {
 #if defined ND_DEBUG && ND_DEBUG >= 2
         ltime = time(NULL);
@@ -726,7 +716,7 @@ int CNexDome::openShutter()
         snprintf(m_szLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::openShutter] Opening shutter");
         m_pLogger->out(m_szLogBuffer);
     }
-    nErr = domeCommand("d\n", NULL, 'D', SERIAL_BUFFER_SIZE);
+    nErr = domeCommand("O#", NULL, 'O', SERIAL_BUFFER_SIZE);
     if(nErr) {
         snprintf(m_szLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::openShutter] ERROR gotoAzimuth");
         m_pLogger->out(m_szLogBuffer);
@@ -759,7 +749,7 @@ int CNexDome::closeShutter()
     fflush(Logfile);
 #endif
 
-    nErr = domeCommand("e\n", NULL, 'D', SERIAL_BUFFER_SIZE);
+    nErr = domeCommand("C#", NULL, 'C', SERIAL_BUFFER_SIZE);
     if(nErr) {
 #if defined ND_DEBUG && ND_DEBUG >= 2
         ltime = time(NULL);
@@ -787,7 +777,7 @@ int CNexDome::getFirmwareVersion(char *szVersion, int nStrMaxLen)
     if(m_bCalibrating)
         return SB_OK;
 
-    nErr = domeCommand("v\n", szResp, 'V', SERIAL_BUFFER_SIZE);
+    nErr = domeCommand("v#", szResp, 'v', SERIAL_BUFFER_SIZE);
     if(nErr) {
 #if defined ND_DEBUG && ND_DEBUG >= 2
         ltime = time(NULL);
@@ -859,7 +849,7 @@ int CNexDome::goHome()
 #endif
 
 
-    nErr = domeCommand("h\n", NULL, 'H', SERIAL_BUFFER_SIZE);
+    nErr = domeCommand("h#", NULL, 'h', SERIAL_BUFFER_SIZE);
     if(nErr) {
 #ifdef ND_DEBUG
         ltime = time(NULL);
@@ -881,7 +871,7 @@ int CNexDome::calibrate()
         return NOT_CONNECTED;
 
 
-    nErr = domeCommand("c\n", NULL, 'C', SERIAL_BUFFER_SIZE);
+    nErr = domeCommand("c#", NULL, 'c', SERIAL_BUFFER_SIZE);
     if(nErr) {
 #if defined ND_DEBUG && ND_DEBUG >= 2
         ltime = time(NULL);
@@ -1168,19 +1158,8 @@ int CNexDome::abortCurrentCommand()
 
     m_bCalibrating = false;
 
-    return (domeCommand("a\n", NULL, 'A', SERIAL_BUFFER_SIZE));
+    return (domeCommand("a#", NULL, 'a', SERIAL_BUFFER_SIZE));
 }
-
-int CNexDome::wakeSutter()
-{
-    if(!m_bIsConnected)
-        return NOT_CONNECTED;
-
-    m_bCalibrating = false;
-
-    return (domeCommand("x\n", NULL, 'X', SERIAL_BUFFER_SIZE));
-}
-
 
 
 #pragma mark - Getter / Setter
@@ -1210,8 +1189,8 @@ int CNexDome::setHomeAz(double dAz)
     if(!m_bIsConnected)
         return NOT_CONNECTED;
     
-    snprintf(szBuf, SERIAL_BUFFER_SIZE, "j %3.2f\n", dAz);
-    nErr = domeCommand(szBuf, NULL, 'J', SERIAL_BUFFER_SIZE);
+    snprintf(szBuf, SERIAL_BUFFER_SIZE, "i %3.2f#", dAz);
+    nErr = domeCommand(szBuf, NULL, 'i', SERIAL_BUFFER_SIZE);
     return nErr;
 }
 
@@ -1235,8 +1214,8 @@ int CNexDome::setParkAz(double dAz)
     if(!m_bIsConnected)
         return NOT_CONNECTED;
 
-    snprintf(szBuf, SERIAL_BUFFER_SIZE, "l %3.2f\n", dAz);
-    nErr = domeCommand(szBuf, NULL, 'L', SERIAL_BUFFER_SIZE);
+    snprintf(szBuf, SERIAL_BUFFER_SIZE, "l %3.2f#", dAz);
+    nErr = domeCommand(szBuf, NULL, 'l', SERIAL_BUFFER_SIZE);
     return nErr;
 }
 
@@ -1274,7 +1253,7 @@ int CNexDome::getDefaultDir(bool &bNormal)
     char szResp[SERIAL_BUFFER_SIZE];
 
     bNormal = true;
-    nErr = domeCommand("y\n", szResp, 'Y', SERIAL_BUFFER_SIZE);
+    nErr = domeCommand("y#", szResp, 'y', SERIAL_BUFFER_SIZE);
     if(nErr) {
         return nErr;
     }
@@ -1300,7 +1279,7 @@ int CNexDome::setDefaultDir(bool bNormal)
     if(!m_bIsConnected)
         return NOT_CONNECTED;
 
-    snprintf(szBuf, SERIAL_BUFFER_SIZE, "y %1d\n", bNormal?0:1);
+    snprintf(szBuf, SERIAL_BUFFER_SIZE, "y %1d#", bNormal?0:1);
 
 #ifdef ND_DEBUG
     ltime = time(NULL);

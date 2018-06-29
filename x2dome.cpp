@@ -150,7 +150,6 @@ int X2Dome::execModalSettingsDialog()
     if(m_bLinked) {
         nErr = m_NexDome.getFirmwareVersion(fFrimwareVersion);
         if(fFrimwareVersion >=1.0) {
-            nErr = m_NexDome.wakeSutter();
             nErr = m_NexDome.getDefaultDir(nReverseDir);
             if(nReverseDir)
                 dx->setChecked("needReverse",false);

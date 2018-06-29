@@ -39,7 +39,7 @@
 #define NOT_RAINING    1
 #define RAINING        0
 
-// #define ND_DEBUG    2
+#define ND_DEBUG    2
 
 
 
@@ -106,8 +106,6 @@ public:
     int setDefaultDir(bool bNormal);
 
     int getRainSensorStatus(int &nStatus);
-
-    int wakeSutter();
 
     void setDebugLog(bool bEnable);
 
