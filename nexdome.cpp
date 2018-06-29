@@ -443,7 +443,7 @@ int CNexDome::getDomeStepPerRev(int &nStepPerRev)
     return nErr;
 }
 
-int CNexDome::getBatteryLevels(double &domeVolts, double &shutterVolts)
+int CNexDome::getBatteryLevels(double &domeVolts, double &dDomeCutOff, double &dShutterVolts, double &dShutterCutOff)
 {
     int nErr = 0;
     int rc = 0;
@@ -455,7 +455,7 @@ int CNexDome::getBatteryLevels(double &domeVolts, double &shutterVolts)
 
     if(m_bCalibrating)
         return nErr;
-    
+    // Dome
     nErr = domeCommand("k#", szResp, 'k', SERIAL_BUFFER_SIZE);
     if(nErr) {
 #if defined ND_DEBUG && ND_DEBUG >= 2
@@ -468,8 +468,7 @@ int CNexDome::getBatteryLevels(double &domeVolts, double &shutterVolts)
         return nErr;
     }
 
-    rc = sscanf(szResp, "%lf,%lf", &domeVolts, &shutterVolts);
-    printf("domeVolts = %4.3f\n", domeVolts);
+    rc = sscanf(szResp, "%lf,%lf", &domeVolts, &dDomeCutOff);
     if(rc == 0) {
 #if defined ND_DEBUG && ND_DEBUG >= 2
         ltime = time(NULL);
@@ -484,11 +483,62 @@ int CNexDome::getBatteryLevels(double &domeVolts, double &shutterVolts)
     // Arduino ADC convert 0-5V to 0-1023 which is 0.0049V per unit
     if(m_fVersion <= 1.10f) {
         domeVolts = (domeVolts*2) * 0.0049f;
-        shutterVolts = (shutterVolts*2) * 0.0049f;
+        dDomeCutOff = (dDomeCutOff*2) * 0.0049f;
     } else { // hopefully we can fix this in the next firmware and report proper values.
         domeVolts = domeVolts / 100.0;
-        shutterVolts = shutterVolts / 100.0;
+        dDomeCutOff = dDomeCutOff / 100.0;
     }
+
+    //  Shutter
+    nErr = domeCommand("K#", szResp, 'K', SERIAL_BUFFER_SIZE);
+    if(nErr) {
+#if defined ND_DEBUG && ND_DEBUG >= 2
+        ltime = time(NULL);
+        timestamp = asctime(localtime(&ltime));
+        timestamp[strlen(timestamp) - 1] = 0;
+        fprintf(Logfile, "[%s] [CNexDome::getBatteryLevels] ERROR = %s\n", timestamp, szResp);
+        fflush(Logfile);
+#endif
+        return nErr;
+    }
+
+    if(strlen(szResp)<2) { // no shutter value
+        dShutterVolts = -1;
+        dShutterCutOff = -1;
+        return nErr;
+    }
+
+    rc = sscanf(szResp, "%lf,%lf", &dShutterVolts, &dShutterCutOff);
+    if(rc == 0) {
+#if defined ND_DEBUG && ND_DEBUG >= 2
+        ltime = time(NULL);
+        timestamp = asctime(localtime(&ltime));
+        timestamp[strlen(timestamp) - 1] = 0;
+        fprintf(Logfile, "[%s] [CNexDome::getBatteryLevels] sscanf ERROR\n", timestamp);
+        fflush(Logfile);
+#endif
+        return COMMAND_FAILED;
+    }
+
+#if defined ND_DEBUG && ND_DEBUG >= 2
+    ltime = time(NULL);
+    timestamp = asctime(localtime(&ltime));
+    timestamp[strlen(timestamp) - 1] = 0;
+    fprintf(Logfile, "[%s] [CNexDome::getBatteryLevels] shutterVolts = %f\n", timestamp, dShutterVolts);
+    fprintf(Logfile, "[%s] [CNexDome::getBatteryLevels] dShutterCutOff = %f\n", timestamp, dShutterCutOff);
+    fflush(Logfile);
+#endif
+
+    // do a proper conversion as for some reason the value is scaled weirdly ( it's multiplied by 3/2)
+    // Arduino ADC convert 0-5V to 0-1023 which is 0.0049V per unit
+    if(m_fVersion <= 1.10f) {
+        dShutterVolts = (dShutterVolts*2) * 0.0049f;
+        dShutterCutOff = (dShutterCutOff*2) * 0.0049f;
+    } else { // hopefully we can fix this in the next firmware and report proper values.
+        dShutterVolts = dShutterVolts / 100.0;
+        dShutterCutOff = dShutterCutOff / 100.0;
+    }
+
     return nErr;
 }
 
@@ -1297,15 +1347,26 @@ int CNexDome::setDefaultDir(bool bNormal)
 
 int CNexDome::getRainSensorStatus(int &nStatus)
 {
-    int nErr = ND_OK;
-    int nShutterStatus;
+    int nErr = 0;
+    char szResp[SERIAL_BUFFER_SIZE];
 
-    if(!m_bIsConnected)
-        return NOT_CONNECTED;
+    nStatus = NOT_RAINING;
+    nErr = domeCommand("F#", szResp, 'F', SERIAL_BUFFER_SIZE);
+    if(nErr) {
+        return nErr;
+    }
 
-    nErr = getShutterState(nShutterStatus);
-    nStatus = m_nIsRaining;
+    nStatus = atoi(szResp) ? false:true;
+#ifdef ND_DEBUG
+    ltime = time(NULL);
+    timestamp = asctime(localtime(&ltime));
+    timestamp[strlen(timestamp) - 1] = 0;
+    fprintf(Logfile, "[%s] [CNexDome::getRainSensorStatus] nStatus =  %s\n", timestamp, nStatus?"NOT RAINING":"RAINING");
+    fflush(Logfile);
+#endif
 
+
+    m_nIsRaining = nStatus;
     return nErr;
 }
 

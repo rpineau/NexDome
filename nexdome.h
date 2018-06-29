@@ -99,7 +99,7 @@ public:
     double getCurrentEl();
 
     int getCurrentShutterState();
-    int getBatteryLevels(double &dDomeVolts, double &dShutterVolts);
+    int getBatteryLevels(double &domeVolts, double &dDomeCutOff, double &dShutterVolts, double &dShutterCutOff);
     int getPointingError(double &dPointingError);
     
     int getDefaultDir(bool &bNormal);

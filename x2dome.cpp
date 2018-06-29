@@ -120,8 +120,8 @@ int X2Dome::execModalSettingsDialog()
     char szTmpBuf[SERIAL_BUFFER_SIZE];
     double dHomeAz;
     double dParkAz;
-    double dDomeBattery;
-    double dShutterBattery;
+    double dDomeBattery, dDomeCutOff;
+    double dShutterBattery, dShutterCutOff;
     bool nReverseDir;
     float fFrimwareVersion = 0.0;
     double dPointingError;
@@ -166,11 +166,14 @@ int X2Dome::execModalSettingsDialog()
         }
         snprintf(szTmpBuf,16,"%d",m_NexDome.getNbTicksPerRev());
         dx->setPropertyString("ticksPerRev","text", szTmpBuf);
-        m_NexDome.getBatteryLevels(dDomeBattery, dShutterBattery);
+        m_NexDome.getBatteryLevels(dDomeBattery, dDomeCutOff, dShutterBattery, dShutterCutOff);
         snprintf(szTmpBuf,16,"%2.2f V",dDomeBattery);
         dx->setPropertyString("domeBatteryLevel","text", szTmpBuf);
         if(m_bHasShutterControl) {
-            snprintf(szTmpBuf,16,"%2.2f V",dShutterBattery);
+            if(dShutterBattery>=0.0f)
+                snprintf(szTmpBuf,16,"%2.2f V",dShutterBattery);
+            else
+                snprintf(szTmpBuf,16,"--");
             dx->setPropertyString("shutterBatteryLevel","text", szTmpBuf);
         }
         else {
@@ -234,8 +237,8 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
 {
     bool bComplete = false;
     int nErr;
-    double dDomeBattery;
-    double dShutterBattery;
+    double dDomeBattery, dDomeCutOff;
+    double dShutterBattery, dShutterCutOff;
     char szTmpBuf[SERIAL_BUFFER_SIZE];    
     char szErrorMessage[LOG_BUFFER_SIZE];
     int nRainSensorStatus = NOT_RAINING;
@@ -301,11 +304,14 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
             if(m_bHasShutterControl && !m_bHomingDome && !m_bCalibratingDome) {
                 // don't ask to often
                 if (!(m_nBattRequest%4)) {
-                    m_NexDome.getBatteryLevels(dDomeBattery, dShutterBattery);
+                    m_NexDome.getBatteryLevels(dDomeBattery, dDomeCutOff, dShutterBattery, dShutterCutOff);
                     snprintf(szTmpBuf,16,"%2.2f V",dDomeBattery);
                     uiex->setPropertyString("domeBatteryLevel","text", szTmpBuf);
                     if(m_bHasShutterControl) {
-                        snprintf(szTmpBuf,16,"%2.2f V",dShutterBattery);
+                        if(dShutterBattery>=0.0f)
+                            snprintf(szTmpBuf,16,"%2.2f V",dShutterBattery);
+                        else
+                            snprintf(szTmpBuf,16,"--");
                         uiex->setPropertyString("shutterBatteryLevel","text", szTmpBuf);
                     }
                     else {
