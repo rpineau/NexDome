@@ -148,6 +148,8 @@ int X2Dome::execModalSettingsDialog()
     }
 
     if(m_bLinked) {
+        dx->setEnabled("homePosition",true);
+        dx->setEnabled("parkPosition",true);
         nErr = m_NexDome.getFirmwareVersion(fFrimwareVersion);
         if(fFrimwareVersion >=1.0) {
             nErr = m_NexDome.getDefaultDir(nReverseDir);
@@ -164,8 +166,9 @@ int X2Dome::execModalSettingsDialog()
             dx->setEnabled("needReverse",false);
             dx->setPropertyString("domePointingError","text", "--");
         }
-        snprintf(szTmpBuf,16,"%d",m_NexDome.getNbTicksPerRev());
-        dx->setPropertyString("ticksPerRev","text", szTmpBuf);
+        dx->setEnabled("ticksPerRev",true);
+        dx->setPropertyInt("ticksPerRev","value", m_NexDome.getNbTicksPerRev());
+
         m_NexDome.getBatteryLevels(dDomeBattery, dDomeCutOff, dShutterBattery, dShutterCutOff);
         snprintf(szTmpBuf,16,"%2.2f V",dDomeBattery);
         dx->setPropertyString("domeBatteryLevel","text", szTmpBuf);
@@ -190,7 +193,10 @@ int X2Dome::execModalSettingsDialog()
         dx->setEnabled("pushButton",true);
     }
     else {
-        dx->setPropertyString("ticksPerRev","text", "--");
+        dx->setEnabled("homePosition",false);
+        dx->setEnabled("parkPosition",false);
+        dx->setPropertyInt("ticksPerRev","value", 0);
+        dx->setEnabled("ticksPerRev",false);
         dx->setPropertyString("domeBatteryLevel","text", "--");
         dx->setPropertyString("shutterBatteryLevel","text", "--");
         dx->setEnabled("pushButton",false);

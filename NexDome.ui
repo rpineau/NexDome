@@ -6,19 +6,19 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>344</width>
+    <width>386</width>
     <height>524</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>344</width>
+    <width>386</width>
     <height>496</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>344</width>
+    <width>386</width>
     <height>524</height>
    </size>
   </property>
@@ -176,7 +176,7 @@
         <item>
          <widget class="QLabel" name="label_4">
           <property name="text">
-           <string>© RTI-Zone.org, 2017</string>
+           <string>© RTI-Zone.org, 2018</string>
           </property>
          </widget>
         </item>
@@ -222,71 +222,6 @@
          <string>Controller Informations</string>
         </property>
         <layout class="QGridLayout" name="gridLayout_3">
-         <item row="3" column="0">
-          <layout class="QHBoxLayout" name="horizontalLayout_8">
-           <property name="bottomMargin">
-            <number>0</number>
-           </property>
-           <item>
-            <spacer name="horizontalSpacer_8">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item>
-            <widget class="QLabel" name="label_6">
-             <property name="text">
-              <string>Pointing Error (Deg.):</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="domePointingError">
-             <property name="text">
-              <string>0.0</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item row="1" column="0">
-          <layout class="QHBoxLayout" name="horizontalLayout_6">
-           <item>
-            <spacer name="horizontalSpacer_7">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item>
-            <widget class="QLabel" name="label_7">
-             <property name="text">
-              <string>Dome battery level :</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="domeBatteryLevel">
-             <property name="text">
-              <string>12.25 V</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
          <item row="0" column="0">
           <layout class="QHBoxLayout" name="horizontalLayout">
            <item>
@@ -310,9 +245,9 @@
             </widget>
            </item>
            <item>
-            <widget class="QLabel" name="ticksPerRev">
-             <property name="text">
-              <string>00000000</string>
+            <widget class="QSpinBox" name="ticksPerRev">
+             <property name="maximum">
+              <number>999999999</number>
              </property>
             </widget>
            </item>
@@ -378,6 +313,71 @@
             <widget class="QLabel" name="rainStatus">
              <property name="text">
               <string>Ok</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="3" column="0">
+          <layout class="QHBoxLayout" name="horizontalLayout_8">
+           <property name="bottomMargin">
+            <number>0</number>
+           </property>
+           <item>
+            <spacer name="horizontalSpacer_8">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_6">
+             <property name="text">
+              <string>Pointing Error (Deg.):</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="domePointingError">
+             <property name="text">
+              <string>0.0</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </item>
+         <item row="1" column="0">
+          <layout class="QHBoxLayout" name="horizontalLayout_6">
+           <item>
+            <spacer name="horizontalSpacer_7">
+             <property name="orientation">
+              <enum>Qt::Horizontal</enum>
+             </property>
+             <property name="sizeHint" stdset="0">
+              <size>
+               <width>40</width>
+               <height>20</height>
+              </size>
+             </property>
+            </spacer>
+           </item>
+           <item>
+            <widget class="QLabel" name="label_7">
+             <property name="text">
+              <string>Dome battery level :</string>
+             </property>
+            </widget>
+           </item>
+           <item>
+            <widget class="QLabel" name="domeBatteryLevel">
+             <property name="text">
+              <string>12.25 V</string>
              </property>
             </widget>
            </item>
