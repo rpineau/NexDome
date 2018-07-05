@@ -90,14 +90,12 @@ int CNexDome::Connect(const char *pszPort)
 
 
     // 9600 8N1
-    if(m_pSerx->open(pszPort, 9600, SerXInterface::B_NOPARITY, "-DTR_CONTROL 1") == 0)
-        m_bIsConnected = true;
-    else
+    nErr = m_pSerx->open(pszPort, 9600, SerXInterface::B_NOPARITY, "-DTR_CONTROL 1");
+    if(nErr) {
         m_bIsConnected = false;
-
-    if(!m_bIsConnected)
-        return ERR_COMMNOLINK;
-
+        return nErr;
+    }
+    m_bIsConnected = true;
 #if defined ND_DEBUG && ND_DEBUG >= 2
     ltime = time(NULL);
     timestamp = asctime(localtime(&ltime));
