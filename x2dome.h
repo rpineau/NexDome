@@ -29,7 +29,7 @@ class MutexInterface;
 class BasicIniUtilInterface;
 class TickCountInterface;
 
-#define DRIVER_VERSION      2.0
+#define DRIVER_VERSION      2.01
 
 #define PARENT_KEY			"NexDome"
 #define CHILD_KEY_PORTNAME	"PortName"

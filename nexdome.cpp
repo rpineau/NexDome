@@ -96,6 +96,10 @@ int CNexDome::Connect(const char *pszPort)
         return nErr;
     }
     m_bIsConnected = true;
+    m_bCalibrating = false;
+    m_bUnParking = false;
+    m_bHomed = false;
+
 #if defined ND_DEBUG && ND_DEBUG >= 2
     ltime = time(NULL);
     timestamp = asctime(localtime(&ltime));
@@ -152,10 +156,15 @@ int CNexDome::Connect(const char *pszPort)
 void CNexDome::Disconnect()
 {
     if(m_bIsConnected) {
+        abortCurrentCommand();
         m_pSerx->purgeTxRx();
         m_pSerx->close();
     }
     m_bIsConnected = false;
+    m_bCalibrating = false;
+    m_bUnParking = false;
+    m_bHomed = false;
+
 #if defined ND_DEBUG && ND_DEBUG >= 2
     ltime = time(NULL);
     timestamp = asctime(localtime(&ltime));
@@ -627,7 +636,7 @@ bool CNexDome::isDomeMoving()
         return NOT_CONNECTED;
 
     nErr = domeCommand("m#", szResp, 'm', SERIAL_BUFFER_SIZE);
-    if(nErr) {
+    if(nErr & !m_bCalibrating) {
 #if defined ND_DEBUG && ND_DEBUG >= 2
         ltime = time(NULL);
         timestamp = asctime(localtime(&ltime));
@@ -636,6 +645,9 @@ bool CNexDome::isDomeMoving()
         fflush(Logfile);
 #endif
         return false;
+    }
+    else if (nErr & m_bCalibrating) {
+        return true;
     }
 
     bIsMoving = false;
@@ -654,7 +666,7 @@ bool CNexDome::isDomeMoving()
     ltime = time(NULL);
     timestamp = asctime(localtime(&ltime));
     timestamp[strlen(timestamp) - 1] = 0;
-    fprintf(Logfile, "[%s] CNexDome::isDomeMoving bIsMoving : %d\n", timestamp, bIsMoving);
+    fprintf(Logfile, "[%s] CNexDome::isDomeMoving bIsMoving : %s\n", timestamp, bIsMoving?"True":"False");
     fflush(Logfile);
 #endif
 
@@ -685,13 +697,13 @@ bool CNexDome::isDomeAtHome()
 
     bAthome = false;
     nTmp = atoi(szResp);
-    if(nTmp == ATHOME || nTmp == HOMED)
+    if(nTmp == ATHOME)
         bAthome = true;
 #if defined ND_DEBUG && ND_DEBUG >= 2
     ltime = time(NULL);
     timestamp = asctime(localtime(&ltime));
     timestamp[strlen(timestamp) - 1] = 0;
-    fprintf(Logfile, "[%s] CNexDome::isDomeAtHome bAthome : %d\n", timestamp, bAthome);
+    fprintf(Logfile, "[%s] CNexDome::isDomeAtHome bAthome : %s\n", timestamp, bAthome?"True":"False");
     fflush(Logfile);
 #endif
 
@@ -1064,7 +1076,7 @@ int CNexDome::isOpenComplete(bool &bComplete)
     ltime = time(NULL);
     timestamp = asctime(localtime(&ltime));
     timestamp[strlen(timestamp) - 1] = 0;
-    fprintf(Logfile, "[%s] CNexDome::isOpenComplete bComplete = %d\n", timestamp, bComplete);
+    fprintf(Logfile, "[%s] CNexDome::isOpenComplete bComplete = %s\n", timestamp, bComplete?"True":"False");
     fflush(Logfile);
 #endif
 
@@ -1097,7 +1109,7 @@ int CNexDome::isCloseComplete(bool &bComplete)
     ltime = time(NULL);
     timestamp = asctime(localtime(&ltime));
     timestamp[strlen(timestamp) - 1] = 0;
-    fprintf(Logfile, "[%s] CNexDome::isCloseComplete bComplete = %d\n", timestamp, bComplete);
+    fprintf(Logfile, "[%s] CNexDome::isCloseComplete bComplete = %s\n", timestamp, bComplete?"True":"False");
     fflush(Logfile);
 #endif
 
@@ -1138,7 +1150,7 @@ int CNexDome::isParkComplete(bool &bComplete)
     ltime = time(NULL);
     timestamp = asctime(localtime(&ltime));
     timestamp[strlen(timestamp) - 1] = 0;
-    fprintf(Logfile, "[%s] CNexDome::isParkComplete bComplete = %d\n", timestamp, bComplete);
+    fprintf(Logfile, "[%s] CNexDome::isParkComplete bComplete = %s\n", timestamp, bComplete?"True":"False");
     fflush(Logfile);
 #endif
 
@@ -1149,23 +1161,46 @@ int CNexDome::isUnparkComplete(bool &bComplete)
 {
     int nErr = 0;
 
+    bComplete = false;
+
     if(!m_bIsConnected)
         return NOT_CONNECTED;
 
-    if(! m_bParked)
+    if(!m_bParked) {
         bComplete = true;
+#if defined ND_DEBUG && ND_DEBUG >= 2
+        ltime = time(NULL);
+        timestamp = asctime(localtime(&ltime));
+        timestamp[strlen(timestamp) - 1] = 0;
+        fprintf(Logfile, "[%s] CNexDome::isUnparkComplete UNPARKED \n", timestamp);
+        fflush(Logfile);
+#endif
+    }
     else if (m_bUnParking) {
-        if(isDomeAtHome() && !isDomeMoving())
-            bComplete = true;
-        else
-            bComplete = false;
+#if defined ND_DEBUG && ND_DEBUG >= 2
+        ltime = time(NULL);
+        timestamp = asctime(localtime(&ltime));
+        timestamp[strlen(timestamp) - 1] = 0;
+        fprintf(Logfile, "[%s] CNexDome::isUnparkComplete unparking.. checking if we're home \n", timestamp);
+        fflush(Logfile);
+#endif
+        nErr = isFindHomeComplete(bComplete);
+        if(nErr)
+            return nErr;
+        if(bComplete) {
+            m_bParked = false;
+        }
+        else {
+            m_bParked = true;
+        }
     }
 
 #if defined ND_DEBUG && ND_DEBUG >= 2
     ltime = time(NULL);
     timestamp = asctime(localtime(&ltime));
     timestamp[strlen(timestamp) - 1] = 0;
-    fprintf(Logfile, "[%s] CNexDome::isUnparkComplete bComplete = %d\n", timestamp, bComplete);
+    fprintf(Logfile, "[%s] CNexDome::isUnparkComplete m_bParked = %s\n", timestamp, m_bParked?"True":"False");
+    fprintf(Logfile, "[%s] CNexDome::isUnparkComplete bComplete = %s\n", timestamp, bComplete?"True":"False");
     fflush(Logfile);
 #endif
 
@@ -1178,6 +1213,14 @@ int CNexDome::isFindHomeComplete(bool &bComplete)
 
     if(!m_bIsConnected)
         return NOT_CONNECTED;
+
+#ifdef ND_DEBUG
+    ltime = time(NULL);
+    timestamp = asctime(localtime(&ltime));
+    timestamp[strlen(timestamp) - 1] = 0;
+    fprintf(Logfile, "[%s] CNexDome::isFindHomeComplete\n", timestamp);
+    fflush(Logfile);
+#endif
 
     if(isDomeMoving()) {
         m_bHomed = false;
@@ -1262,6 +1305,16 @@ int CNexDome::isCalibratingComplete(bool &bComplete)
     m_bHomed = true;
     bComplete = true;
     m_bCalibrating = false;
+#ifdef ND_DEBUG
+    ltime = time(NULL);
+    timestamp = asctime(localtime(&ltime));
+    timestamp[strlen(timestamp) - 1] = 0;
+    fprintf(Logfile, "[%s] [CNexDome::getNbTicksPerRev] final m_nNbStepPerRev = %d\n", timestamp, m_nNbStepPerRev);
+    fprintf(Logfile, "[%s] [CNexDome::getNbTicksPerRev] final m_bHomed = %s\n", timestamp, m_bHomed?"True":"False");
+    fprintf(Logfile, "[%s] [CNexDome::getNbTicksPerRev] final m_bCalibrating = %s\n", timestamp, m_bCalibrating?"True":"False");
+    fprintf(Logfile, "[%s] [CNexDome::getNbTicksPerRev] final bComplete = %s\n", timestamp, bComplete?"True":"False");
+    fflush(Logfile);
+#endif
     return nErr;
 }
 
@@ -1272,6 +1325,7 @@ int CNexDome::abortCurrentCommand()
         return NOT_CONNECTED;
 
     m_bCalibrating = false;
+    m_bUnParking = false;
 
     return (domeCommand("a#", NULL, 'a', SERIAL_BUFFER_SIZE));
 }
@@ -1285,7 +1339,7 @@ int CNexDome::getNbTicksPerRev()
     ltime = time(NULL);
     timestamp = asctime(localtime(&ltime));
     timestamp[strlen(timestamp) - 1] = 0;
-    fprintf(Logfile, "[%s] [CNexDome::getNbTicksPerRev] m_bIsConnected = %d\n", timestamp, m_bIsConnected);
+    fprintf(Logfile, "[%s] [CNexDome::getNbTicksPerRev] m_bIsConnected = %s\n", timestamp, m_bIsConnected?"True":"False");
     fflush(Logfile);
 #endif
 
@@ -1402,7 +1456,7 @@ int CNexDome::getDefaultDir(bool &bNormal)
     ltime = time(NULL);
     timestamp = asctime(localtime(&ltime));
     timestamp[strlen(timestamp) - 1] = 0;
-    fprintf(Logfile, "[%s] [CNexDome::getDefaultDir] bNormal =  %d\n", timestamp, bNormal);
+    fprintf(Logfile, "[%s] [CNexDome::getDefaultDir] bNormal =  %s\n", timestamp, bNormal?"True":"False");
     fflush(Logfile);
 #endif
 
@@ -1424,7 +1478,7 @@ int CNexDome::setDefaultDir(bool bNormal)
     ltime = time(NULL);
     timestamp = asctime(localtime(&ltime));
     timestamp[strlen(timestamp) - 1] = 0;
-    fprintf(Logfile, "[%s] [CNexDome::setDefaultDir] bNormal =  %d\n", timestamp, bNormal);
+    fprintf(Logfile, "[%s] [CNexDome::setDefaultDir] bNormal =  %s\n", timestamp, bNormal?"True":"False");
     fprintf(Logfile, "[%s] [CNexDome::setDefaultDir] szBuf =  %s\n", timestamp, szBuf);
     fflush(Logfile);
 #endif

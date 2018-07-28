@@ -35,7 +35,7 @@ X2Dome::X2Dome(const char* pszSelection,
         m_NexDome.setHomeAz( m_pIniUtil->readDouble(PARENT_KEY, CHILD_KEY_HOME_AZ, 0) );
         m_NexDome.setParkAz( m_pIniUtil->readDouble(PARENT_KEY, CHILD_KEY_PARK_AZ, 0) );
         m_bHasShutterControl = m_pIniUtil->readInt(PARENT_KEY, CHILD_KEY_SHUTTER_CONTROL, false);
-        m_bHomeOnUnpark = m_bHasShutterControl = m_pIniUtil->readInt(PARENT_KEY, CHILD_KEY_HOME_ON_UNPARK, false);
+        m_bHomeOnUnpark = m_pIniUtil->readInt(PARENT_KEY, CHILD_KEY_HOME_ON_UNPARK, false);
         m_NexDome.setHomeOnUnpark(m_bHomeOnUnpark);
     }
 }
@@ -291,8 +291,8 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
     char szTmpBuf[SERIAL_BUFFER_SIZE];    
     char szErrorMessage[LOG_BUFFER_SIZE];
     int nRainSensorStatus = NOT_RAINING;
-    
-    if (!strcmp(pszEvent, "on_pushButtonCancel_clicked"))
+
+    if (!strcmp(pszEvent, "on_pushButtonCancel_clicked") && (m_bCalibratingDome || m_bHomingDome))
         m_NexDome.abortCurrentCommand();
 
     if (!strcmp(pszEvent, "on_timer"))
@@ -316,10 +316,10 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
                 if(bComplete) {
                     m_bHomingDome = false;
                     m_bCalibratingDome = true;
+                    m_NexDome.setNbTicksPerRev(16000000L);    // set this to a large value as the firmware only do 1 move of 1.5 time the current step per rev
                     m_NexDome.calibrate();
                     return;
                 }
-                
             }
             
             if(m_bCalibratingDome) {
@@ -335,19 +335,17 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
                     m_bCalibratingDome = false;
                     return;;
                 }
-                
+
                 if(!bComplete) {
                     return;
                 }
-                
+
                 // enable "ok" and "calibrate"
                 uiex->setEnabled("pushButton",true);
                 uiex->setEnabled("pushButtonOK",true);
-                // read step per rev from dome
-                snprintf(szTmpBuf,16,"%d",m_NexDome.getNbTicksPerRev());
-                uiex->setPropertyString("ticksPerRev","text", szTmpBuf);
+                // read step per rev from controller
+                uiex->setPropertyInt("ticksPerRev","value", m_NexDome.getNbTicksPerRev());
                 m_bCalibratingDome = false;
-                
             }
             
             if(m_bHasShutterControl && !m_bHomingDome && !m_bCalibratingDome) {
