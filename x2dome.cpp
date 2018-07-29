@@ -35,7 +35,10 @@ X2Dome::X2Dome(const char* pszSelection,
         m_NexDome.setHomeAz( m_pIniUtil->readDouble(PARENT_KEY, CHILD_KEY_HOME_AZ, 0) );
         m_NexDome.setParkAz( m_pIniUtil->readDouble(PARENT_KEY, CHILD_KEY_PARK_AZ, 0) );
         m_bHasShutterControl = m_pIniUtil->readInt(PARENT_KEY, CHILD_KEY_SHUTTER_CONTROL, false);
+
+        m_bHomeOnPark = m_pIniUtil->readInt(PARENT_KEY, CHILD_KEY_HOME_ON_PARK, false);
         m_bHomeOnUnpark = m_pIniUtil->readInt(PARENT_KEY, CHILD_KEY_HOME_ON_UNPARK, false);
+        m_NexDome.setHomeOnPark(m_bHomeOnPark);
         m_NexDome.setHomeOnUnpark(m_bHomeOnUnpark);
     }
 }
@@ -156,6 +159,13 @@ int X2Dome::execModalSettingsDialog()
         dx->setChecked("hasShutterCtrl",false);
     }
 
+    if(m_bHomeOnPark) {
+        dx->setChecked("homeOnPark",true);
+    }
+    else {
+        dx->setChecked("homeOnPark",false);
+    }
+
     if(m_bHomeOnUnpark) {
         dx->setChecked("homeOnUnpark",true);
     }
@@ -258,11 +268,14 @@ int X2Dome::execModalSettingsDialog()
         dx->propertyInt("shutterSpeed", "value", nSSpeed);
         dx->propertyInt("shutterAcceleration", "value", nSAcc);
         m_bHasShutterControl = dx->isChecked("hasShutterCtrl");
+        m_bHomeOnPark = dx->isChecked("homeOnPark");
         m_bHomeOnUnpark = dx->isChecked("homeOnUnpark");
         m_NexDome.setHomeOnUnpark(m_bHomeOnUnpark);
         nReverseDir = dx->isChecked("needReverse");
         if(m_bLinked) {
             m_NexDome.setDefaultDir(!nReverseDir);
+            m_NexDome.setHomeOnPark(m_bHomeOnPark);
+            m_NexDome.setHomeOnUnpark(m_bHomeOnUnpark);
             m_NexDome.setHomeAz(dHomeAz);
             m_NexDome.setParkAz(dParkAz);
             m_NexDome.setNbTicksPerRev(n_nbStepPerRev);
@@ -276,6 +289,7 @@ int X2Dome::execModalSettingsDialog()
         nErr |= m_pIniUtil->writeDouble(PARENT_KEY, CHILD_KEY_HOME_AZ, dHomeAz);
         nErr |= m_pIniUtil->writeDouble(PARENT_KEY, CHILD_KEY_PARK_AZ, dParkAz);
         nErr |= m_pIniUtil->writeInt(PARENT_KEY, CHILD_KEY_SHUTTER_CONTROL, m_bHasShutterControl);
+        nErr |= m_pIniUtil->writeInt(PARENT_KEY, CHILD_KEY_HOME_ON_PARK, m_bHomeOnPark);
         nErr |= m_pIniUtil->writeInt(PARENT_KEY, CHILD_KEY_HOME_ON_UNPARK, m_bHomeOnUnpark);
     }
     return nErr;

@@ -121,6 +121,7 @@ public:
     int getShutterAcceleration(int &nAcceleration);
     int setShutterAcceleration(int nAcceleration);
 
+    void setHomeOnPark(const bool bEnabled);
     void setHomeOnUnpark(const bool bEnabled);
 
     void setDebugLog(bool bEnable);
@@ -171,9 +172,11 @@ protected:
     char            m_szLogBuffer[ND_LOG_BUFFER_SIZE];
     int             m_nHomingTries;
     int             m_nGotoTries;
+    bool            m_bParking;
     bool            m_bUnParking;
     bool            m_bHasBeenHome;
     int             m_nIsRaining;
+    bool            m_bHomeOnPark;
     bool            m_bHomeOnUnpark;
 
 #ifdef ND_DEBUG

@@ -25,6 +25,7 @@ CNexDome::CNexDome()
     m_dCurrentElPosition = 0.0;
 
     m_bCalibrating = false;
+    m_bParking = false;
     m_bUnParking = false;
     m_bHasBeenHome = false;
 
@@ -38,8 +39,10 @@ CNexDome::CNexDome()
     m_nGotoTries = 0;
 
     m_nIsRaining = NOT_RAINING;
+
+    m_bHomeOnPark = false;
     m_bHomeOnUnpark = false;
-    
+
     memset(m_szFirmwareVersion,0,SERIAL_BUFFER_SIZE);
     memset(m_szLogBuffer,0,ND_LOG_BUFFER_SIZE);
 
@@ -744,7 +747,12 @@ int CNexDome::parkDome()
     if(!m_bIsConnected)
         return NOT_CONNECTED;
 
-    nErr = gotoAzimuth(m_dParkAz);
+    if(m_bHomeOnPark) {
+        m_bParking = true;
+        nErr = goHome();
+    } else
+        nErr = gotoAzimuth(m_dParkAz);
+
     return nErr;
 
 }
@@ -1121,13 +1129,39 @@ int CNexDome::isParkComplete(bool &bComplete)
 {
     int nErr = 0;
     double dDomeAz=0;
+    bool bFoundHome;
 
     if(!m_bIsConnected)
         return NOT_CONNECTED;
+#if defined ND_DEBUG && ND_DEBUG >= 2
+    ltime = time(NULL);
+    timestamp = asctime(localtime(&ltime));
+    timestamp[strlen(timestamp) - 1] = 0;
+    fprintf(Logfile, "[%s] CNexDome::isParkComplete m_bParking = %s\n", timestamp, m_bParking?"True":"False");
+    fprintf(Logfile, "[%s] CNexDome::isParkComplete bComplete = %s\n", timestamp, bComplete?"True":"False");
+    fflush(Logfile);
+#endif
 
     if(isDomeMoving()) {
         getDomeAz(dDomeAz);
         bComplete = false;
+        return nErr;
+    }
+
+    if(m_bParking) {
+        bComplete = false;
+        nErr = isFindHomeComplete(bFoundHome);
+        if(bFoundHome) { // we're home, now park
+#if defined ND_DEBUG && ND_DEBUG >= 2
+            ltime = time(NULL);
+            timestamp = asctime(localtime(&ltime));
+            timestamp[strlen(timestamp) - 1] = 0;
+            fprintf(Logfile, "[%s] CNexDome::isParkComplete found home, now parking\n", timestamp);
+            fflush(Logfile);
+#endif
+            m_bParking = false;
+            nErr = gotoAzimuth(m_dParkAz);
+        }
         return nErr;
     }
 
@@ -1665,6 +1699,11 @@ int CNexDome::setShutterAcceleration(int nAcceleration)
     snprintf(szBuf, SERIAL_BUFFER_SIZE, "E %d#", nAcceleration);
     nErr = domeCommand(szBuf, NULL, 'E', SERIAL_BUFFER_SIZE);
     return nErr;
+}
+
+void CNexDome::setHomeOnPark(const bool bEnabled)
+{
+    m_bHomeOnPark = bEnabled;
 }
 
 void CNexDome::setHomeOnUnpark(const bool bEnabled)
