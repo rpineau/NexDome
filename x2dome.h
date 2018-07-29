@@ -29,7 +29,7 @@ class MutexInterface;
 class BasicIniUtilInterface;
 class TickCountInterface;
 
-#define DRIVER_VERSION      1.5
+#define DRIVER_VERSION      2.01
 
 #define PARENT_KEY			"NexDome"
 #define CHILD_KEY_PORTNAME	"PortName"
@@ -37,6 +37,8 @@ class TickCountInterface;
 #define CHILD_KEY_HOME_AZ "HomeAzimuth"
 #define CHILD_KEY_PARK_AZ "ParkAzimuth"
 #define CHILD_KEY_SHUTTER_CONTROL "ShutterCtrl"
+#define CHILD_KEY_HOME_ON_PARK "HomeOnPark"
+#define CHILD_KEY_HOME_ON_UNPARK "HomeOnUnpark"
 #define CHILD_KEY_SHUTTER_OPEN_UPPER_ONLY "ShutterOpenUpperOnly"
 #define CHILD_KEY_ROOL_OFF_ROOF "RollOffRoof"
 #define CHILD_KEY_SHUTTER_OPER_ANY_Az "ShutterOperAnyAz"
@@ -165,6 +167,8 @@ private:
 	bool        m_bLinked;
     CNexDome    m_NexDome;
     bool        m_bHasShutterControl;
+    bool        m_bHomeOnPark;
+    bool        m_bHomeOnUnpark;
     bool        m_bOpenUpperShutterOnly;
     bool        m_bHomingDome;
     bool        m_bCalibratingDome;

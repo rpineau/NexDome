@@ -35,18 +35,18 @@
 #define MAX_TIMEOUT 5000
 #define ND_LOG_BUFFER_SIZE 256
 
-// RG-11
-#define NOT_RAINING    1
-#define RAINING        0
 
-// #define ND_DEBUG    2
+// #define ND_DEBUG 2
 
 
 
 // error codes
 // Error code
 enum NexDomeErrors {ND_OK=0, NOT_CONNECTED, ND_CANT_CONNECT, ND_BAD_CMD_RESPONSE, COMMAND_FAILED};
-enum NexDomeShutterState {OPEN=1, OPENING, CLOSED, CLOSING, SHUTTER_ERROR};
+enum NexDomeShutterState {OPEN = 0, CLOSED, OPENING, CLOSING, SHUTTER_ERROR };
+enum HomeStatuses {NEVER_HOMED = 0, HOMED, ATHOME};
+// RG-11
+enum RainSensorStates {RAINING= 0, NOT_RAINING};
 
 class CNexDome
 {
@@ -54,9 +54,9 @@ public:
     CNexDome();
     ~CNexDome();
 
-    int        Connect(const char *pszPort);
+    int         Connect(const char *pszPort);
     void        Disconnect(void);
-    bool        IsConnected(void) { return m_bIsConnected; }
+    const bool  IsConnected(void) { return m_bIsConnected; }
 
     void        setSerxPointer(SerXInterface *p) { m_pSerx = p; }
     void        setSleeprPinter(SleeperInterface *p) {m_pSleeper = p; }
@@ -87,6 +87,8 @@ public:
 
     // getter/setter
     int getNbTicksPerRev();
+    int setNbTicksPerRev(int nSteps);
+
     int getBatteryLevel();
 
     double getHomeAz();
@@ -99,7 +101,7 @@ public:
     double getCurrentEl();
 
     int getCurrentShutterState();
-    int getBatteryLevels(double &dDomeVolts, double &dShutterVolts);
+    int getBatteryLevels(double &domeVolts, double &dDomeCutOff, double &dShutterVolts, double &dShutterCutOff);
     int getPointingError(double &dPointingError);
     
     int getDefaultDir(bool &bNormal);
@@ -107,19 +109,33 @@ public:
 
     int getRainSensorStatus(int &nStatus);
 
-    int wakeSutter();
+    int getRotationSpeed(int &nSpeed);
+    int setRotationSpeed(int nSpeed);
+
+    int getRotationAcceleration(int &nAcceleration);
+    int setRotationAcceleration(int nAcceleration);
+
+    int getShutterSpeed(int &nSpeed);
+    int setShutterSpeed(int nSpeed);
+
+    int getShutterAcceleration(int &nAcceleration);
+    int setShutterAcceleration(int nAcceleration);
+
+    void setHomeOnPark(const bool bEnabled);
+    void setHomeOnUnpark(const bool bEnabled);
 
     void setDebugLog(bool bEnable);
 
 protected:
     
-    int             readResponse(char *respBuffer, int bufferLen);
-    int             getDomeAz(double &domeAz);
-    int             getDomeEl(double &domeEl);
-    int             getDomeHomeAz(double &Az);
-    int             getDomeParkAz(double &Az);
-    int             getShutterState(int &state);
-    int             getDomeStepPerRev(int &stepPerRev);
+    int             readResponse(char *respBuffer, int nBufferLen);
+    int             getDomeAz(double &dDomeAz);
+    int             getDomeEl(double &dDomeEl);
+    int             getDomeHomeAz(double &dAz);
+    int             getDomeParkAz(double &dAz);
+    int             getShutterState(int &nState);
+    int             getDomeStepPerRev(int &nStepPerRev);
+    int             setDomeStepPerRev(int nStepPerRev);
 
     bool            isDomeMoving();
     bool            isDomeAtHome();
@@ -156,9 +172,12 @@ protected:
     char            m_szLogBuffer[ND_LOG_BUFFER_SIZE];
     int             m_nHomingTries;
     int             m_nGotoTries;
+    bool            m_bParking;
     bool            m_bUnParking;
     bool            m_bHasBeenHome;
     int             m_nIsRaining;
+    bool            m_bHomeOnPark;
+    bool            m_bHomeOnUnpark;
 
 #ifdef ND_DEBUG
     std::string m_sLogfilePath;

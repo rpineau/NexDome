@@ -35,6 +35,11 @@ X2Dome::X2Dome(const char* pszSelection,
         m_NexDome.setHomeAz( m_pIniUtil->readDouble(PARENT_KEY, CHILD_KEY_HOME_AZ, 0) );
         m_NexDome.setParkAz( m_pIniUtil->readDouble(PARENT_KEY, CHILD_KEY_PARK_AZ, 0) );
         m_bHasShutterControl = m_pIniUtil->readInt(PARENT_KEY, CHILD_KEY_SHUTTER_CONTROL, false);
+
+        m_bHomeOnPark = m_pIniUtil->readInt(PARENT_KEY, CHILD_KEY_HOME_ON_PARK, false);
+        m_bHomeOnUnpark = m_pIniUtil->readInt(PARENT_KEY, CHILD_KEY_HOME_ON_UNPARK, false);
+        m_NexDome.setHomeOnPark(m_bHomeOnPark);
+        m_NexDome.setHomeOnUnpark(m_bHomeOnUnpark);
     }
 }
 
@@ -65,6 +70,7 @@ int X2Dome::establishLink(void)
     char szPort[DRIVER_MAX_STRING];
 
     X2MutexLocker ml(GetMutex());
+
     // get serial port device name
     portNameOnToCharPtr(szPort,DRIVER_MAX_STRING);
     nErr = m_NexDome.Connect(szPort);
@@ -81,14 +87,16 @@ int X2Dome::establishLink(void)
 int X2Dome::terminateLink(void)					
 {
     X2MutexLocker ml(GetMutex());
+
     m_NexDome.Disconnect();
 	m_bLinked = false;
-	return SB_OK;
+
+    return SB_OK;
 }
 
  bool X2Dome::isLinked(void) const				
 {
-	return m_bLinked;
+    return m_bLinked;
 }
 
 
@@ -120,12 +128,16 @@ int X2Dome::execModalSettingsDialog()
     char szTmpBuf[SERIAL_BUFFER_SIZE];
     double dHomeAz;
     double dParkAz;
-    double dDomeBattery;
-    double dShutterBattery;
+    double dDomeBattery, dDomeCutOff;
+    double dShutterBattery, dShutterCutOff;
     bool nReverseDir;
-    float fFrimwareVersion = 0.0;
+    int n_nbStepPerRev;
     double dPointingError;
     int nRainSensorStatus = NOT_RAINING;
+    int nRSpeed;
+    int nRAcc;
+    int nSSpeed;
+    int nSAcc;
 
     if (NULL == ui)
         return ERR_POINTER;
@@ -147,31 +159,62 @@ int X2Dome::execModalSettingsDialog()
         dx->setChecked("hasShutterCtrl",false);
     }
 
+    if(m_bHomeOnPark) {
+        dx->setChecked("homeOnPark",true);
+    }
+    else {
+        dx->setChecked("homeOnPark",false);
+    }
+
+    if(m_bHomeOnUnpark) {
+        dx->setChecked("homeOnUnpark",true);
+    }
+    else {
+        dx->setChecked("homeOnUnpark",false);
+    }
+
     if(m_bLinked) {
-        nErr = m_NexDome.getFirmwareVersion(fFrimwareVersion);
-        if(fFrimwareVersion >=1.0) {
-            nErr = m_NexDome.wakeSutter();
-            nErr = m_NexDome.getDefaultDir(nReverseDir);
-            if(nReverseDir)
-                dx->setChecked("needReverse",false);
-            else
-                dx->setChecked("needReverse",true);
-            m_NexDome.getPointingError(dPointingError);
-            snprintf(szTmpBuf,16,"%3.2f",dPointingError);
-            dx->setPropertyString("domePointingError","text", szTmpBuf);
-        }
-        else {
+        dx->setEnabled("homePosition",true);
+        dx->setEnabled("parkPosition",true);
+        nErr = m_NexDome.getDefaultDir(nReverseDir);
+        if(nReverseDir)
             dx->setChecked("needReverse",false);
-            dx->setEnabled("needReverse",false);
-            dx->setPropertyString("domePointingError","text", "--");
-        }
-        snprintf(szTmpBuf,16,"%d",m_NexDome.getNbTicksPerRev());
-        dx->setPropertyString("ticksPerRev","text", szTmpBuf);
-        m_NexDome.getBatteryLevels(dDomeBattery, dShutterBattery);
+        else
+            dx->setChecked("needReverse",true);
+        m_NexDome.getPointingError(dPointingError);
+        snprintf(szTmpBuf,16,"%3.2f",dPointingError);
+        dx->setPropertyString("domePointingError","text", szTmpBuf);
+
+        // read values from dome controller
+        dx->setEnabled("ticksPerRev",true);
+        n_nbStepPerRev = m_NexDome.getNbTicksPerRev();
+        dx->setPropertyInt("ticksPerRev","value", n_nbStepPerRev);
+
+        dx->setEnabled("rotationSpeed",true);
+        m_NexDome.getRotationSpeed(nRSpeed);
+        dx->setPropertyInt("rotationSpeed","value", nRSpeed);
+
+        dx->setEnabled("rotationAcceletation",true);
+        m_NexDome.getRotationAcceleration(nRAcc);
+        dx->setPropertyInt("rotationAcceletation","value", nRAcc);
+
+        dx->setEnabled("shutterSpeed",true);
+        m_NexDome.getShutterSpeed(nSSpeed);
+        dx->setPropertyInt("shutterSpeed","value", nSSpeed);
+
+        dx->setEnabled("shutterAcceleration",true);
+        m_NexDome.getShutterAcceleration(nSAcc);
+        dx->setPropertyInt("shutterAcceleration","value", nSAcc);
+
+
+        m_NexDome.getBatteryLevels(dDomeBattery, dDomeCutOff, dShutterBattery, dShutterCutOff);
         snprintf(szTmpBuf,16,"%2.2f V",dDomeBattery);
         dx->setPropertyString("domeBatteryLevel","text", szTmpBuf);
         if(m_bHasShutterControl) {
-            snprintf(szTmpBuf,16,"%2.2f V",dShutterBattery);
+            if(dShutterBattery>=0.0f)
+                snprintf(szTmpBuf,16,"%2.2f V",dShutterBattery);
+            else
+                snprintf(szTmpBuf,16,"--");
             dx->setPropertyString("shutterBatteryLevel","text", szTmpBuf);
         }
         else {
@@ -188,13 +231,20 @@ int X2Dome::execModalSettingsDialog()
         dx->setEnabled("pushButton",true);
     }
     else {
-        dx->setPropertyString("ticksPerRev","text", "--");
+        dx->setEnabled("homePosition",false);
+        dx->setEnabled("parkPosition",false);
+        dx->setEnabled("ticksPerRev",false);
+        dx->setEnabled("rotationSpeed",false);
+        dx->setEnabled("rotationAcceletation",false);
+        dx->setEnabled("shutterSpeed",false);
+        dx->setEnabled("shutterAcceleration",false);
+
         dx->setPropertyString("domeBatteryLevel","text", "--");
         dx->setPropertyString("shutterBatteryLevel","text", "--");
         dx->setEnabled("pushButton",false);
-        dx->setEnabled("hasShutterCtrl",false);
         dx->setEnabled("needReverse",false);
         dx->setPropertyString("domePointingError","text", "--");
+        dx->setPropertyString("rainStatus","text", "--");
     }
     dx->setPropertyDouble("homePosition","value", m_NexDome.getHomeAz());
     dx->setPropertyDouble("parkPosition","value", m_NexDome.getParkAz());
@@ -210,22 +260,37 @@ int X2Dome::execModalSettingsDialog()
 
     //Retreive values from the user interface
     if (bPressedOK) {
+        dx->propertyInt("ticksPerRev", "value", n_nbStepPerRev);
         dx->propertyDouble("homePosition", "value", dHomeAz);
         dx->propertyDouble("parkPosition", "value", dParkAz);
+        dx->propertyInt("rotationSpeed", "value", nRSpeed);
+        dx->propertyInt("rotationAcceletation", "value", nRAcc);
+        dx->propertyInt("shutterSpeed", "value", nSSpeed);
+        dx->propertyInt("shutterAcceleration", "value", nSAcc);
         m_bHasShutterControl = dx->isChecked("hasShutterCtrl");
+        m_bHomeOnPark = dx->isChecked("homeOnPark");
+        m_bHomeOnUnpark = dx->isChecked("homeOnUnpark");
+        m_NexDome.setHomeOnUnpark(m_bHomeOnUnpark);
         nReverseDir = dx->isChecked("needReverse");
         if(m_bLinked) {
-            if(fFrimwareVersion >=1.0) {
-                m_NexDome.setDefaultDir(!nReverseDir);
-            }
+            m_NexDome.setDefaultDir(!nReverseDir);
+            m_NexDome.setHomeOnPark(m_bHomeOnPark);
+            m_NexDome.setHomeOnUnpark(m_bHomeOnUnpark);
             m_NexDome.setHomeAz(dHomeAz);
             m_NexDome.setParkAz(dParkAz);
+            m_NexDome.setNbTicksPerRev(n_nbStepPerRev);
+            m_NexDome.setRotationSpeed(nRSpeed);
+            m_NexDome.setRotationAcceleration(nRAcc);
+            m_NexDome.setShutterSpeed(nSSpeed);
+            m_NexDome.setShutterAcceleration(nSAcc);
         }
 
         // save the values to persistent storage
         nErr |= m_pIniUtil->writeDouble(PARENT_KEY, CHILD_KEY_HOME_AZ, dHomeAz);
         nErr |= m_pIniUtil->writeDouble(PARENT_KEY, CHILD_KEY_PARK_AZ, dParkAz);
         nErr |= m_pIniUtil->writeInt(PARENT_KEY, CHILD_KEY_SHUTTER_CONTROL, m_bHasShutterControl);
+        nErr |= m_pIniUtil->writeInt(PARENT_KEY, CHILD_KEY_HOME_ON_PARK, m_bHomeOnPark);
+        nErr |= m_pIniUtil->writeInt(PARENT_KEY, CHILD_KEY_HOME_ON_UNPARK, m_bHomeOnUnpark);
     }
     return nErr;
 
@@ -235,13 +300,13 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
 {
     bool bComplete = false;
     int nErr;
-    double dDomeBattery;
-    double dShutterBattery;
+    double dDomeBattery, dDomeCutOff;
+    double dShutterBattery, dShutterCutOff;
     char szTmpBuf[SERIAL_BUFFER_SIZE];    
     char szErrorMessage[LOG_BUFFER_SIZE];
     int nRainSensorStatus = NOT_RAINING;
-    
-    if (!strcmp(pszEvent, "on_pushButtonCancel_clicked"))
+
+    if (!strcmp(pszEvent, "on_pushButtonCancel_clicked") && (m_bCalibratingDome || m_bHomingDome))
         m_NexDome.abortCurrentCommand();
 
     if (!strcmp(pszEvent, "on_timer"))
@@ -265,10 +330,10 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
                 if(bComplete) {
                     m_bHomingDome = false;
                     m_bCalibratingDome = true;
+                    m_NexDome.setNbTicksPerRev(16000000L);    // set this to a large value as the firmware only do 1 move of 1.5 time the current step per rev
                     m_NexDome.calibrate();
                     return;
                 }
-                
             }
             
             if(m_bCalibratingDome) {
@@ -284,29 +349,30 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
                     m_bCalibratingDome = false;
                     return;;
                 }
-                
+
                 if(!bComplete) {
                     return;
                 }
-                
+
                 // enable "ok" and "calibrate"
                 uiex->setEnabled("pushButton",true);
                 uiex->setEnabled("pushButtonOK",true);
-                // read step per rev from dome
-                snprintf(szTmpBuf,16,"%d",m_NexDome.getNbTicksPerRev());
-                uiex->setPropertyString("ticksPerRev","text", szTmpBuf);
+                // read step per rev from controller
+                uiex->setPropertyInt("ticksPerRev","value", m_NexDome.getNbTicksPerRev());
                 m_bCalibratingDome = false;
-                
             }
             
             if(m_bHasShutterControl && !m_bHomingDome && !m_bCalibratingDome) {
                 // don't ask to often
                 if (!(m_nBattRequest%4)) {
-                    m_NexDome.getBatteryLevels(dDomeBattery, dShutterBattery);
+                    m_NexDome.getBatteryLevels(dDomeBattery, dDomeCutOff, dShutterBattery, dShutterCutOff);
                     snprintf(szTmpBuf,16,"%2.2f V",dDomeBattery);
                     uiex->setPropertyString("domeBatteryLevel","text", szTmpBuf);
                     if(m_bHasShutterControl) {
-                        snprintf(szTmpBuf,16,"%2.2f V",dShutterBattery);
+                        if(dShutterBattery>=0.0f)
+                            snprintf(szTmpBuf,16,"%2.2f V",dShutterBattery);
+                        else
+                            snprintf(szTmpBuf,16,"--");
                         uiex->setPropertyString("shutterBatteryLevel","text", szTmpBuf);
                     }
                     else {
@@ -360,6 +426,8 @@ void X2Dome::deviceInfoDetailedDescription(BasicStringInterface& str) const
 
  void X2Dome::deviceInfoFirmwareVersion(BasicStringInterface& str)					
 {
+    X2MutexLocker ml(GetMutex());
+
     if(m_bLinked) {
         char cFirmware[SERIAL_BUFFER_SIZE];
         m_NexDome.getFirmwareVersion(cFirmware, SERIAL_BUFFER_SIZE);
