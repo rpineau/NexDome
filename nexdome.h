@@ -84,6 +84,7 @@ public:
     int isCalibratingComplete(bool &bComplete);
 
     int abortCurrentCommand();
+    int sendShutterHello();
 
     // getter/setter
     int getNbTicksPerRev();
@@ -102,6 +103,8 @@ public:
 
     int getCurrentShutterState();
     int getBatteryLevels(double &domeVolts, double &dDomeCutOff, double &dShutterVolts, double &dShutterCutOff);
+    int setBatteryCutOff(double dDomeCutOff, double dShutterCutOff);
+
     int getPointingError(double &dPointingError);
     
     int getDefaultDir(bool &bNormal);

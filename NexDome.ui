@@ -7,19 +7,19 @@
     <x>0</x>
     <y>0</y>
     <width>386</width>
-    <height>712</height>
+    <height>760</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
     <width>386</width>
-    <height>712</height>
+    <height>760</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
     <width>386</width>
-    <height>712</height>
+    <height>760</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -49,482 +49,584 @@
      <property name="SerialPortName" stdset="0">
       <string/>
      </property>
-     <layout class="QGridLayout" name="gridLayout">
-      <item row="2" column="0" rowspan="2">
-       <widget class="QGroupBox" name="MaxDomeIIParams">
-        <property name="title">
-         <string>NexDome Params</string>
-        </property>
-        <layout class="QGridLayout" name="gridLayout_2">
-         <item row="14" column="0">
-          <widget class="QCheckBox" name="homeOnUnpark">
-           <property name="text">
-            <string>Home after unpark</string>
-           </property>
-          </widget>
-         </item>
-         <item row="2" column="0">
-          <widget class="QPushButton" name="pushButton">
-           <property name="text">
-            <string>Calibrate</string>
-           </property>
-          </widget>
-         </item>
-         <item row="12" column="0">
-          <widget class="QCheckBox" name="hasShutterCtrl">
-           <property name="text">
-            <string>Shutter controller present</string>
-           </property>
-          </widget>
-         </item>
-         <item row="10" column="0">
-          <layout class="QHBoxLayout" name="horizontalLayout_3">
-           <item>
-            <spacer name="horizontalSpacer_2">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item>
-            <widget class="QLabel" name="label_3">
-             <property name="text">
-              <string>Park Postition (Deg.) :</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QDoubleSpinBox" name="parkPosition">
-             <property name="maximum">
-              <double>359.990000000000009</double>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item row="11" column="0">
-          <widget class="QCheckBox" name="needReverse">
-           <property name="text">
-            <string>Reverse direction</string>
-           </property>
-          </widget>
-         </item>
-         <item row="7" column="0" rowspan="2">
-          <layout class="QHBoxLayout" name="horizontalLayout_2">
-           <item>
-            <spacer name="horizontalSpacer">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item>
-            <widget class="QLabel" name="label_2">
-             <property name="text">
-              <string>Home Position (Deg.) :</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QDoubleSpinBox" name="homePosition">
-             <property name="maximum">
-              <double>359.990000000000009</double>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item row="13" column="0">
-          <widget class="QCheckBox" name="homeOnPark">
-           <property name="text">
-            <string>Home before park</string>
-           </property>
-          </widget>
-         </item>
-        </layout>
-       </widget>
-      </item>
-      <item row="0" column="0">
-       <layout class="QHBoxLayout" name="horizontalLayout_5">
-        <item>
-         <widget class="QLabel" name="label_logo">
-          <property name="text">
-           <string/>
-          </property>
-          <property name="pixmap">
-           <pixmap>NexDome.png</pixmap>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-          <property name="X2_PhotoFileName" stdset="0">
-           <string>NexDome.png</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="horizontalSpacer_3">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <widget class="QLabel" name="label_4">
-          <property name="text">
-           <string>© RTI-Zone.org, 2018</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="5" column="0">
-       <layout class="QHBoxLayout" name="horizontalLayout_4">
-        <item>
-         <spacer name="horizontalSpacer_4">
-          <property name="orientation">
-           <enum>Qt::Horizontal</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>40</width>
-            <height>20</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-        <item>
-         <widget class="QPushButton" name="pushButtonCancel">
-          <property name="text">
-           <string>Cancel</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="pushButtonOK">
-          <property name="text">
-           <string>OK</string>
-          </property>
-          <property name="default">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item row="4" column="0">
-       <widget class="QGroupBox" name="groupBox">
-        <property name="title">
-         <string>Controller Informations and settings</string>
-        </property>
-        <layout class="QGridLayout" name="gridLayout_3">
-         <item row="6" column="0">
-          <layout class="QHBoxLayout" name="horizontalLayout_7">
-           <item>
-            <spacer name="horizontalSpacer_5">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item>
-            <widget class="QLabel" name="label_5">
-             <property name="text">
-              <string>Shutter battery level :</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="shutterBatteryLevel">
-             <property name="text">
-              <string>12.25 V</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item row="1" column="0">
-          <layout class="QHBoxLayout" name="horizontalLayout_10">
-           <item>
-            <spacer name="horizontalSpacer_10">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item>
-            <widget class="QLabel" name="label_9">
-             <property name="text">
-              <string>Rotation speed (step/s) :</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QSpinBox" name="rotationSpeed">
-             <property name="maximum">
-              <number>999999999</number>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item row="2" column="0">
-          <layout class="QHBoxLayout" name="horizontalLayout_11">
-           <item>
-            <spacer name="horizontalSpacer_11">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item>
-            <widget class="QLabel" name="label_10">
-             <property name="text">
-              <string>Rotation acceleration (step/s) :</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QSpinBox" name="rotationAcceletation">
-             <property name="maximum">
-              <number>999999999</number>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item row="3" column="0">
-          <layout class="QHBoxLayout" name="horizontalLayout_12">
-           <item>
-            <spacer name="horizontalSpacer_12">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item>
-            <widget class="QLabel" name="label_11">
-             <property name="text">
-              <string>Shutter speed (step/s) :</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QSpinBox" name="shutterSpeed">
-             <property name="maximum">
-              <number>999999999</number>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item row="0" column="0">
-          <layout class="QHBoxLayout" name="horizontalLayout">
-           <item>
-            <spacer name="horizontalSpacer_6">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item>
-            <widget class="QLabel" name="label">
-             <property name="text">
-              <string>Number of steps per revolution :</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QSpinBox" name="ticksPerRev">
-             <property name="maximum">
-              <number>999999999</number>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item row="8" column="0">
-          <layout class="QHBoxLayout" name="horizontalLayout_9">
-           <property name="bottomMargin">
-            <number>0</number>
-           </property>
-           <item>
-            <spacer name="horizontalSpacer_9">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item>
-            <widget class="QLabel" name="label_8">
-             <property name="text">
-              <string>Rain sensor :</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="rainStatus">
-             <property name="text">
-              <string>Ok</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item row="7" column="0">
-          <layout class="QHBoxLayout" name="horizontalLayout_8">
-           <property name="bottomMargin">
-            <number>0</number>
-           </property>
-           <item>
-            <spacer name="horizontalSpacer_8">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item>
-            <widget class="QLabel" name="label_6">
-             <property name="text">
-              <string>Pointing Error (Deg.):</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="domePointingError">
-             <property name="text">
-              <string>0.0</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item row="5" column="0">
-          <layout class="QHBoxLayout" name="horizontalLayout_6">
-           <item>
-            <spacer name="horizontalSpacer_7">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item>
-            <widget class="QLabel" name="label_7">
-             <property name="text">
-              <string>Dome battery level :</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QLabel" name="domeBatteryLevel">
-             <property name="text">
-              <string>12.25 V</string>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-         <item row="4" column="0">
-          <layout class="QHBoxLayout" name="horizontalLayout_14">
-           <item>
-            <spacer name="horizontalSpacer_13">
-             <property name="orientation">
-              <enum>Qt::Horizontal</enum>
-             </property>
-             <property name="sizeHint" stdset="0">
-              <size>
-               <width>40</width>
-               <height>20</height>
-              </size>
-             </property>
-            </spacer>
-           </item>
-           <item>
-            <widget class="QLabel" name="label_12">
-             <property name="text">
-              <string>Shutter acceleration (step/s) :</string>
-             </property>
-            </widget>
-           </item>
-           <item>
-            <widget class="QSpinBox" name="shutterAcceleration">
-             <property name="maximum">
-              <number>999999999</number>
-             </property>
-            </widget>
-           </item>
-          </layout>
-         </item>
-        </layout>
-       </widget>
-      </item>
-     </layout>
+     <widget class="QGroupBox" name="MaxDomeIIParams">
+      <property name="geometry">
+       <rect>
+        <x>13</x>
+        <y>104</y>
+        <width>336</width>
+        <height>225</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>NexDome Params</string>
+      </property>
+      <widget class="QCheckBox" name="homeOnUnpark">
+       <property name="geometry">
+        <rect>
+         <x>13</x>
+         <y>193</y>
+         <width>140</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Home after unpark</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="pushButton">
+       <property name="geometry">
+        <rect>
+         <x>9</x>
+         <y>29</y>
+         <width>281</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Calibrate</string>
+       </property>
+      </widget>
+      <widget class="QCheckBox" name="hasShutterCtrl">
+       <property name="geometry">
+        <rect>
+         <x>13</x>
+         <y>151</y>
+         <width>183</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Shutter controller present</string>
+       </property>
+      </widget>
+      <widget class="QCheckBox" name="needReverse">
+       <property name="geometry">
+        <rect>
+         <x>13</x>
+         <y>130</y>
+         <width>132</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Reverse direction</string>
+       </property>
+      </widget>
+      <widget class="QCheckBox" name="homeOnPark">
+       <property name="geometry">
+        <rect>
+         <x>13</x>
+         <y>172</y>
+         <width>136</width>
+         <height>20</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Home before park</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_2">
+       <property name="geometry">
+        <rect>
+         <x>16</x>
+         <y>64</y>
+         <width>160</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Home Position (Deg.) :</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+      <widget class="QDoubleSpinBox" name="homePosition">
+       <property name="geometry">
+        <rect>
+         <x>184</x>
+         <y>64</y>
+         <width>88</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+       <property name="maximum">
+        <double>359.990000000000009</double>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_3">
+       <property name="geometry">
+        <rect>
+         <x>32</x>
+         <y>88</y>
+         <width>144</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Park Postition (Deg.) :</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+      <widget class="QDoubleSpinBox" name="parkPosition">
+       <property name="geometry">
+        <rect>
+         <x>184</x>
+         <y>88</y>
+         <width>88</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+       <property name="maximum">
+        <double>359.990000000000009</double>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QGroupBox" name="groupBox">
+      <property name="geometry">
+       <rect>
+        <x>13</x>
+        <y>336</y>
+        <width>336</width>
+        <height>352</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>Controller Informations and settings</string>
+      </property>
+      <widget class="QLabel" name="label_13">
+       <property name="geometry">
+        <rect>
+         <x>64</x>
+         <y>200</y>
+         <width>152</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Dome battery cutoff :</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+      <widget class="QDoubleSpinBox" name="lowRotBatCutOff">
+       <property name="geometry">
+        <rect>
+         <x>224</x>
+         <y>200</y>
+         <width>62</width>
+         <height>22</height>
+        </rect>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+       <property name="value">
+        <double>11.000000000000000</double>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_14">
+       <property name="geometry">
+        <rect>
+         <x>64</x>
+         <y>224</y>
+         <width>152</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Shutter battery cutoff :</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+      <widget class="QDoubleSpinBox" name="lowShutBatCutOff">
+       <property name="geometry">
+        <rect>
+         <x>224</x>
+         <y>224</y>
+         <width>62</width>
+         <height>22</height>
+        </rect>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+       <property name="value">
+        <double>11.000000000000000</double>
+       </property>
+      </widget>
+      <widget class="QLabel" name="shutterBatteryLevel">
+       <property name="geometry">
+        <rect>
+         <x>224</x>
+         <y>272</y>
+         <width>56</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>12.25 V</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_5">
+       <property name="geometry">
+        <rect>
+         <x>72</x>
+         <y>272</y>
+         <width>144</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Shutter battery level :</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_9">
+       <property name="geometry">
+        <rect>
+         <x>56</x>
+         <y>67</y>
+         <width>160</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Rotation speed (step/s) :</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+      <widget class="QSpinBox" name="rotationSpeed">
+       <property name="geometry">
+        <rect>
+         <x>224</x>
+         <y>67</y>
+         <width>104</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+       <property name="maximum">
+        <number>999999999</number>
+       </property>
+      </widget>
+      <widget class="QSpinBox" name="rotationAcceletation">
+       <property name="geometry">
+        <rect>
+         <x>224</x>
+         <y>100</y>
+         <width>104</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+       <property name="maximum">
+        <number>999999999</number>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_10">
+       <property name="geometry">
+        <rect>
+         <x>16</x>
+         <y>100</y>
+         <width>200</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Rotation acceleration (step/s) :</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label">
+       <property name="geometry">
+        <rect>
+         <x>8</x>
+         <y>34</y>
+         <width>208</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Number of steps per revolution :</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+      <widget class="QSpinBox" name="ticksPerRev">
+       <property name="geometry">
+        <rect>
+         <x>224</x>
+         <y>34</y>
+         <width>104</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+       <property name="maximum">
+        <number>999999999</number>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_8">
+       <property name="geometry">
+        <rect>
+         <x>128</x>
+         <y>320</y>
+         <width>88</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Rain sensor :</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+      <widget class="QLabel" name="rainStatus">
+       <property name="geometry">
+        <rect>
+         <x>224</x>
+         <y>320</y>
+         <width>96</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Ok</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_6">
+       <property name="geometry">
+        <rect>
+         <x>64</x>
+         <y>296</y>
+         <width>152</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Pointing Error (Deg.) :</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+      <widget class="QLabel" name="domePointingError">
+       <property name="geometry">
+        <rect>
+         <x>224</x>
+         <y>296</y>
+         <width>48</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>0.0</string>
+       </property>
+      </widget>
+      <widget class="QSpinBox" name="shutterAcceleration">
+       <property name="geometry">
+        <rect>
+         <x>224</x>
+         <y>166</y>
+         <width>104</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+       <property name="maximum">
+        <number>999999999</number>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_12">
+       <property name="geometry">
+        <rect>
+         <x>16</x>
+         <y>166</y>
+         <width>200</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Shutter acceleration (step/s) :</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_7">
+       <property name="geometry">
+        <rect>
+         <x>80</x>
+         <y>248</y>
+         <width>136</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Dome battery level :</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+      <widget class="QLabel" name="domeBatteryLevel">
+       <property name="geometry">
+        <rect>
+         <x>224</x>
+         <y>248</y>
+         <width>56</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>12.25 V</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_11">
+       <property name="geometry">
+        <rect>
+         <x>56</x>
+         <y>133</y>
+         <width>160</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Shutter speed (step/s) :</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+      <widget class="QSpinBox" name="shutterSpeed">
+       <property name="geometry">
+        <rect>
+         <x>224</x>
+         <y>133</y>
+         <width>104</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+       <property name="maximum">
+        <number>999999999</number>
+       </property>
+      </widget>
+     </widget>
+     <widget class="QLabel" name="label_logo">
+      <property name="geometry">
+       <rect>
+        <x>96</x>
+        <y>8</y>
+        <width>168</width>
+        <height>64</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="pixmap">
+       <pixmap>NexDome.png</pixmap>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+      <property name="X2_PhotoFileName" stdset="0">
+       <string>NexDome.png</string>
+      </property>
+     </widget>
+     <widget class="QLabel" name="label_4">
+      <property name="geometry">
+       <rect>
+        <x>96</x>
+        <y>64</y>
+        <width>168</width>
+        <height>40</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>© RTI-Zone.org, 2018</string>
+      </property>
+      <property name="alignment">
+       <set>Qt::AlignCenter</set>
+      </property>
+     </widget>
+     <widget class="QWidget" name="horizontalLayoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>128</x>
+        <y>696</y>
+        <width>216</width>
+        <height>40</height>
+       </rect>
+      </property>
+      <layout class="QHBoxLayout" name="horizontalLayout">
+       <item>
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButtonCancel">
+         <property name="text">
+          <string>Cancel</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QPushButton" name="pushButtonOK">
+         <property name="text">
+          <string>OK</string>
+         </property>
+         <property name="default">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
     </widget>
    </item>
   </layout>
