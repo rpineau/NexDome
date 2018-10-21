@@ -176,6 +176,7 @@ int X2Dome::execModalSettingsDialog()
     }
 
     if(m_bLinked) {
+        m_NexDome.sendShutterHello();   // refresh values.
         dx->setEnabled("homePosition",true);
         dx->setEnabled("parkPosition",true);
         nErr = m_NexDome.getDefaultDir(nReverseDir);
@@ -297,9 +298,14 @@ int X2Dome::execModalSettingsDialog()
             m_NexDome.setNbTicksPerRev(n_nbStepPerRev);
             m_NexDome.setRotationSpeed(nRSpeed);
             m_NexDome.setRotationAcceleration(nRAcc);
+            usleep(10000);
             m_NexDome.setShutterSpeed(nSSpeed);
+            usleep(10000);
             m_NexDome.setShutterAcceleration(nSAcc);
+            usleep(10000);
             m_NexDome.setBatteryCutOff(batRotCutOff, batShutCutOff);
+            usleep(10000);
+            m_NexDome.sendShutterHello();
         }
 
         // save the values to persistent storage
