@@ -36,7 +36,7 @@
 #define ND_LOG_BUFFER_SIZE 256
 
 
-#define ND_DEBUG 2
+// #define ND_DEBUG 2
 
 
 
