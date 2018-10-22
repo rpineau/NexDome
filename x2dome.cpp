@@ -298,13 +298,9 @@ int X2Dome::execModalSettingsDialog()
             m_NexDome.setNbTicksPerRev(n_nbStepPerRev);
             m_NexDome.setRotationSpeed(nRSpeed);
             m_NexDome.setRotationAcceleration(nRAcc);
-            usleep(10000);
             m_NexDome.setShutterSpeed(nSSpeed);
-            usleep(10000);
             m_NexDome.setShutterAcceleration(nSAcc);
-            usleep(10000);
             m_NexDome.setBatteryCutOff(batRotCutOff, batShutCutOff);
-            usleep(10000);
             m_NexDome.sendShutterHello();
         }
 

@@ -627,14 +627,22 @@ int CNexDome::setBatteryCutOff(double dDomeCutOff, double dShutterCutOff)
     char szResp[SERIAL_BUFFER_SIZE];
     int nRotCutOff, nShutCutOff;
 
-    nRotCutOff =  int(dDomeCutOff/0.0049f)/2;
-    nShutCutOff =  int(dShutterCutOff/0.0049f)/2;
-
     if(!m_bIsConnected)
         return NOT_CONNECTED;
 
     if(m_bCalibrating)
         return nErr;
+
+    if(m_fVersion < 2.0f) {
+        nRotCutOff =  int(dDomeCutOff/0.0049f)/2;
+        nShutCutOff =  int(dShutterCutOff/0.0049f)/2;
+    }
+    else {
+        nRotCutOff = dDomeCutOff * 100.0;
+        nShutCutOff = dShutterCutOff * 100.0;
+
+    }
+
     // Dome
     snprintf(szBuf, SERIAL_BUFFER_SIZE, "k%d#", nRotCutOff);
     nErr = domeCommand(szBuf, szResp, 'k', SERIAL_BUFFER_SIZE);
