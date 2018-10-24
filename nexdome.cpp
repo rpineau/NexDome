@@ -150,9 +150,31 @@ int CNexDome::Connect(const char *pszPort)
     }
 
     nErr = getDomeParkAz(m_dCurrentAzPosition);
-    nErr |= getDomeHomeAz(m_dHomeAz);
-    nErr |= sendShutterHello();
-    return nErr;
+    if(nErr) {
+#if defined ND_DEBUG && ND_DEBUG >= 2
+        ltime = time(NULL);
+        timestamp = asctime(localtime(&ltime));
+        timestamp[strlen(timestamp) - 1] = 0;
+        fprintf(Logfile, "[%s] CNexDome::Connect getDomeParkAz nErr : %d\n", timestamp, nErr);
+        fflush(Logfile);
+#endif
+        return nErr;
+    }
+    nErr = getDomeHomeAz(m_dHomeAz);
+    if(nErr) {
+#if defined ND_DEBUG && ND_DEBUG >= 2
+        ltime = time(NULL);
+        timestamp = asctime(localtime(&ltime));
+        timestamp[strlen(timestamp) - 1] = 0;
+        fprintf(Logfile, "[%s] CNexDome::Connect getDomeHomeAz nErr : %d\n", timestamp, nErr);
+        fflush(Logfile);
+#endif
+        return nErr;
+    }
+
+    sendShutterHello();
+
+    return SB_OK;
 }
 
 
@@ -1472,11 +1494,10 @@ int CNexDome::abortCurrentCommand()
 int CNexDome::sendShutterHello()
 {
     int nErr = ND_OK;
-    char szResp[SERIAL_BUFFER_SIZE];
 
     if(!m_bIsConnected)
         return NOT_CONNECTED;
-    nErr = domeCommand("H#", szResp, 'H', SERIAL_BUFFER_SIZE);
+    nErr = domeCommand("H#", NULL, 0, SERIAL_BUFFER_SIZE);
     return nErr;
 }
 #pragma mark - Getter / Setter

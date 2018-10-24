@@ -35,7 +35,6 @@
 #define MAX_TIMEOUT 5000
 #define ND_LOG_BUFFER_SIZE 256
 
-
 // #define ND_DEBUG 2
 
 
