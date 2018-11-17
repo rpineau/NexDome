@@ -1494,10 +1494,14 @@ int CNexDome::abortCurrentCommand()
 int CNexDome::sendShutterHello()
 {
     int nErr = ND_OK;
+    char szResp[SERIAL_BUFFER_SIZE];
 
     if(!m_bIsConnected)
         return NOT_CONNECTED;
-    nErr = domeCommand("H#", NULL, 0, SERIAL_BUFFER_SIZE);
+    if(m_fVersion>=2.0f)
+        nErr = domeCommand("H#", szResp, 'H', SERIAL_BUFFER_SIZE);
+    else
+        nErr = domeCommand("H#", NULL, 0, SERIAL_BUFFER_SIZE);
     return nErr;
 }
 #pragma mark - Getter / Setter

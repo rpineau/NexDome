@@ -67,12 +67,12 @@ X2Dome::~X2Dome()
 int X2Dome::establishLink(void)					
 {
     int nErr;
-    char szPort[DRIVER_MAX_STRING];
+    char szPort[SERIAL_BUFFER_SIZE];
 
     X2MutexLocker ml(GetMutex());
 
     // get serial port device name
-    portNameOnToCharPtr(szPort,DRIVER_MAX_STRING);
+    portNameOnToCharPtr(szPort,SERIAL_BUFFER_SIZE);
     nErr = m_NexDome.Connect(szPort);
     if(nErr) {
         m_bLinked = false;
@@ -758,9 +758,9 @@ int X2Dome::dapiSync(double dAz, double dEl)
 
 void X2Dome::portName(BasicStringInterface& str) const
 {
-    char szPortName[DRIVER_MAX_STRING];
+    char szPortName[SERIAL_BUFFER_SIZE];
 
-    portNameOnToCharPtr(szPortName, DRIVER_MAX_STRING);
+    portNameOnToCharPtr(szPortName, SERIAL_BUFFER_SIZE);
 
     str = szPortName;
 
