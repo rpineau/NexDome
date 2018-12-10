@@ -34,9 +34,9 @@
 #define SERIAL_BUFFER_SIZE 256
 #define MAX_TIMEOUT 5000
 #define ND_LOG_BUFFER_SIZE 256
+#define INTER_COMMAND_PASUSE_MS	100
 
-
-// #define ND_DEBUG 2
+#define ND_DEBUG 2
 
 
 
@@ -84,6 +84,7 @@ public:
     int isCalibratingComplete(bool &bComplete);
 
     int abortCurrentCommand();
+    int sendShutterHello();
 
     // getter/setter
     int getNbTicksPerRev();
@@ -102,6 +103,8 @@ public:
 
     int getCurrentShutterState();
     int getBatteryLevels(double &domeVolts, double &dDomeCutOff, double &dShutterVolts, double &dShutterCutOff);
+    int setBatteryCutOff(double dDomeCutOff, double dShutterCutOff);
+
     int getPointingError(double &dPointingError);
     
     int getDefaultDir(bool &bNormal);

@@ -29,7 +29,7 @@ class MutexInterface;
 class BasicIniUtilInterface;
 class TickCountInterface;
 
-#define DRIVER_VERSION      2.01
+#define DRIVER_VERSION      2.03
 
 #define PARENT_KEY			"NexDome"
 #define CHILD_KEY_PORTNAME	"PortName"
@@ -135,7 +135,7 @@ public:
     virtual bool			isBaudRateFixed() const		{return true;};
 
     virtual SerXInterface::Parity	parity() const				{return SerXInterface::B_NOPARITY;};
-    virtual void					setParity(const SerXInterface::Parity& parity){parity;};
+    virtual void					setParity(const SerXInterface::Parity& parity){};
     virtual bool					isParityFixed() const		{return true;};
 
 

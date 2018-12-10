@@ -67,12 +67,12 @@ X2Dome::~X2Dome()
 int X2Dome::establishLink(void)					
 {
     int nErr;
-    char szPort[DRIVER_MAX_STRING];
+    char szPort[SERIAL_BUFFER_SIZE];
 
     X2MutexLocker ml(GetMutex());
 
     // get serial port device name
-    portNameOnToCharPtr(szPort,DRIVER_MAX_STRING);
+    portNameOnToCharPtr(szPort,SERIAL_BUFFER_SIZE);
     nErr = m_NexDome.Connect(szPort);
     if(nErr) {
         m_bLinked = false;
@@ -138,6 +138,8 @@ int X2Dome::execModalSettingsDialog()
     int nRAcc;
     int nSSpeed;
     int nSAcc;
+    double  batRotCutOff;
+    double  batShutCutOff;
 
     if (NULL == ui)
         return ERR_POINTER;
@@ -174,6 +176,7 @@ int X2Dome::execModalSettingsDialog()
     }
 
     if(m_bLinked) {
+        m_NexDome.sendShutterHello();   // refresh values.
         dx->setEnabled("homePosition",true);
         dx->setEnabled("parkPosition",true);
         nErr = m_NexDome.getDefaultDir(nReverseDir);
@@ -206,11 +209,21 @@ int X2Dome::execModalSettingsDialog()
         m_NexDome.getShutterAcceleration(nSAcc);
         dx->setPropertyInt("shutterAcceleration","value", nSAcc);
 
+        dx->setEnabled("lowRotBatCutOff",true);
+        dx->setEnabled("lowShutBatCutOff",true);
+
 
         m_NexDome.getBatteryLevels(dDomeBattery, dDomeCutOff, dShutterBattery, dShutterCutOff);
+        dx->setPropertyDouble("lowRotBatCutOff","value", dDomeCutOff);
+        dx->setPropertyDouble("lowShutBatCutOff","value", dShutterCutOff);
+
         snprintf(szTmpBuf,16,"%2.2f V",dDomeBattery);
         dx->setPropertyString("domeBatteryLevel","text", szTmpBuf);
+
         if(m_bHasShutterControl) {
+            snprintf(szTmpBuf,16,"%2.2f V",dShutterCutOff);
+            dx->setPropertyString("lowShutBatCutOff","text", szTmpBuf);
+
             if(dShutterBattery>=0.0f)
                 snprintf(szTmpBuf,16,"%2.2f V",dShutterBattery);
             else
@@ -238,6 +251,8 @@ int X2Dome::execModalSettingsDialog()
         dx->setEnabled("rotationAcceletation",false);
         dx->setEnabled("shutterSpeed",false);
         dx->setEnabled("shutterAcceleration",false);
+        dx->setEnabled("lowRotBatCutOff",false);
+        dx->setEnabled("lowShutBatCutOff",true);
 
         dx->setPropertyString("domeBatteryLevel","text", "--");
         dx->setPropertyString("shutterBatteryLevel","text", "--");
@@ -267,12 +282,15 @@ int X2Dome::execModalSettingsDialog()
         dx->propertyInt("rotationAcceletation", "value", nRAcc);
         dx->propertyInt("shutterSpeed", "value", nSSpeed);
         dx->propertyInt("shutterAcceleration", "value", nSAcc);
+        dx->propertyDouble("lowRotBatCutOff", "value", batRotCutOff);
+        dx->propertyDouble("lowShutBatCutOff", "value", batShutCutOff);
         m_bHasShutterControl = dx->isChecked("hasShutterCtrl");
         m_bHomeOnPark = dx->isChecked("homeOnPark");
         m_bHomeOnUnpark = dx->isChecked("homeOnUnpark");
         m_NexDome.setHomeOnUnpark(m_bHomeOnUnpark);
         nReverseDir = dx->isChecked("needReverse");
         if(m_bLinked) {
+			// pause between command as we don't want to overload the controller
             m_NexDome.setDefaultDir(!nReverseDir);
             m_NexDome.setHomeOnPark(m_bHomeOnPark);
             m_NexDome.setHomeOnUnpark(m_bHomeOnUnpark);
@@ -281,8 +299,14 @@ int X2Dome::execModalSettingsDialog()
             m_NexDome.setNbTicksPerRev(n_nbStepPerRev);
             m_NexDome.setRotationSpeed(nRSpeed);
             m_NexDome.setRotationAcceleration(nRAcc);
+			m_pSleeper->sleep(INTER_COMMAND_PASUSE_MS);
             m_NexDome.setShutterSpeed(nSSpeed);
+			m_pSleeper->sleep(INTER_COMMAND_PASUSE_MS);
             m_NexDome.setShutterAcceleration(nSAcc);
+			m_pSleeper->sleep(INTER_COMMAND_PASUSE_MS);
+            m_NexDome.setBatteryCutOff(batRotCutOff, batShutCutOff);
+			m_pSleeper->sleep(INTER_COMMAND_PASUSE_MS);
+            m_NexDome.sendShutterHello();
         }
 
         // save the values to persistent storage
@@ -395,11 +419,25 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
     if (!strcmp(pszEvent, "on_pushButton_clicked"))
     {
         if(m_bLinked) {
-            // disable "ok" and "calibrate"
-            uiex->setEnabled("pushButton",false);
-            uiex->setEnabled("pushButtonOK",false);
-            m_NexDome.goHome();
-            m_bHomingDome = true;
+            if(m_bHomingDome || m_bCalibratingDome) {
+                // enable "ok"
+                uiex->setEnabled("pushButtonOK", true);
+                uiex->setEnabled("pushButtonCancel", true);
+                // stop everything
+                m_NexDome.abortCurrentCommand();
+                m_bHomingDome = false;
+                m_bCalibratingDome = false;
+                // set button text the Calibrate
+                uiex->setText("pushButton", "Calibrate");
+            } else {
+                // disable "ok"
+                uiex->setEnabled("pushButtonOK", false);
+                uiex->setEnabled("pushButtonCancel", false);
+                // change "calibrate" to "abort"
+                uiex->setText("pushButton", "Abort");
+                m_NexDome.goHome();
+                m_bHomingDome = true;
+            }
         }
     }
 }
@@ -725,9 +763,9 @@ int X2Dome::dapiSync(double dAz, double dEl)
 
 void X2Dome::portName(BasicStringInterface& str) const
 {
-    char szPortName[DRIVER_MAX_STRING];
+    char szPortName[SERIAL_BUFFER_SIZE];
 
-    portNameOnToCharPtr(szPortName, DRIVER_MAX_STRING);
+    portNameOnToCharPtr(szPortName, SERIAL_BUFFER_SIZE);
 
     str = szPortName;
 
