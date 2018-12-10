@@ -679,6 +679,8 @@ int CNexDome::setBatteryCutOff(double dDomeCutOff, double dShutterCutOff)
         return nErr;
     }
 
+	// pause
+	m_pSleeper->sleep(INTER_COMMAND_PASUSE_MS);
     // Shutter
     snprintf(szBuf, SERIAL_BUFFER_SIZE, "K%d#", nShutCutOff);
     nErr = domeCommand(szBuf, szResp, 'K', SERIAL_BUFFER_SIZE);

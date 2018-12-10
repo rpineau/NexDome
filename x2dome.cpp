@@ -290,6 +290,7 @@ int X2Dome::execModalSettingsDialog()
         m_NexDome.setHomeOnUnpark(m_bHomeOnUnpark);
         nReverseDir = dx->isChecked("needReverse");
         if(m_bLinked) {
+			// pause between command as we don't want to overload the controller
             m_NexDome.setDefaultDir(!nReverseDir);
             m_NexDome.setHomeOnPark(m_bHomeOnPark);
             m_NexDome.setHomeOnUnpark(m_bHomeOnUnpark);
@@ -298,9 +299,13 @@ int X2Dome::execModalSettingsDialog()
             m_NexDome.setNbTicksPerRev(n_nbStepPerRev);
             m_NexDome.setRotationSpeed(nRSpeed);
             m_NexDome.setRotationAcceleration(nRAcc);
+			m_pSleeper->sleep(INTER_COMMAND_PASUSE_MS);
             m_NexDome.setShutterSpeed(nSSpeed);
+			m_pSleeper->sleep(INTER_COMMAND_PASUSE_MS);
             m_NexDome.setShutterAcceleration(nSAcc);
+			m_pSleeper->sleep(INTER_COMMAND_PASUSE_MS);
             m_NexDome.setBatteryCutOff(batRotCutOff, batShutCutOff);
+			m_pSleeper->sleep(INTER_COMMAND_PASUSE_MS);
             m_NexDome.sendShutterHello();
         }
 
