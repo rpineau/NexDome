@@ -290,7 +290,6 @@ int X2Dome::execModalSettingsDialog()
         m_NexDome.setHomeOnUnpark(m_bHomeOnUnpark);
         nReverseDir = dx->isChecked("needReverse");
         if(m_bLinked) {
-			// pause between command as we don't want to overload the controller
             m_NexDome.setDefaultDir(!nReverseDir);
             m_NexDome.setHomeOnPark(m_bHomeOnPark);
             m_NexDome.setHomeOnUnpark(m_bHomeOnUnpark);
@@ -299,13 +298,9 @@ int X2Dome::execModalSettingsDialog()
             m_NexDome.setNbTicksPerRev(n_nbStepPerRev);
             m_NexDome.setRotationSpeed(nRSpeed);
             m_NexDome.setRotationAcceleration(nRAcc);
-			m_pSleeper->sleep(INTER_COMMAND_PASUSE_MS);
             m_NexDome.setShutterSpeed(nSSpeed);
-			m_pSleeper->sleep(INTER_COMMAND_PASUSE_MS);
             m_NexDome.setShutterAcceleration(nSAcc);
-			m_pSleeper->sleep(INTER_COMMAND_PASUSE_MS);
             m_NexDome.setBatteryCutOff(batRotCutOff, batShutCutOff);
-			m_pSleeper->sleep(INTER_COMMAND_PASUSE_MS);
             m_NexDome.sendShutterHello();
         }
 
@@ -464,10 +459,10 @@ void X2Dome::deviceInfoDetailedDescription(BasicStringInterface& str) const
 
  void X2Dome::deviceInfoFirmwareVersion(BasicStringInterface& str)					
 {
-    X2MutexLocker ml(GetMutex());
 
     if(m_bLinked) {
         char cFirmware[SERIAL_BUFFER_SIZE];
+		X2MutexLocker ml(GetMutex());
         m_NexDome.getFirmwareVersion(cFirmware, SERIAL_BUFFER_SIZE);
         str = cFirmware;
 
@@ -503,10 +498,10 @@ double	X2Dome::driverInfoVersion(void) const
 
 int X2Dome::dapiGetAzEl(double* pdAz, double* pdEl)
 {
-    X2MutexLocker ml(GetMutex());
-
     if(!m_bLinked)
         return ERR_NOLINK;
+
+	X2MutexLocker ml(GetMutex());
 
     *pdAz = m_NexDome.getCurrentAz();
     *pdEl = m_NexDome.getCurrentEl();
@@ -517,10 +512,10 @@ int X2Dome::dapiGotoAzEl(double dAz, double dEl)
 {
     int nErr;
 
-    X2MutexLocker ml(GetMutex());
-
     if(!m_bLinked)
         return ERR_NOLINK;
+
+	X2MutexLocker ml(GetMutex());
 
     nErr = m_NexDome.gotoAzimuth(dAz);
     if(nErr)
@@ -532,11 +527,10 @@ int X2Dome::dapiGotoAzEl(double dAz, double dEl)
 
 int X2Dome::dapiAbort(void)
 {
-
-    X2MutexLocker ml(GetMutex());
-
     if(!m_bLinked)
         return ERR_NOLINK;
+
+	X2MutexLocker ml(GetMutex());
 
     m_NexDome.abortCurrentCommand();
 
@@ -546,13 +540,14 @@ int X2Dome::dapiAbort(void)
 int X2Dome::dapiOpen(void)
 {
     int nErr;
-    X2MutexLocker ml(GetMutex());
 
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    if(!m_bHasShutterControl)
+	if(!m_bHasShutterControl)
         return SB_OK;
+
+	X2MutexLocker ml(GetMutex());
 
     nErr = m_NexDome.openShutter();
     if(nErr)
@@ -564,13 +559,14 @@ int X2Dome::dapiOpen(void)
 int X2Dome::dapiClose(void)
 {
     int nErr;
-    X2MutexLocker ml(GetMutex());
 
     if(!m_bLinked)
         return ERR_NOLINK;
 
     if(!m_bHasShutterControl)
         return SB_OK;
+
+	X2MutexLocker ml(GetMutex());
 
     nErr = m_NexDome.closeShutter();
     if(nErr)
@@ -582,19 +578,12 @@ int X2Dome::dapiClose(void)
 int X2Dome::dapiPark(void)
 {
     int nErr;
-    X2MutexLocker ml(GetMutex());
 
     if(!m_bLinked)
         return ERR_NOLINK;
-    /*
-    if(m_bHasShutterControl)
-    {
-        nErr = nexDome.closeShutter();
-        if(nErr)
-            return ERR_CMDFAILED;
-    }
-     */
-    
+
+	X2MutexLocker ml(GetMutex());
+
     nErr = m_NexDome.parkDome();
     if(nErr)
         return ERR_CMDFAILED;
@@ -605,19 +594,12 @@ int X2Dome::dapiPark(void)
 int X2Dome::dapiUnpark(void)
 {
     int nErr;
-    X2MutexLocker ml(GetMutex());
 
     if(!m_bLinked)
         return ERR_NOLINK;
-    /*
-    if(m_bHasShutterControl)
-    {
-        nErr = nexDome.openShutter();
-        if(nErr)
-            return ERR_CMDFAILED;
-    }
-     */
-    
+
+	X2MutexLocker ml(GetMutex());
+
     nErr = m_NexDome.unparkDome();
     if(nErr)
         return ERR_CMDFAILED;
@@ -628,12 +610,13 @@ int X2Dome::dapiUnpark(void)
 int X2Dome::dapiFindHome(void)
 {
     int nErr;
-    X2MutexLocker ml(GetMutex());
 
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    nErr = m_NexDome.goHome();
+	X2MutexLocker ml(GetMutex());
+
+	nErr = m_NexDome.goHome();
     if(nErr)
         return ERR_CMDFAILED;
 
@@ -643,12 +626,13 @@ int X2Dome::dapiFindHome(void)
 int X2Dome::dapiIsGotoComplete(bool* pbComplete)
 {
     int nErr;
-    X2MutexLocker ml(GetMutex());
 
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    nErr = m_NexDome.isGoToComplete(*pbComplete);
+	X2MutexLocker ml(GetMutex());
+
+	nErr = m_NexDome.isGoToComplete(*pbComplete);
     if(nErr)
         return ERR_CMDFAILED;
     return SB_OK;
@@ -657,7 +641,6 @@ int X2Dome::dapiIsGotoComplete(bool* pbComplete)
 int X2Dome::dapiIsOpenComplete(bool* pbComplete)
 {
     int nErr;
-    X2MutexLocker ml(GetMutex());
 
     if(!m_bLinked)
         return ERR_NOLINK;
@@ -668,7 +651,9 @@ int X2Dome::dapiIsOpenComplete(bool* pbComplete)
         return SB_OK;
     }
 
-    nErr = m_NexDome.isOpenComplete(*pbComplete);
+	X2MutexLocker ml(GetMutex());
+
+	nErr = m_NexDome.isOpenComplete(*pbComplete);
     if(nErr)
         return ERR_CMDFAILED;
 
@@ -678,7 +663,6 @@ int X2Dome::dapiIsOpenComplete(bool* pbComplete)
 int	X2Dome::dapiIsCloseComplete(bool* pbComplete)
 {
     int nErr;
-    X2MutexLocker ml(GetMutex());
 
     if(!m_bLinked)
         return ERR_NOLINK;
@@ -689,7 +673,9 @@ int	X2Dome::dapiIsCloseComplete(bool* pbComplete)
         return SB_OK;
     }
 
-    nErr = m_NexDome.isCloseComplete(*pbComplete);
+	X2MutexLocker ml(GetMutex());
+
+	nErr = m_NexDome.isCloseComplete(*pbComplete);
     if(nErr)
         return ERR_CMDFAILED;
 
@@ -699,12 +685,13 @@ int	X2Dome::dapiIsCloseComplete(bool* pbComplete)
 int X2Dome::dapiIsParkComplete(bool* pbComplete)
 {
     int nErr;
-    X2MutexLocker ml(GetMutex());
 
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    nErr = m_NexDome.isParkComplete(*pbComplete);
+	X2MutexLocker ml(GetMutex());
+
+	nErr = m_NexDome.isParkComplete(*pbComplete);
     if(nErr)
         return ERR_CMDFAILED;
 
@@ -714,12 +701,13 @@ int X2Dome::dapiIsParkComplete(bool* pbComplete)
 int X2Dome::dapiIsUnparkComplete(bool* pbComplete)
 {
     int nErr;
-    X2MutexLocker ml(GetMutex());
 
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    nErr = m_NexDome.isUnparkComplete(*pbComplete);
+	X2MutexLocker ml(GetMutex());
+
+	nErr = m_NexDome.isUnparkComplete(*pbComplete);
     if(nErr)
         return ERR_CMDFAILED;
 
@@ -729,12 +717,13 @@ int X2Dome::dapiIsUnparkComplete(bool* pbComplete)
 int X2Dome::dapiIsFindHomeComplete(bool* pbComplete)
 {
     int nErr;
-    X2MutexLocker ml(GetMutex());
 
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    nErr = m_NexDome.isFindHomeComplete(*pbComplete);
+	X2MutexLocker ml(GetMutex());
+
+	nErr = m_NexDome.isFindHomeComplete(*pbComplete);
     if(nErr)
         return ERR_CMDFAILED;
 
@@ -745,12 +734,12 @@ int X2Dome::dapiSync(double dAz, double dEl)
 {
     int nErr;
 
-    X2MutexLocker ml(GetMutex());
-
     if(!m_bLinked)
         return ERR_NOLINK;
 
-    nErr = m_NexDome.syncDome(dAz, dEl);
+	X2MutexLocker ml(GetMutex());
+
+	nErr = m_NexDome.syncDome(dAz, dEl);
     if(nErr)
         return ERR_CMDFAILED;
 	return SB_OK;
