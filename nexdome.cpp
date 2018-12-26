@@ -440,7 +440,9 @@ int CNexDome::getShutterState(int &nState)
 
     if(m_bCalibrating)
         return nErr;
-
+	
+	m_pSleeper->sleep(INTER_COMMAND_PAUSE_MS);
+	
     nErr = domeCommand("M#", szResp, 'M', SERIAL_BUFFER_SIZE);
     if(nErr) {
 #if defined ND_DEBUG && ND_DEBUG >= 2
@@ -582,6 +584,7 @@ int CNexDome::getBatteryLevels(double &domeVolts, double &dDomeCutOff, double &d
 #endif
 
     //  Shutter
+	m_pSleeper->sleep(INTER_COMMAND_PAUSE_MS);
     nErr = domeCommand("K#", szResp, 'K', SERIAL_BUFFER_SIZE);
     if(nErr) {
 #if defined ND_DEBUG && ND_DEBUG >= 2
@@ -679,9 +682,8 @@ int CNexDome::setBatteryCutOff(double dDomeCutOff, double dShutterCutOff)
         return nErr;
     }
 
-	// pause
-	m_pSleeper->sleep(INTER_COMMAND_PASUSE_MS);
     // Shutter
+	m_pSleeper->sleep(INTER_COMMAND_PAUSE_MS);
     snprintf(szBuf, SERIAL_BUFFER_SIZE, "K%d#", nShutCutOff);
     nErr = domeCommand(szBuf, szResp, 'K', SERIAL_BUFFER_SIZE);
     if(nErr) {
@@ -941,6 +943,8 @@ int CNexDome::openShutter()
         snprintf(m_szLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::openShutter] Opening shutter");
         m_pLogger->out(m_szLogBuffer);
     }
+
+	m_pSleeper->sleep(INTER_COMMAND_PAUSE_MS);
     nErr = domeCommand("O#", szResp, 'O', SERIAL_BUFFER_SIZE);
     if(nErr) {
         snprintf(m_szLogBuffer,ND_LOG_BUFFER_SIZE,"[CNexDome::openShutter] ERROR gotoAzimuth");
@@ -976,6 +980,7 @@ int CNexDome::closeShutter()
     fflush(Logfile);
 #endif
 
+	m_pSleeper->sleep(INTER_COMMAND_PAUSE_MS);
     nErr = domeCommand("C#", szResp, 'C', SERIAL_BUFFER_SIZE);
     if(nErr) {
 #if defined ND_DEBUG && ND_DEBUG >= 2
@@ -1500,7 +1505,9 @@ int CNexDome::sendShutterHello()
 
     if(!m_bIsConnected)
         return NOT_CONNECTED;
-    if(m_fVersion>=2.0f)
+
+	m_pSleeper->sleep(INTER_COMMAND_PAUSE_MS);
+	if(m_fVersion>=2.0f)
         nErr = domeCommand("H#", szResp, 'H', SERIAL_BUFFER_SIZE);
     else
         nErr = domeCommand("H#", NULL, 0, SERIAL_BUFFER_SIZE);
@@ -1779,6 +1786,7 @@ int CNexDome::getShutterSpeed(int &nSpeed)
     if(!m_bIsConnected)
         return NOT_CONNECTED;
 
+	m_pSleeper->sleep(INTER_COMMAND_PAUSE_MS);
     nErr = domeCommand("R#", szResp, 'R', SERIAL_BUFFER_SIZE);
     if(nErr) {
         return nErr;
@@ -1805,6 +1813,7 @@ int CNexDome::setShutterSpeed(int nSpeed)
     if(!m_bIsConnected)
         return NOT_CONNECTED;
 
+	m_pSleeper->sleep(INTER_COMMAND_PAUSE_MS);
     snprintf(szBuf, SERIAL_BUFFER_SIZE, "R%d#", nSpeed);
     nErr = domeCommand(szBuf, szResp, 'R', SERIAL_BUFFER_SIZE);
 
@@ -1819,6 +1828,7 @@ int CNexDome::getShutterAcceleration(int &nAcceleration)
     if(!m_bIsConnected)
         return NOT_CONNECTED;
 
+	m_pSleeper->sleep(INTER_COMMAND_PAUSE_MS);
     nErr = domeCommand("E#", szResp, 'E', SERIAL_BUFFER_SIZE);
     if(nErr) {
         return nErr;
@@ -1844,6 +1854,7 @@ int CNexDome::setShutterAcceleration(int nAcceleration)
     if(!m_bIsConnected)
         return NOT_CONNECTED;
 
+	m_pSleeper->sleep(INTER_COMMAND_PAUSE_MS);
     snprintf(szBuf, SERIAL_BUFFER_SIZE, "E%d#", nAcceleration);
     nErr = domeCommand(szBuf, szResp, 'E', SERIAL_BUFFER_SIZE);
     return nErr;
