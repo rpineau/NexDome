@@ -29,7 +29,7 @@ class MutexInterface;
 class BasicIniUtilInterface;
 class TickCountInterface;
 
-#define DRIVER_VERSION      2.04
+#define DRIVER_VERSION      2.05
 
 #define PARENT_KEY			"NexDome"
 #define CHILD_KEY_PORTNAME	"PortName"
@@ -174,6 +174,6 @@ private:
     bool        m_bCalibratingDome;
     char        m_szLogBuffer[LOG_BUFFER_SIZE];
     int         m_nBattRequest;
-
+	int			m_nSavedTicksPerRev;
     // bool        mIsRollOffRoof;
 };

@@ -338,12 +338,13 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
                 bComplete = false;
                 nErr = m_NexDome.isFindHomeComplete(bComplete);
                 if(nErr) {
-                    uiex->setEnabled("pushButton",true);
-                    uiex->setEnabled("pushButtonOK",true);
                     snprintf(szErrorMessage, LOG_BUFFER_SIZE, "Error homing dome while calibrating dome : Error %d", nErr);
                     uiex->messageBox("NexDome Calibrate", szErrorMessage);
                     m_bHomingDome = false;
                     m_bCalibratingDome = false;
+					// enable buttons
+					uiex->setEnabled("pushButton",true);
+					uiex->setEnabled("pushButtonOK",true);
                     return;
                 }
                 if(bComplete) {
@@ -360,8 +361,8 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
                 bComplete = false;
                 nErr = m_NexDome.isCalibratingComplete(bComplete);
                 if(nErr) {
-                    uiex->setEnabled("pushButton",true);
                     uiex->setEnabled("pushButtonOK",true);
+					uiex->setEnabled("pushButtonCancel", true);
                     snprintf(szErrorMessage, LOG_BUFFER_SIZE, "Error calibrating dome : Error %d", nErr);
                     uiex->messageBox("NexDome Calibrate", szErrorMessage);
                     m_bHomingDome = false;
@@ -373,13 +374,15 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
                     return;
                 }
 
-                // enable "ok" and "calibrate"
-                uiex->setEnabled("pushButton",true);
+                // enable buttons
                 uiex->setEnabled("pushButtonOK",true);
+				uiex->setEnabled("pushButtonCancel", true);
+				m_bCalibratingDome = false;
+				m_bHomingDome = false;
+				uiex->setText("pushButton", "Calibrate");
                 // read step per rev from controller
                 uiex->setPropertyInt("ticksPerRev","value", m_NexDome.getNbTicksPerRev());
-                m_bCalibratingDome = false;
-            }
+			}
             
             if(m_bHasShutterControl && !m_bHomingDome && !m_bCalibratingDome) {
                 // don't ask to often
@@ -414,8 +417,8 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
     if (!strcmp(pszEvent, "on_pushButton_clicked"))
     {
         if(m_bLinked) {
-            if(m_bHomingDome || m_bCalibratingDome) {
-                // enable "ok"
+            if(m_bHomingDome || m_bCalibratingDome) { // Abort
+                // enable buttons
                 uiex->setEnabled("pushButtonOK", true);
                 uiex->setEnabled("pushButtonCancel", true);
                 // stop everything
@@ -424,14 +427,18 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
                 m_bCalibratingDome = false;
                 // set button text the Calibrate
                 uiex->setText("pushButton", "Calibrate");
-            } else {
-                // disable "ok"
+				// restore saved ticks per rev
+				uiex->setPropertyInt("ticksPerRev","value", m_nSavedTicksPerRev);
+				m_NexDome.setNbTicksPerRev(m_nSavedTicksPerRev);
+            } else {								// Calibrate
+                // disable buttons
                 uiex->setEnabled("pushButtonOK", false);
                 uiex->setEnabled("pushButtonCancel", false);
-                // change "calibrate" to "abort"
+                // change "Calibrate" to "Abort"
                 uiex->setText("pushButton", "Abort");
                 m_NexDome.goHome();
                 m_bHomingDome = true;
+				m_nSavedTicksPerRev = m_NexDome.getNbTicksPerRev();
             }
         }
     }
