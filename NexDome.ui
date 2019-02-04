@@ -565,7 +565,7 @@
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
       </widget>
-      <widget class="QSpinBox" name="shutterWatchdog">
+      <widget class="QSpinBox" name="spinBox">
        <property name="geometry">
         <rect>
          <x>224</x>
@@ -578,7 +578,7 @@
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
        <property name="minimum">
-        <number>30</number>
+        <number>60</number>
        </property>
        <property name="maximum">
         <number>300</number>
