@@ -138,6 +138,7 @@ int X2Dome::execModalSettingsDialog()
     int nRAcc;
     int nSSpeed;
     int nSAcc;
+	int nWatchdog;
     double  batRotCutOff;
     double  batShutCutOff;
 
@@ -209,6 +210,10 @@ int X2Dome::execModalSettingsDialog()
         m_NexDome.getShutterAcceleration(nSAcc);
         dx->setPropertyInt("shutterAcceleration","value", nSAcc);
 
+		dx->setEnabled("shutterWatchdog",true);
+		m_NexDome.getSutterWatchdogTimerValue(nWatchdog);
+		dx->setPropertyInt("shutterWatchdog", "value", nWatchdog);
+
         dx->setEnabled("lowRotBatCutOff",true);
         dx->setEnabled("lowShutBatCutOff",true);
 
@@ -251,9 +256,9 @@ int X2Dome::execModalSettingsDialog()
         dx->setEnabled("rotationAcceletation",false);
         dx->setEnabled("shutterSpeed",false);
         dx->setEnabled("shutterAcceleration",false);
+		dx->setEnabled("shutterWatchdog",false);
         dx->setEnabled("lowRotBatCutOff",false);
         dx->setEnabled("lowShutBatCutOff",true);
-
         dx->setPropertyString("domeBatteryLevel","text", "--");
         dx->setPropertyString("shutterBatteryLevel","text", "--");
         dx->setEnabled("pushButton",false);
@@ -282,6 +287,7 @@ int X2Dome::execModalSettingsDialog()
         dx->propertyInt("rotationAcceletation", "value", nRAcc);
         dx->propertyInt("shutterSpeed", "value", nSSpeed);
         dx->propertyInt("shutterAcceleration", "value", nSAcc);
+		dx->propertyInt("shutterWatchdog", "value", nWatchdog);
         dx->propertyDouble("lowRotBatCutOff", "value", batRotCutOff);
         dx->propertyDouble("lowShutBatCutOff", "value", batShutCutOff);
         m_bHasShutterControl = dx->isChecked("hasShutterCtrl");
@@ -300,6 +306,7 @@ int X2Dome::execModalSettingsDialog()
             m_NexDome.setRotationAcceleration(nRAcc);
             m_NexDome.setShutterSpeed(nSSpeed);
             m_NexDome.setShutterAcceleration(nSAcc);
+			m_NexDome.setSutterWatchdogTimerValue(nWatchdog);
             m_NexDome.setBatteryCutOff(batRotCutOff, batShutCutOff);
             m_NexDome.sendShutterHello();
         }

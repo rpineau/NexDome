@@ -126,6 +126,9 @@ public:
 
     void setHomeOnPark(const bool bEnabled);
     void setHomeOnUnpark(const bool bEnabled);
+	
+	int	getSutterWatchdogTimerValue(int &nValue);
+	int	setSutterWatchdogTimerValue(const int &nValue);
 
     void setDebugLog(bool bEnable);
 
