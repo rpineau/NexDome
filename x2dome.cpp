@@ -304,11 +304,13 @@ int X2Dome::execModalSettingsDialog()
             m_NexDome.setNbTicksPerRev(n_nbStepPerRev);
             m_NexDome.setRotationSpeed(nRSpeed);
             m_NexDome.setRotationAcceleration(nRAcc);
-            m_NexDome.setShutterSpeed(nSSpeed);
-            m_NexDome.setShutterAcceleration(nSAcc);
-			m_NexDome.setSutterWatchdogTimerValue(nWatchdog);
-            m_NexDome.setBatteryCutOff(batRotCutOff, batShutCutOff);
-            m_NexDome.sendShutterHello();
+			m_NexDome.setBatteryCutOff(batRotCutOff, batShutCutOff);
+			if(m_bHasShutterControl) {
+				m_NexDome.setShutterSpeed(nSSpeed);
+				m_NexDome.setShutterAcceleration(nSAcc);
+				m_NexDome.setSutterWatchdogTimerValue(nWatchdog);
+				m_NexDome.sendShutterHello();
+			}
         }
 
         // save the values to persistent storage
@@ -357,7 +359,6 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
                 if(bComplete) {
                     m_bHomingDome = false;
                     m_bCalibratingDome = true;
-                    m_NexDome.setNbTicksPerRev(16000000L);    // set this to a large value as the firmware only do 1 move of 1.5 time the current step per rev
                     m_NexDome.calibrate();
                     return;
                 }
@@ -443,9 +444,10 @@ void X2Dome::uiEvent(X2GUIExchangeInterface* uiex, const char* pszEvent)
                 uiex->setEnabled("pushButtonCancel", false);
                 // change "Calibrate" to "Abort"
                 uiex->setText("pushButton", "Abort");
+				m_nSavedTicksPerRev = m_NexDome.getNbTicksPerRev();
+				m_NexDome.setNbTicksPerRev(16000000L);    // set this to a large value as the firmware only do 1 move of 1.5 time the current step per rev
                 m_NexDome.goHome();
                 m_bHomingDome = true;
-				m_nSavedTicksPerRev = m_NexDome.getNbTicksPerRev();
             }
         }
     }
