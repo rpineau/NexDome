@@ -4,6 +4,12 @@
 	#define PlugInExport
 #endif
 
+#include <stdio.h>
+#include "../../licensedinterfaces/basicstringinterface.h"
+#include "x2dome.h"
+
+#define PLUGIN_NAME "X2Dome NexDome"
+
 class SerXInterface;
 class TheSkyXFacadeForDriversInterface;
 class SleeperInterface;
