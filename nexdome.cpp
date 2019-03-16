@@ -1910,6 +1910,49 @@ int	CNexDome::setSutterWatchdogTimerValue(const int &nValue)
 	return nErr;
 }
 
+
+int CNexDome::getRainTimerValue(int &nValue)
+{
+    int nErr = ND_OK;
+    char szResp[SERIAL_BUFFER_SIZE];
+
+    if(!m_bIsConnected)
+        return NOT_CONNECTED;
+
+    m_pSleeper->sleep(INTER_COMMAND_PAUSE_MS);
+    nErr = domeCommand("f#", szResp, 'f', SERIAL_BUFFER_SIZE);
+    if(nErr) {
+        return nErr;
+    }
+
+    nValue = atoi(szResp)/1000; // value is in ms
+#ifdef ND_DEBUG
+    ltime = time(NULL);
+    timestamp = asctime(localtime(&ltime));
+    timestamp[strlen(timestamp) - 1] = 0;
+    fprintf(Logfile, "[%s] [CNexDome::getRainTimerValue] nValue =  %d\n", timestamp, nValue);
+    fflush(Logfile);
+#endif
+    return nErr;
+
+}
+
+int CNexDome::setRainTimerValue(const int &nValue)
+{
+    int nErr = ND_OK;
+    char szBuf[SERIAL_BUFFER_SIZE];
+    char szResp[SERIAL_BUFFER_SIZE];
+
+    if(!m_bIsConnected)
+        return NOT_CONNECTED;
+
+    m_pSleeper->sleep(INTER_COMMAND_PAUSE_MS);
+    snprintf(szBuf, SERIAL_BUFFER_SIZE, "f%d#", nValue * 1000); // value is in ms
+    nErr = domeCommand(szBuf, szResp, 'I', SERIAL_BUFFER_SIZE);
+    return nErr;
+}
+
+
 int CNexDome::parseFields(const char *pszResp, std::vector<std::string> &svFields, char cSeparator)
 {
     int nErr = ND_OK;

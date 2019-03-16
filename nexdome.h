@@ -128,6 +128,9 @@ public:
 	int	getSutterWatchdogTimerValue(int &nValue);
 	int	setSutterWatchdogTimerValue(const int &nValue);
 
+    int    getRainTimerValue(int &nValue);
+    int    setRainTimerValue(const int &nValue);
+
     void setDebugLog(bool bEnable);
 
 protected:
