@@ -218,7 +218,7 @@ int X2Dome::execModalSettingsDialog()
 
         dx->setEnabled("rainCheckInterval",true);
         m_NexDome.getRainTimerValue(nRainTimer);
-        dx->setPropertyInt("rainCheckInterval", "value", nWatchdog);
+        dx->setPropertyInt("rainCheckInterval", "value", nRainTimer);
 
         dx->setEnabled("lowRotBatCutOff",true);
         dx->setEnabled("lowShutBatCutOff",true);
@@ -295,7 +295,7 @@ int X2Dome::execModalSettingsDialog()
         dx->propertyInt("shutterSpeed", "value", nSSpeed);
         dx->propertyInt("shutterAcceleration", "value", nSAcc);
 		dx->propertyInt("shutterWatchdog", "value", nWatchdog);
-        dx->propertyInt("shutterWatchdog", "value", nRainTimer);
+        dx->propertyInt("rainCheckInterval", "value", nRainTimer);
         dx->propertyDouble("lowRotBatCutOff", "value", batRotCutOff);
         dx->propertyDouble("lowShutBatCutOff", "value", batShutCutOff);
         m_bHasShutterControl = dx->isChecked("hasShutterCtrl");

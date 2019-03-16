@@ -1925,7 +1925,7 @@ int CNexDome::getRainTimerValue(int &nValue)
         return nErr;
     }
 
-    nValue = atoi(szResp)/1000; // value is in ms
+    nValue = atoi(szResp);
 #ifdef ND_DEBUG
     ltime = time(NULL);
     timestamp = asctime(localtime(&ltime));
@@ -1947,7 +1947,7 @@ int CNexDome::setRainTimerValue(const int &nValue)
         return NOT_CONNECTED;
 
     m_pSleeper->sleep(INTER_COMMAND_PAUSE_MS);
-    snprintf(szBuf, SERIAL_BUFFER_SIZE, "f%d#", nValue * 1000); // value is in ms
+    snprintf(szBuf, SERIAL_BUFFER_SIZE, "f%d#", nValue);
     nErr = domeCommand(szBuf, szResp, 'I', SERIAL_BUFFER_SIZE);
     return nErr;
 }
