@@ -34,11 +34,9 @@
 #define SERIAL_BUFFER_SIZE 256
 #define MAX_TIMEOUT 5000
 #define ND_LOG_BUFFER_SIZE 256
-#define INTER_COMMAND_PASUSE_MS	100
+#define INTER_COMMAND_PAUSE_MS	100
 
-#define ND_DEBUG 2
-
-
+// #define ND_DEBUG 2
 
 // error codes
 // Error code
@@ -126,6 +124,12 @@ public:
 
     void setHomeOnPark(const bool bEnabled);
     void setHomeOnUnpark(const bool bEnabled);
+	
+	int	getSutterWatchdogTimerValue(int &nValue);
+	int	setSutterWatchdogTimerValue(const int &nValue);
+
+    int    getRainTimerValue(int &nValue);
+    int    setRainTimerValue(const int &nValue);
 
     void setDebugLog(bool bEnable);
 
