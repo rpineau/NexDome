@@ -6,20 +6,20 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>386</width>
-    <height>812</height>
+    <width>712</width>
+    <height>534</height>
    </rect>
   </property>
   <property name="minimumSize">
    <size>
-    <width>386</width>
-    <height>812</height>
+    <width>712</width>
+    <height>534</height>
    </size>
   </property>
   <property name="maximumSize">
    <size>
-    <width>386</width>
-    <height>812</height>
+    <width>712</width>
+    <height>534</height>
    </size>
   </property>
   <property name="windowTitle">
@@ -33,8 +33,8 @@
      </property>
      <property name="minimumSize">
       <size>
-       <width>362</width>
-       <height>524</height>
+       <width>0</width>
+       <height>0</height>
       </size>
      </property>
      <property name="maximumSize">
@@ -55,14 +55,14 @@
      <widget class="QGroupBox" name="MaxDomeIIParams">
       <property name="geometry">
        <rect>
-        <x>13</x>
+        <x>16</x>
         <y>104</y>
-        <width>336</width>
+        <width>296</width>
         <height>225</height>
        </rect>
       </property>
       <property name="title">
-       <string>NexDome Params</string>
+       <string>Dome params</string>
       </property>
       <widget class="QCheckBox" name="homeOnUnpark">
        <property name="geometry">
@@ -80,7 +80,7 @@
       <widget class="QPushButton" name="pushButton">
        <property name="geometry">
         <rect>
-         <x>9</x>
+         <x>8</x>
          <y>29</y>
          <width>281</width>
          <height>24</height>
@@ -197,20 +197,20 @@
      <widget class="QGroupBox" name="groupBox">
       <property name="geometry">
        <rect>
-        <x>13</x>
-        <y>336</y>
+        <x>336</x>
+        <y>104</y>
         <width>336</width>
-        <height>384</height>
+        <height>328</height>
        </rect>
       </property>
       <property name="title">
-       <string>Controller Informations and settings</string>
+       <string>Controller settings</string>
       </property>
       <widget class="QLabel" name="label_13">
        <property name="geometry">
         <rect>
          <x>64</x>
-         <y>232</y>
+         <y>264</y>
          <width>152</width>
          <height>24</height>
         </rect>
@@ -226,7 +226,7 @@
        <property name="geometry">
         <rect>
          <x>224</x>
-         <y>232</y>
+         <y>264</y>
          <width>62</width>
          <height>22</height>
         </rect>
@@ -242,7 +242,7 @@
        <property name="geometry">
         <rect>
          <x>64</x>
-         <y>256</y>
+         <y>288</y>
          <width>152</width>
          <height>24</height>
         </rect>
@@ -258,7 +258,7 @@
        <property name="geometry">
         <rect>
          <x>224</x>
-         <y>256</y>
+         <y>288</y>
          <width>62</width>
          <height>22</height>
         </rect>
@@ -268,35 +268,6 @@
        </property>
        <property name="value">
         <double>11.000000000000000</double>
-       </property>
-      </widget>
-      <widget class="QLabel" name="shutterBatteryLevel">
-       <property name="geometry">
-        <rect>
-         <x>224</x>
-         <y>304</y>
-         <width>56</width>
-         <height>24</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>12.25 V</string>
-       </property>
-      </widget>
-      <widget class="QLabel" name="label_5">
-       <property name="geometry">
-        <rect>
-         <x>72</x>
-         <y>304</y>
-         <width>144</width>
-         <height>24</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Shutter battery level :</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
       </widget>
       <widget class="QLabel" name="label_9">
@@ -395,64 +366,6 @@
         <number>999999999</number>
        </property>
       </widget>
-      <widget class="QLabel" name="label_8">
-       <property name="geometry">
-        <rect>
-         <x>128</x>
-         <y>352</y>
-         <width>88</width>
-         <height>24</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Rain sensor :</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-       </property>
-      </widget>
-      <widget class="QLabel" name="rainStatus">
-       <property name="geometry">
-        <rect>
-         <x>224</x>
-         <y>352</y>
-         <width>96</width>
-         <height>24</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Ok</string>
-       </property>
-      </widget>
-      <widget class="QLabel" name="label_6">
-       <property name="geometry">
-        <rect>
-         <x>64</x>
-         <y>328</y>
-         <width>152</width>
-         <height>24</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Pointing Error (Deg.) :</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-       </property>
-      </widget>
-      <widget class="QLabel" name="domePointingError">
-       <property name="geometry">
-        <rect>
-         <x>224</x>
-         <y>328</y>
-         <width>48</width>
-         <height>24</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>0.0</string>
-       </property>
-      </widget>
       <widget class="QSpinBox" name="shutterAcceleration">
        <property name="geometry">
         <rect>
@@ -483,38 +396,6 @@
        </property>
        <property name="alignment">
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-       </property>
-      </widget>
-      <widget class="QLabel" name="label_7">
-       <property name="geometry">
-        <rect>
-         <x>80</x>
-         <y>280</y>
-         <width>136</width>
-         <height>24</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>Dome battery level :</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
-       </property>
-      </widget>
-      <widget class="QLabel" name="domeBatteryLevel">
-       <property name="geometry">
-        <rect>
-         <x>224</x>
-         <y>280</y>
-         <width>56</width>
-         <height>24</height>
-        </rect>
-       </property>
-       <property name="text">
-        <string>12.25 V</string>
-       </property>
-       <property name="alignment">
-        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
        </property>
       </widget>
       <widget class="QLabel" name="label_11">
@@ -565,7 +446,7 @@
         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
        </property>
       </widget>
-      <widget class="QSpinBox" name="spinBox">
+      <widget class="QSpinBox" name="shutterWatchdog">
        <property name="geometry">
         <rect>
          <x>224</x>
@@ -587,12 +468,50 @@
         <number>90</number>
        </property>
       </widget>
+      <widget class="QLabel" name="label_16">
+       <property name="geometry">
+        <rect>
+         <x>16</x>
+         <y>232</y>
+         <width>200</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Rain sensor check interval (s) :</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+      <widget class="QSpinBox" name="rainCheckInterval">
+       <property name="geometry">
+        <rect>
+         <x>224</x>
+         <y>232</y>
+         <width>104</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+       <property name="minimum">
+        <number>0</number>
+       </property>
+       <property name="maximum">
+        <number>300</number>
+       </property>
+       <property name="value">
+        <number>30</number>
+       </property>
+      </widget>
      </widget>
      <widget class="QLabel" name="label_logo">
       <property name="geometry">
        <rect>
-        <x>96</x>
-        <y>8</y>
+        <x>272</x>
+        <y>0</y>
         <width>168</width>
         <height>64</height>
        </rect>
@@ -613,10 +532,10 @@
      <widget class="QLabel" name="label_4">
       <property name="geometry">
        <rect>
-        <x>96</x>
+        <x>272</x>
         <y>64</y>
         <width>168</width>
-        <height>40</height>
+        <height>24</height>
        </rect>
       </property>
       <property name="text">
@@ -626,47 +545,166 @@
        <set>Qt::AlignCenter</set>
       </property>
      </widget>
-     <widget class="QWidget" name="horizontalLayoutWidget">
+     <widget class="QPushButton" name="pushButtonCancel">
       <property name="geometry">
        <rect>
-        <x>128</x>
-        <y>736</y>
-        <width>216</width>
-        <height>40</height>
+        <x>496</x>
+        <y>456</y>
+        <width>81</width>
+        <height>32</height>
        </rect>
       </property>
-      <layout class="QHBoxLayout" name="horizontalLayout">
-       <item>
-        <spacer name="horizontalSpacer">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
-         </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
-       </item>
-       <item>
-        <widget class="QPushButton" name="pushButtonCancel">
-         <property name="text">
-          <string>Cancel</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QPushButton" name="pushButtonOK">
-         <property name="text">
-          <string>OK</string>
-         </property>
-         <property name="default">
-          <bool>true</bool>
-         </property>
-        </widget>
-       </item>
-      </layout>
+      <property name="text">
+       <string>Cancel</string>
+      </property>
+     </widget>
+     <widget class="QPushButton" name="pushButtonOK">
+      <property name="geometry">
+       <rect>
+        <x>584</x>
+        <y>456</y>
+        <width>81</width>
+        <height>32</height>
+       </rect>
+      </property>
+      <property name="text">
+       <string>OK</string>
+      </property>
+      <property name="default">
+       <bool>true</bool>
+      </property>
+     </widget>
+     <widget class="QGroupBox" name="groupBox_2">
+      <property name="geometry">
+       <rect>
+        <x>16</x>
+        <y>352</y>
+        <width>296</width>
+        <height>144</height>
+       </rect>
+      </property>
+      <property name="title">
+       <string>Status</string>
+      </property>
+      <widget class="QLabel" name="rainStatus">
+       <property name="geometry">
+        <rect>
+         <x>176</x>
+         <y>112</y>
+         <width>96</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Ok</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_7">
+       <property name="geometry">
+        <rect>
+         <x>32</x>
+         <y>40</y>
+         <width>136</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Dome battery level :</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+      <widget class="QLabel" name="shutterBatteryLevel">
+       <property name="geometry">
+        <rect>
+         <x>176</x>
+         <y>64</y>
+         <width>56</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>12.25 V</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="domePointingError">
+       <property name="geometry">
+        <rect>
+         <x>176</x>
+         <y>88</y>
+         <width>48</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>0.0</string>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_8">
+       <property name="geometry">
+        <rect>
+         <x>80</x>
+         <y>112</y>
+         <width>88</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Rain sensor :</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_6">
+       <property name="geometry">
+        <rect>
+         <x>16</x>
+         <y>88</y>
+         <width>152</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Pointing Error (Deg.) :</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+      <widget class="QLabel" name="domeBatteryLevel">
+       <property name="geometry">
+        <rect>
+         <x>176</x>
+         <y>40</y>
+         <width>56</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>12.25 V</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignLeading|Qt::AlignLeft|Qt::AlignVCenter</set>
+       </property>
+      </widget>
+      <widget class="QLabel" name="label_5">
+       <property name="geometry">
+        <rect>
+         <x>24</x>
+         <y>64</y>
+         <width>144</width>
+         <height>24</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Shutter battery level :</string>
+       </property>
+       <property name="alignment">
+        <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+       </property>
+      </widget>
      </widget>
     </widget>
    </item>

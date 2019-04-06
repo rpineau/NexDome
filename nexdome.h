@@ -38,8 +38,6 @@
 
 // #define ND_DEBUG 2
 
-
-
 // error codes
 // Error code
 enum NexDomeErrors {ND_OK=0, NOT_CONNECTED, ND_CANT_CONNECT, ND_BAD_CMD_RESPONSE, COMMAND_FAILED};
@@ -129,6 +127,9 @@ public:
 	
 	int	getSutterWatchdogTimerValue(int &nValue);
 	int	setSutterWatchdogTimerValue(const int &nValue);
+
+    int    getRainTimerValue(int &nValue);
+    int    setRainTimerValue(const int &nValue);
 
     void setDebugLog(bool bEnable);
 

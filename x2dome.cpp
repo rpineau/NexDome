@@ -139,6 +139,7 @@ int X2Dome::execModalSettingsDialog()
     int nSSpeed;
     int nSAcc;
 	int nWatchdog;
+    int nRainTimer;
     double  batRotCutOff;
     double  batShutCutOff;
 
@@ -180,6 +181,7 @@ int X2Dome::execModalSettingsDialog()
         m_NexDome.sendShutterHello();   // refresh values.
         dx->setEnabled("homePosition",true);
         dx->setEnabled("parkPosition",true);
+        dx->setEnabled("needReverse",true);
         nErr = m_NexDome.getDefaultDir(nReverseDir);
         if(nReverseDir)
             dx->setChecked("needReverse",false);
@@ -213,6 +215,10 @@ int X2Dome::execModalSettingsDialog()
 		dx->setEnabled("shutterWatchdog",true);
 		m_NexDome.getSutterWatchdogTimerValue(nWatchdog);
 		dx->setPropertyInt("shutterWatchdog", "value", nWatchdog);
+
+        dx->setEnabled("rainCheckInterval",true);
+        m_NexDome.getRainTimerValue(nRainTimer);
+        dx->setPropertyInt("rainCheckInterval", "value", nRainTimer);
 
         dx->setEnabled("lowRotBatCutOff",true);
         dx->setEnabled("lowShutBatCutOff",true);
@@ -251,18 +257,19 @@ int X2Dome::execModalSettingsDialog()
     else {
         dx->setEnabled("homePosition",false);
         dx->setEnabled("parkPosition",false);
+        dx->setEnabled("needReverse",false);
         dx->setEnabled("ticksPerRev",false);
         dx->setEnabled("rotationSpeed",false);
         dx->setEnabled("rotationAcceletation",false);
         dx->setEnabled("shutterSpeed",false);
         dx->setEnabled("shutterAcceleration",false);
 		dx->setEnabled("shutterWatchdog",false);
+        dx->setEnabled("rainCheckInterval",false);
         dx->setEnabled("lowRotBatCutOff",false);
-        dx->setEnabled("lowShutBatCutOff",true);
+        dx->setEnabled("lowShutBatCutOff",false);
         dx->setPropertyString("domeBatteryLevel","text", "--");
         dx->setPropertyString("shutterBatteryLevel","text", "--");
         dx->setEnabled("pushButton",false);
-        dx->setEnabled("needReverse",false);
         dx->setPropertyString("domePointingError","text", "--");
         dx->setPropertyString("rainStatus","text", "--");
     }
@@ -288,6 +295,7 @@ int X2Dome::execModalSettingsDialog()
         dx->propertyInt("shutterSpeed", "value", nSSpeed);
         dx->propertyInt("shutterAcceleration", "value", nSAcc);
 		dx->propertyInt("shutterWatchdog", "value", nWatchdog);
+        dx->propertyInt("rainCheckInterval", "value", nRainTimer);
         dx->propertyDouble("lowRotBatCutOff", "value", batRotCutOff);
         dx->propertyDouble("lowShutBatCutOff", "value", batShutCutOff);
         m_bHasShutterControl = dx->isChecked("hasShutterCtrl");
@@ -304,6 +312,7 @@ int X2Dome::execModalSettingsDialog()
             m_NexDome.setNbTicksPerRev(n_nbStepPerRev);
             m_NexDome.setRotationSpeed(nRSpeed);
             m_NexDome.setRotationAcceleration(nRAcc);
+            m_NexDome.setRainTimerValue(nRainTimer);
 			m_NexDome.setBatteryCutOff(batRotCutOff, batShutCutOff);
 			if(m_bHasShutterControl) {
 				m_NexDome.setShutterSpeed(nSSpeed);
