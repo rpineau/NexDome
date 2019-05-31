@@ -1431,6 +1431,7 @@ int CNexDome::isFindHomeComplete(bool &bComplete)
             m_nHomingTries = 1;
             goHome();
         }
+        return ERR_CMDFAILED;
     }
 
     return nErr;
@@ -1489,8 +1490,14 @@ int CNexDome::abortCurrentCommand()
     if(!m_bIsConnected)
         return NOT_CONNECTED;
 
+    m_bHomed = false;
+    m_bParked = false;
     m_bCalibrating = false;
+    m_bParking = false;
     m_bUnParking = false;
+    m_nGotoTries = 1;   // prevents the goto retry
+    m_nHomingTries = 1; // prevents the find home retry
+    
     nErr = domeCommand("a#", szResp, 'a', SERIAL_BUFFER_SIZE);
 
     getDomeAz(m_dGotoAz);
