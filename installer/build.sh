@@ -1,5 +1,12 @@
 #!/bin/bash
 
+PACKAGE_NAME="NexDome_X2.pkg"
+BUNDLE_NAME="org.rti-zone.NexDomeX2"
+
+if [ ! -z "$app_id_signature" ]; then
+    codesign -f -s "$app_id_signature" --verbose ../build/Release/libNexDome.dylib
+fi
+
 mkdir -p ROOT/tmp/NexDome_X2/
 cp "../NexDome.ui" ROOT/tmp/NexDome_X2/
 cp "../NexDome.png" ROOT/tmp/NexDome_X2/
