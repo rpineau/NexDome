@@ -40,6 +40,7 @@ X2Dome::X2Dome(const char* pszSelection,
         m_bHomeOnUnpark = m_pIniUtil->readInt(PARENT_KEY, CHILD_KEY_HOME_ON_UNPARK, false);
         m_NexDome.setHomeOnPark(m_bHomeOnPark);
         m_NexDome.setHomeOnUnpark(m_bHomeOnUnpark);
+        m_NexDome.setShutterPresent(m_bHasShutterControl);
     }
 }
 
@@ -178,7 +179,8 @@ int X2Dome::execModalSettingsDialog()
     }
 
     if(m_bLinked) {
-        m_NexDome.sendShutterHello();   // refresh values.
+        if(m_bHasShutterControl)
+            m_NexDome.sendShutterHello();   // refresh values.
         dx->setEnabled("homePosition",true);
         dx->setEnabled("parkPosition",true);
         dx->setEnabled("needReverse",true);
@@ -203,19 +205,23 @@ int X2Dome::execModalSettingsDialog()
         dx->setEnabled("rotationAcceletation",true);
         m_NexDome.getRotationAcceleration(nRAcc);
         dx->setPropertyInt("rotationAcceletation","value", nRAcc);
+        if(m_bHasShutterControl) {
+            dx->setEnabled("shutterSpeed",true);
+            m_NexDome.getShutterSpeed(nSSpeed);
+            dx->setPropertyInt("shutterSpeed","value", nSSpeed);
 
-        dx->setEnabled("shutterSpeed",true);
-        m_NexDome.getShutterSpeed(nSSpeed);
-        dx->setPropertyInt("shutterSpeed","value", nSSpeed);
+            dx->setEnabled("shutterAcceleration",true);
+            m_NexDome.getShutterAcceleration(nSAcc);
+            dx->setPropertyInt("shutterAcceleration","value", nSAcc);
 
-        dx->setEnabled("shutterAcceleration",true);
-        m_NexDome.getShutterAcceleration(nSAcc);
-        dx->setPropertyInt("shutterAcceleration","value", nSAcc);
-
-		dx->setEnabled("shutterWatchdog",true);
-		m_NexDome.getSutterWatchdogTimerValue(nWatchdog);
-		dx->setPropertyInt("shutterWatchdog", "value", nWatchdog);
-
+            dx->setEnabled("shutterWatchdog",true);
+            m_NexDome.getSutterWatchdogTimerValue(nWatchdog);
+            dx->setPropertyInt("shutterWatchdog", "value", nWatchdog);
+        } else {
+            dx->setEnabled("shutterSpeed",false);
+            dx->setEnabled("shutterAcceleration",false);
+            dx->setEnabled("shutterWatchdog",false);
+        }
         dx->setEnabled("rainCheckInterval",true);
         m_NexDome.getRainTimerValue(nRainTimer);
         dx->setPropertyInt("rainCheckInterval", "value", nRainTimer);

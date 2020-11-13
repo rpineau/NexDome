@@ -37,6 +37,7 @@
 #define INTER_COMMAND_PAUSE_MS	100
 
 // #define ND_DEBUG 2
+#define DRIVER_VERSION      2.14
 
 // error codes
 // Error code
@@ -83,7 +84,7 @@ public:
 
     int abortCurrentCommand();
     int sendShutterHello();
-
+    void setShutterPresent(bool bShutterPresent);
     // getter/setter
     int getNbTicksPerRev();
     int setNbTicksPerRev(int nSteps);
@@ -185,7 +186,8 @@ protected:
     int             m_nIsRaining;
     bool            m_bHomeOnPark;
     bool            m_bHomeOnUnpark;
-
+    bool            m_bShutterPresent;
+    
 #ifdef ND_DEBUG
     std::string m_sLogfilePath;
     // timestamp for logs

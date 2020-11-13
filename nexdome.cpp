@@ -43,6 +43,8 @@ CNexDome::CNexDome()
     m_bHomeOnPark = false;
     m_bHomeOnUnpark = false;
 
+    m_bShutterPresent = false;
+    
     memset(m_szFirmwareVersion,0,SERIAL_BUFFER_SIZE);
     memset(m_szLogBuffer,0,ND_LOG_BUFFER_SIZE);
 
@@ -438,6 +440,11 @@ int CNexDome::getShutterState(int &nState)
     if(!m_bIsConnected)
         return NOT_CONNECTED;
 
+    if(!m_bShutterPresent) {
+        nState = SHUTTER_ERROR;
+        return nErr;
+    }
+
     if(m_bCalibrating)
         return nErr;
 	
@@ -452,6 +459,7 @@ int CNexDome::getShutterState(int &nState)
         fprintf(Logfile, "[%s] [CNexDome::getShutterState] ERROR = %s\n", timestamp, szResp);
         fflush(Logfile);
 #endif
+        nState = SHUTTER_ERROR;
         return nErr;
     }
 
@@ -583,64 +591,70 @@ int CNexDome::getBatteryLevels(double &domeVolts, double &dDomeCutOff, double &d
     fflush(Logfile);
 #endif
 
-    //  Shutter
-	m_pSleeper->sleep(INTER_COMMAND_PAUSE_MS);
-    nErr = domeCommand("K#", szResp, 'K', SERIAL_BUFFER_SIZE);
-    if(nErr) {
-#if defined ND_DEBUG && ND_DEBUG >= 2
-        ltime = time(NULL);
-        timestamp = asctime(localtime(&ltime));
-        timestamp[strlen(timestamp) - 1] = 0;
-        fprintf(Logfile, "[%s] [CNexDome::getBatteryLevels] ERROR = %s\n", timestamp, szResp);
-        fflush(Logfile);
-#endif
-        return nErr;
-    }
+    dShutterVolts  = 0;
+    dShutterCutOff = 0;
+    if(m_bShutterPresent) {
+            //  Shutter
+            m_pSleeper->sleep(INTER_COMMAND_PAUSE_MS);
+            nErr = domeCommand("K#", szResp, 'K', SERIAL_BUFFER_SIZE);
+            if(nErr) {
+        #if defined ND_DEBUG && ND_DEBUG >= 2
+                ltime = time(NULL);
+                timestamp = asctime(localtime(&ltime));
+                timestamp[strlen(timestamp) - 1] = 0;
+                fprintf(Logfile, "[%s] [CNexDome::getBatteryLevels] ERROR = %s\n", timestamp, szResp);
+                fflush(Logfile);
+        #endif
+                dShutterVolts = 0;
+                dShutterCutOff = 0;
+                return nErr;
+            }
+            
+            if(strlen(szResp)<2) { // no shutter value
+                dShutterVolts = -1;
+                dShutterCutOff = -1;
+                return nErr;
+            }
 
-    if(strlen(szResp)<2) { // no shutter value
-        dShutterVolts = -1;
-        dShutterCutOff = -1;
-        return nErr;
-    }
+            rc = sscanf(szResp, "%lf,%lf", &dShutterVolts, &dShutterCutOff);
+            if(rc == 0) {
+        #if defined ND_DEBUG && ND_DEBUG >= 2
+                ltime = time(NULL);
+                timestamp = asctime(localtime(&ltime));
+                timestamp[strlen(timestamp) - 1] = 0;
+                fprintf(Logfile, "[%s] [CNexDome::getBatteryLevels] sscanf ERROR\n", timestamp);
+                fflush(Logfile);
+        #endif
+                return COMMAND_FAILED;
+            }
 
-    rc = sscanf(szResp, "%lf,%lf", &dShutterVolts, &dShutterCutOff);
-    if(rc == 0) {
-#if defined ND_DEBUG && ND_DEBUG >= 2
-        ltime = time(NULL);
-        timestamp = asctime(localtime(&ltime));
-        timestamp[strlen(timestamp) - 1] = 0;
-        fprintf(Logfile, "[%s] [CNexDome::getBatteryLevels] sscanf ERROR\n", timestamp);
-        fflush(Logfile);
-#endif
-        return COMMAND_FAILED;
-    }
+        #if defined ND_DEBUG && ND_DEBUG >= 2
+            ltime = time(NULL);
+            timestamp = asctime(localtime(&ltime));
+            timestamp[strlen(timestamp) - 1] = 0;
+            fprintf(Logfile, "[%s] [CNexDome::getBatteryLevels] shutterVolts = %f\n", timestamp, dShutterVolts);
+            fprintf(Logfile, "[%s] [CNexDome::getBatteryLevels] dShutterCutOff = %f\n", timestamp, dShutterCutOff);
+            fflush(Logfile);
+        #endif
 
-#if defined ND_DEBUG && ND_DEBUG >= 2
-    ltime = time(NULL);
-    timestamp = asctime(localtime(&ltime));
-    timestamp[strlen(timestamp) - 1] = 0;
-    fprintf(Logfile, "[%s] [CNexDome::getBatteryLevels] shutterVolts = %f\n", timestamp, dShutterVolts);
-    fprintf(Logfile, "[%s] [CNexDome::getBatteryLevels] dShutterCutOff = %f\n", timestamp, dShutterCutOff);
-    fflush(Logfile);
-#endif
-
-    // do a proper conversion as for some reason the value is scaled weirdly ( it's multiplied by 3/2)
-    // Arduino ADC convert 0-5V to 0-1023 which is 0.0049V per unit
-    if(m_fVersion < 2.0f) {
-        dShutterVolts = (dShutterVolts*2) * 0.0049f;
-        dShutterCutOff = (dShutterCutOff*2) * 0.0049f;
-    } else { // hopefully we can fix this in the next firmware and report proper values.
-        dShutterVolts = dShutterVolts / 100.0;
-        dShutterCutOff = dShutterCutOff / 100.0;
+            // do a proper conversion as for some reason the value is scaled weirdly ( it's multiplied by 3/2)
+            // Arduino ADC convert 0-5V to 0-1023 which is 0.0049V per unit
+            if(m_fVersion < 2.0f) {
+                dShutterVolts = (dShutterVolts*2) * 0.0049f;
+                dShutterCutOff = (dShutterCutOff*2) * 0.0049f;
+            } else { // hopefully we can fix this in the next firmware and report proper values.
+                dShutterVolts = dShutterVolts / 100.0;
+                dShutterCutOff = dShutterCutOff / 100.0;
+            }
+        #if defined ND_DEBUG && ND_DEBUG >= 2
+            ltime = time(NULL);
+            timestamp = asctime(localtime(&ltime));
+            timestamp[strlen(timestamp) - 1] = 0;
+            fprintf(Logfile, "[%s] [CNexDome::getBatteryLevels] shutterVolts = %f\n", timestamp, dShutterVolts);
+            fprintf(Logfile, "[%s] [CNexDome::getBatteryLevels] dShutterCutOff = %f\n", timestamp, dShutterCutOff);
+            fflush(Logfile);
+        #endif
     }
-#if defined ND_DEBUG && ND_DEBUG >= 2
-    ltime = time(NULL);
-    timestamp = asctime(localtime(&ltime));
-    timestamp[strlen(timestamp) - 1] = 0;
-    fprintf(Logfile, "[%s] [CNexDome::getBatteryLevels] shutterVolts = %f\n", timestamp, dShutterVolts);
-    fprintf(Logfile, "[%s] [CNexDome::getBatteryLevels] dShutterCutOff = %f\n", timestamp, dShutterCutOff);
-    fflush(Logfile);
-#endif
 
     return nErr;
 }
@@ -682,21 +696,22 @@ int CNexDome::setBatteryCutOff(double dDomeCutOff, double dShutterCutOff)
         return nErr;
     }
 
-    // Shutter
-	m_pSleeper->sleep(INTER_COMMAND_PAUSE_MS);
-    snprintf(szBuf, SERIAL_BUFFER_SIZE, "K%d#", nShutCutOff);
-    nErr = domeCommand(szBuf, szResp, 'K', SERIAL_BUFFER_SIZE);
-    if(nErr) {
-#if defined ND_DEBUG && ND_DEBUG >= 2
-        ltime = time(NULL);
-        timestamp = asctime(localtime(&ltime));
-        timestamp[strlen(timestamp) - 1] = 0;
-        fprintf(Logfile, "[%s] [CNexDome::setBatteryCutOff] dShutterCutOff ERROR = %s\n", timestamp, szResp);
-        fflush(Logfile);
-#endif
-        return nErr;
+    if(m_bShutterPresent) {
+        // Shutter
+        m_pSleeper->sleep(INTER_COMMAND_PAUSE_MS);
+        snprintf(szBuf, SERIAL_BUFFER_SIZE, "K%d#", nShutCutOff);
+        nErr = domeCommand(szBuf, szResp, 'K', SERIAL_BUFFER_SIZE);
+        if(nErr) {
+    #if defined ND_DEBUG && ND_DEBUG >= 2
+            ltime = time(NULL);
+            timestamp = asctime(localtime(&ltime));
+            timestamp[strlen(timestamp) - 1] = 0;
+            fprintf(Logfile, "[%s] [CNexDome::setBatteryCutOff] dShutterCutOff ERROR = %s\n", timestamp, szResp);
+            fflush(Logfile);
+    #endif
+            return nErr;
+        }
     }
-
     return nErr;
 }
 
@@ -931,6 +946,10 @@ int CNexDome::openShutter()
     if(m_bCalibrating)
         return SB_OK;
 
+    if(!m_bShutterPresent) {
+        return SB_OK;
+    }
+    
 #if defined ND_DEBUG && ND_DEBUG >= 2
     ltime = time(NULL);
     timestamp = asctime(localtime(&ltime));
@@ -971,6 +990,10 @@ int CNexDome::closeShutter()
 
     if(m_bCalibrating)
         return SB_OK;
+
+    if(!m_bShutterPresent) {
+        return SB_OK;
+    }
 
 #if defined ND_DEBUG && ND_DEBUG >= 2
     ltime = time(NULL);
@@ -1192,6 +1215,11 @@ int CNexDome::isOpenComplete(bool &bComplete)
     if(!m_bIsConnected)
         return NOT_CONNECTED;
 
+    if(!m_bShutterPresent) {
+        bComplete = true;
+        return SB_OK;
+    }
+
     nErr = getShutterState(nState);
     if(nErr)
         return ERR_CMDFAILED;
@@ -1224,6 +1252,11 @@ int CNexDome::isCloseComplete(bool &bComplete)
 
     if(!m_bIsConnected)
         return NOT_CONNECTED;
+
+    if(!m_bShutterPresent) {
+        bComplete = true;
+        return SB_OK;
+    }
 
     nErr = getShutterState(nState);
     if(nErr)
@@ -1513,6 +1546,10 @@ int CNexDome::sendShutterHello()
     if(!m_bIsConnected)
         return NOT_CONNECTED;
 
+    if(!m_bShutterPresent) {
+        return SB_OK;
+    }
+
 	m_pSleeper->sleep(INTER_COMMAND_PAUSE_MS);
 	if(m_fVersion>=2.0f)
         nErr = domeCommand("H#", szResp, 'H', SERIAL_BUFFER_SIZE);
@@ -1520,6 +1557,13 @@ int CNexDome::sendShutterHello()
         nErr = domeCommand("H#", NULL, 0, SERIAL_BUFFER_SIZE);
     return nErr;
 }
+
+void CNexDome::setShutterPresent(bool bShutterPresent)
+{
+    m_bShutterPresent = bShutterPresent;
+}
+
+
 #pragma mark - Getter / Setter
 
 int CNexDome::getNbTicksPerRev()
@@ -1793,6 +1837,11 @@ int CNexDome::getShutterSpeed(int &nSpeed)
     if(!m_bIsConnected)
         return NOT_CONNECTED;
 
+    if(!m_bShutterPresent) {
+        nSpeed = 0;
+        return SB_OK;
+    }
+
 	m_pSleeper->sleep(INTER_COMMAND_PAUSE_MS);
     nErr = domeCommand("R#", szResp, 'R', SERIAL_BUFFER_SIZE);
     if(nErr) {
@@ -1820,6 +1869,10 @@ int CNexDome::setShutterSpeed(int nSpeed)
     if(!m_bIsConnected)
         return NOT_CONNECTED;
 
+    if(!m_bShutterPresent) {
+        return SB_OK;
+    }
+
 	m_pSleeper->sleep(INTER_COMMAND_PAUSE_MS);
     snprintf(szBuf, SERIAL_BUFFER_SIZE, "R%d#", nSpeed);
     nErr = domeCommand(szBuf, szResp, 'R', SERIAL_BUFFER_SIZE);
@@ -1834,6 +1887,11 @@ int CNexDome::getShutterAcceleration(int &nAcceleration)
 
     if(!m_bIsConnected)
         return NOT_CONNECTED;
+
+    if(!m_bShutterPresent) {
+        nAcceleration = 0;
+        return SB_OK;
+    }
 
 	m_pSleeper->sleep(INTER_COMMAND_PAUSE_MS);
     nErr = domeCommand("E#", szResp, 'E', SERIAL_BUFFER_SIZE);
@@ -1861,6 +1919,10 @@ int CNexDome::setShutterAcceleration(int nAcceleration)
     if(!m_bIsConnected)
         return NOT_CONNECTED;
 
+    if(!m_bShutterPresent) {
+        return SB_OK;
+    }
+
 	m_pSleeper->sleep(INTER_COMMAND_PAUSE_MS);
     snprintf(szBuf, SERIAL_BUFFER_SIZE, "E%d#", nAcceleration);
     nErr = domeCommand(szBuf, szResp, 'E', SERIAL_BUFFER_SIZE);
@@ -1884,7 +1946,12 @@ int	CNexDome::getSutterWatchdogTimerValue(int &nValue)
 	
 	if(!m_bIsConnected)
 		return NOT_CONNECTED;
-	
+
+    if(!m_bShutterPresent) {
+        nValue = 0;
+        return SB_OK;
+    }
+
 	m_pSleeper->sleep(INTER_COMMAND_PAUSE_MS);
 	nErr = domeCommand("I#", szResp, 'I', SERIAL_BUFFER_SIZE);
 	if(nErr) {
@@ -1910,6 +1977,10 @@ int	CNexDome::setSutterWatchdogTimerValue(const int &nValue)
 	
 	if(!m_bIsConnected)
 		return NOT_CONNECTED;
+
+    if(!m_bShutterPresent) {
+        return SB_OK;
+    }
 
 	m_pSleeper->sleep(INTER_COMMAND_PAUSE_MS);
 	snprintf(szBuf, SERIAL_BUFFER_SIZE, "I%d#", nValue * 1000); // value is in ms
